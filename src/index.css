@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@theme {
+  --color-special-day: #f97316;
+  --color-engagement: #a8a29e;
+  --color-ideation: #4ade80;
+
+  --font-sans: "Inter", sans-serif;
+}
+
+body {
+  background-color: var(--color-gray-50);
+  color: var(--color-gray-900);
+}
