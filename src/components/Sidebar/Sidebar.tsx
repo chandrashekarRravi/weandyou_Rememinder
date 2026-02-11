@@ -24,9 +24,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeFilter, setActiveFilter }) => {
     return (
         <aside className="w-64 bg-white border-r border-gray-100 p-6 flex flex-col space-y-8 h-full">
             <div className="flex items-center space-x-2 px-2">
-                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+                {/*<div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
                     <FaCalendarAlt className="text-white text-sm" />
-                </div>
+                </div> */}
+
                 <span className="font-bold text-xl text-gray-800 tracking-tight">AVAIO</span>
             </div>
 
@@ -71,7 +72,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeFilter, setActiveFilter }) => {
                     ))}
                 </div>
             </div>
-
+            {/* Pro Tip
             <div className="mt-auto px-2">
                 <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
                     <h4 className="text-indigo-900 font-semibold text-sm mb-1">Pro Tip</h4>
@@ -79,7 +80,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeFilter, setActiveFilter }) => {
                         Click on any date to manage events.
                     </p>
                 </div>
-            </div>
+            </div>  */}
+
         </aside>
     );
 };

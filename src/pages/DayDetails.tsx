@@ -5,10 +5,12 @@ import EventCard from '../components/Event/EventCard';
 import { FaArrowLeft, FaPlus } from 'react-icons/fa';
 import { format, parseISO, isSameDay } from 'date-fns';
 import axios from 'axios';
+import { useCalendarContext } from '../context/CalendarContext';
 
 const DayDetails: React.FC = () => {
     const { date } = useParams<{ date: string }>();
     const navigate = useNavigate();
+    const { activeFilter } = useCalendarContext();
 
     const dateObj = React.useMemo(() => {
         return date ? parseISO(date) : new Date();
@@ -18,7 +20,17 @@ const DayDetails: React.FC = () => {
     // Optimization: passing dateObj works because it's within the month.
     const { events, loading } = useEvents(dateObj);
 
-    const dayEvents = events.filter(e => isSameDay(parseISO(e.date), dateObj));
+    const dayEvents = events.filter(e => {
+        // 1. Filter by day
+        if (!isSameDay(parseISO(e.date), dateObj)) return false;
+
+        // 2. Apply Sidebar Filter
+        if (activeFilter === 'All') return true;
+        if (activeFilter === 'Pending' || activeFilter === 'Ongoing' || activeFilter === 'Completed') {
+            return e.status === activeFilter;
+        }
+        return e.category === activeFilter;
+    });
 
     // Placeholder handler for adding event - ideally opens a modal
     const handleAddEvent = async () => {
@@ -39,37 +51,45 @@ const DayDetails: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-8 font-sans">
-            <div className="max-w-3xl mx-auto">
-                <header className="flex items-center justify-between mb-8">
+        <div className="max-w-4xl mx-auto h-full flex flex-col">
+            <header className="flex items-center justify-between mb-8 bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-gray-100/50">
+                <div className="flex items-center gap-4">
                     <button
-                        onClick={() => navigate(-1)}
-                        className="flex items-center space-x-2 text-gray-500 hover:text-gray-800 transition-colors"
+                        onClick={() => navigate('/')}
+                        className="p-2 rounded-xl text-gray-500 hover:bg-white hover:text-indigo-600 hover:shadow-sm transition-all"
+                        title="Back to Calendar"
                     >
                         <FaArrowLeft />
-                        <span className="font-medium">Back to Calendar</span>
                     </button>
-                    <h1 className="text-2xl font-bold text-gray-800">
-                        {date && format(dateObj, 'MMMM d, yyyy')}
-                    </h1>
-                    <button
-                        onClick={handleAddEvent}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 shadow-lg shadow-indigo-200 transition-all active:scale-95"
-                    >
-                        <FaPlus />
-                        <span>Add Event</span>
-                    </button>
-                </header>
+                    <div>
+                        <h1 className="text-xl font-bold text-gray-800">
+                            {date && format(dateObj, 'MMMM d, yyyy')}
+                        </h1>
+                        <p className="text-xs text-gray-500 font-medium">
+                            {dayEvents.length} Events • Filter: <span className="text-indigo-600">{activeFilter}</span>
+                        </p>
+                    </div>
+                </div>
 
-                {loading ? (
-                    <div className="text-center py-20 text-gray-400">Loading events...</div>
-                ) : (
-                    <div className="grid gap-6">
+                <button
+                    onClick={handleAddEvent}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 shadow-lg shadow-indigo-200 transition-all active:scale-95"
+                >
+                    <FaPlus />
+                    <span>Add Event</span>
+                </button>
+            </header>
+
+            {loading ? (
+                <div className="text-center py-20 text-gray-400">Loading events...</div>
+            ) : (
+                <div className="flex-1 overflow-y-auto pr-2">
+                    <div className="grid gap-4 pb-10">
                         {dayEvents.length === 0 ? (
                             <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 border-dashed">
-                                <p className="text-gray-400 font-medium">No events planned for this day.</p>
+                                <p className="text-gray-400 font-medium">No events found for {activeFilter}.</p>
                                 <button onClick={handleAddEvent} className="mt-4 text-indigo-600 font-semibold text-sm hover:underline">
-                                    Create your first event
+                                    Create one?
                                 </button>
                             </div>
                         ) : (
@@ -78,8 +98,8 @@ const DayDetails: React.FC = () => {
                             ))
                         )}
                     </div>
-                )}
-            </div>
+                </div>
+            )}
         </div>
     );
 };
