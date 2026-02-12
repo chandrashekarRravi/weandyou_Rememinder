@@ -8,6 +8,8 @@ const eventSchema = new mongoose.Schema({
     endTime: String,
     clientName: String,
     clientBrand: String,
+    review: String,
+    captions: String,
     category: {
         type: String,
         enum: ['Special Day', 'Engagement', 'Ideation', 'Other'],

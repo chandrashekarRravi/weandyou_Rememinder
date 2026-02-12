@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { SocketProvider } from './context/SocketContext';
 import { CalendarProvider } from './context/CalendarContext';
 import MainLayout from './layouts/MainLayout';
-import Dashboard from './pages/Dashboard';
+import Dashboard from './pages/Rememinder';
 import DayDetails from './pages/DayDetails';
 import './index.css';
 

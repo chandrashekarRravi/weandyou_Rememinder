@@ -13,6 +13,8 @@ export interface EventType {
     clientName?: string;
     clientBrand?: string;
     poster?: string;
+    review?: string;
+    captions?: string;
     category: 'Special Day' | 'Engagement' | 'Ideation' | 'Other';
     status: 'Pending' | 'Ongoing' | 'Completed';
     // other fields...

@@ -15,6 +15,8 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, onSave, initia
     const [formData, setFormData] = useState({
         title: '',
         description: '',
+        review:'',
+        captions:'',
         startTime: '',
         endTime: '',
         clientName: '',
@@ -30,6 +32,8 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, onSave, initia
                 title: eventToEdit.title,
                 description: eventToEdit.description || '',
                 startTime: eventToEdit.startTime || '',
+                review:eventToEdit.review ||'',
+                captions:eventToEdit.captions ||'',
                 endTime: eventToEdit.endTime || '',
                 clientName: eventToEdit.clientName || '',
                 clientBrand: eventToEdit.clientBrand || '',
@@ -41,6 +45,8 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, onSave, initia
             setFormData({
                 title: '',
                 description: '',
+                review:'',
+                captions:'',
                 startTime: '',
                 endTime: '',
                 clientName: '',
@@ -60,7 +66,7 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, onSave, initia
         try {
             const payload = {
                 ...formData,
-                date: initialDate // In edit mode, we keeps same date for now, or could add date picker
+                date: (initialDate instanceof Date) ? initialDate.toISOString() : initialDate
             };
 
             if (eventToEdit) {
@@ -190,7 +196,28 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, onSave, initia
                             onChange={e => setFormData({ ...formData, description: e.target.value })}
                         />
                     </div>
-
+                    {/* review */}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Review</label>
+                        <textarea
+                            rows={3}
+                            placeholder="Add details..."
+                            className="w-full px-4 py-3 bg-gray-50 rounded-xl border-transparent focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none text-gray-700 resize-none"
+                            value={formData.review}
+                            onChange={e => setFormData({ ...formData, review: e.target.value })}
+                        />
+                    </div>
+                    {/* captions */}
+<div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Captions</label>
+                        <textarea
+                            rows={3}
+                            placeholder="Add details..."
+                            className="w-full px-4 py-3 bg-gray-50 rounded-xl border-transparent focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all outline-none text-gray-700 resize-none"
+                            value={formData.captions}
+                            onChange={e => setFormData({ ...formData, captions: e.target.value })}
+                        />
+                    </div>
                     <div className="pt-4 flex items-center justify-end space-x-3">
                         <button
                             type="button"

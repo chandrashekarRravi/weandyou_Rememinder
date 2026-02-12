@@ -19,6 +19,7 @@ export const useCalendar = () => {
 
     const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
     const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
+    const setMonth = (monthIndex: number) => setCurrentDate(new Date(currentDate.getFullYear(), monthIndex, 1));
 
     const nextWeek = () => setCurrentDate(addWeeks(currentDate, 1));
     const prevWeek = () => setCurrentDate(subWeeks(currentDate, 1));
@@ -43,6 +44,7 @@ export const useCalendar = () => {
         monthLabel,
         nextMonth,
         prevMonth,
+        setMonth,
         nextWeek,
         prevWeek,
         isSameMonth,

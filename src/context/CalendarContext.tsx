@@ -11,6 +11,7 @@ interface CalendarContextType {
     prevWeek: () => void;
     currentWeekIndex: number;
     setCurrentWeekIndex: React.Dispatch<React.SetStateAction<number>>;
+    setMonth?: (monthIndex: number) => void;
 
     activeFilter: string;
     setActiveFilter: (filter: string) => void;

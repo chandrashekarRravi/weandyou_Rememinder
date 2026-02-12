@@ -20,6 +20,7 @@ router.get('/', async (req, res) => {
 
 // Create event
 router.post('/', async (req, res) => {
+    console.log('Create event payload:', req.body);
     const event = new Event(req.body);
     try {
         const newEvent = await event.save();
@@ -34,6 +35,7 @@ router.post('/', async (req, res) => {
 
 // Update event
 router.put('/:id', async (req, res) => {
+    console.log('Update event payload for', req.params.id, req.body);
     try {
         const updatedEvent = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
         // Emit real-time update

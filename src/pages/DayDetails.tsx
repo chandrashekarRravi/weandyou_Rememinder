@@ -36,6 +36,18 @@ const DayDetails: React.FC = () => {
         return e.category === activeFilter;
     });
 
+    const groupedByClient = React.useMemo(() => {
+        const map = new Map<string, EventType[]>();
+        dayEvents.forEach(ev => {
+            const key = ev.clientName?.trim() || 'No Client';
+            if (!map.has(key)) map.set(key, []);
+            map.get(key)!.push(ev);
+        });
+
+        // Convert to sorted array [clientName, events[]]
+        return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+    }, [dayEvents]);
+
     const handleAddEvent = () => {
         setSelectedEvent(null);
         setIsModalOpen(true);
@@ -93,12 +105,26 @@ const DayDetails: React.FC = () => {
                                 </button>
                             </div>
                         ) : (
-                            dayEvents.map(event => (
-                                <EventCard
-                                    key={event._id}
-                                    event={event}
-                                    onEdit={() => handleEditEvent(event)}
-                                />
+                            groupedByClient.map(([clientName, eventsForClient]) => (
+                                <section key={clientName} className="space-y-3">
+                                    <div className="px-2">
+                                        <h4 className="text-sm font-semibold text-gray-600">
+                                            {clientName === 'No Client' ? 'No Client' : clientName}
+                                            {eventsForClient[0]?.clientBrand && (
+                                                <span className="text-xs text-gray-400 font-normal ml-2">({eventsForClient[0].clientBrand})</span>
+                                            )}
+                                        </h4>
+                                    </div>
+                                    <div className="grid gap-4">
+                                        {eventsForClient.map(event => (
+                                            <EventCard
+                                                key={event._id}
+                                                event={event}
+                                                onEdit={() => handleEditEvent(event)}
+                                            />
+                                        ))}
+                                    </div>
+                                </section>
                             ))
                         )}
                     </div>
