@@ -1,5 +1,5 @@
 import React from 'react';
-import CalendarGrid from '../components/Calendar/CalendarGrid';
+import CalendarGrid from '../components/Calendar/CalendarGrid.tsx';
 import { useCalendarContext } from '../context/CalendarContext';
 
 const Dashboard: React.FC = () => {

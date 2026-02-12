@@ -15,8 +15,8 @@ const FILTERS = [
 ];
 
 const STATUS_FILTERS = [
-    { id: 'Pending', label: 'Pending', color: 'bg-gray-400', icon: FaRegClock },
-    { id: 'Ongoing', label: 'Ongoing', color: 'bg-blue-500', icon: FaHourglassHalf },
+    { id: 'Pending', label: 'Review', color: 'bg-gray-400', icon: FaRegClock },
+    { id: 'Ongoing', label: 'Approved', color: 'bg-blue-500', icon: FaHourglassHalf },
     { id: 'Completed', label: 'Completed', color: 'bg-green-600', icon: FaCheck },
 ];
 

@@ -5,7 +5,11 @@ import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 
-dotenv.config();
+dotenv.config({ path: '../.env' });
+
+mongoose.connect(process.env.MONGODB_URI)
+    .then(() => console.log('Connected to MongoDB'))
+    .catch((err) => console.error('MongoDB connection error:', err));
 
 const app = express();
 const httpServer = createServer(app);
@@ -19,35 +23,21 @@ const io = new Server(httpServer, {
 app.use(cors());
 app.use(express.json());
 
-import eventRoutes from './routes/events.js';
-app.use('/api/events', eventRoutes);
-
-const PORT = process.env.PORT || 5000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/calendar_db';
-
-mongoose.connect(MONGODB_URI)
-    .then(() => console.log('MongoDB connected'))
-    .catch(err => console.error(err));
-
-// Socket.io connection
-io.on('connection', (socket) => {
-    console.log('User connected:', socket.id);
-
-    socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
-    });
-});
-
-// Make io available in routes (if separated)
+// Make io available in routes
 app.use((req, res, next) => {
     req.io = io;
     next();
 });
 
+import eventRoutes from './routes/events.js';
+app.use('/api/events', eventRoutes);
+
 // Fallback route
 app.get('/', (req, res) => {
     res.send('Calendar API is running');
 });
+
+const PORT = process.env.PORT || 5000;
 
 httpServer.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

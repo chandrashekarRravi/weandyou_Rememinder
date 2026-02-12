@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEvents } from '../hooks/useEvents';
+import { useEvents, type EventType } from '../hooks/useEvents';
 import EventCard from '../components/Event/EventCard';
+import EventModal from '../components/Event/EventModal';
 import { FaArrowLeft, FaPlus } from 'react-icons/fa';
 import { format, parseISO, isSameDay } from 'date-fns';
-import axios from 'axios';
 import { useCalendarContext } from '../context/CalendarContext';
 
 const DayDetails: React.FC = () => {
@@ -12,13 +12,17 @@ const DayDetails: React.FC = () => {
     const navigate = useNavigate();
     const { activeFilter } = useCalendarContext();
 
+    // Modal State
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedEvent, setSelectedEvent] = useState<EventType | null>(null);
+
     const dateObj = React.useMemo(() => {
         return date ? parseISO(date) : new Date();
     }, [date]);
 
     // Reuse the hook - it fetches the whole month. 
     // Optimization: passing dateObj works because it's within the month.
-    const { events, loading } = useEvents(dateObj);
+    const { events, loading, refreshEvents } = useEvents(dateObj);
 
     const dayEvents = events.filter(e => {
         // 1. Filter by day
@@ -32,22 +36,18 @@ const DayDetails: React.FC = () => {
         return e.category === activeFilter;
     });
 
-    // Placeholder handler for adding event - ideally opens a modal
-    const handleAddEvent = async () => {
-        const title = prompt("Enter Event Title:");
-        if (!title) return;
+    const handleAddEvent = () => {
+        setSelectedEvent(null);
+        setIsModalOpen(true);
+    };
 
-        try {
-            await axios.post('/api/events', {
-                title,
-                date: dateObj,
-                description: "New event",
-                status: "Pending",
-                category: "Other"
-            });
-        } catch (e) {
-            alert("Failed to create event");
-        }
+    const handleEditEvent = (event: EventType) => {
+        setSelectedEvent(event);
+        setIsModalOpen(true);
+    };
+
+    const handleSave = () => {
+        refreshEvents();
     };
 
     return (
@@ -94,12 +94,24 @@ const DayDetails: React.FC = () => {
                             </div>
                         ) : (
                             dayEvents.map(event => (
-                                <EventCard key={event._id} event={event} />
+                                <EventCard
+                                    key={event._id}
+                                    event={event}
+                                    onEdit={() => handleEditEvent(event)}
+                                />
                             ))
                         )}
                     </div>
                 </div>
             )}
+
+            <EventModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSave={handleSave}
+                initialDate={dateObj}
+                eventToEdit={selectedEvent}
+            />
         </div>
     );
 };

@@ -6,9 +6,10 @@ import axios from 'axios';
 
 interface EventCardProps {
     event: EventType;
+    onEdit: () => void;
 }
 
-const EventCard: React.FC<EventCardProps> = ({ event }) => {
+const EventCard: React.FC<EventCardProps> = ({ event, onEdit }) => {
 
     const handleMarkCompleted = async () => {
         try {
@@ -65,7 +66,10 @@ const EventCard: React.FC<EventCardProps> = ({ event }) => {
             </div>
 
             <div className="flex space-x-3 pl-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button className="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-700 py-2 rounded-xl text-sm font-semibold flex items-center justify-center space-x-2 transition-colors">
+                <button
+                    onClick={onEdit}
+                    className="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-700 py-2 rounded-xl text-sm font-semibold flex items-center justify-center space-x-2 transition-colors"
+                >
                     <FaEdit className="text-xs" />
                     <span>Edit</span>
                 </button>
