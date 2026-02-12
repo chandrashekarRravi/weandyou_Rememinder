@@ -144,15 +144,15 @@ const DayCell: React.FC<DayCellProps> = React.memo(({ date, currentMonth, events
                                 </div>
                             )}
                         </div>
-
-                        <div className="p-6 border-t border-gray-100 flex items-center justify-end">
+{/*                         <div className="p-6 border-t border-gray-100 flex items-center justify-end">
                             <button
                                 onClick={() => setSelectedEvent(null)}
                                 className="px-6 py-2.5 rounded-xl text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
                             >
                                 Close
                             </button>
-                        </div>
+                        </div>*/}
+
                     </div>
                 </div>
             )}

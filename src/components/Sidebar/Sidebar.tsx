@@ -13,9 +13,10 @@ const Sidebar: React.FC = () => {
     
     return (
         <aside className="w-64 bg-white border-r border-gray-100 p-6 flex flex-col space-y-6 h-full">
-            <div className="flex items-center space-x-2 px-2">
+            {/*<div className="flex items-center space-x-2 px-2">
                 <span className="font-bold text-xl text-gray-800 tracking-tight">AVAIO</span>
-            </div>
+            </div> */}
+            
 
             <div>
                 <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 px-2">Select Month</h3>
