@@ -5,7 +5,13 @@ import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 
+import fs from 'fs';
+
 dotenv.config({ path: '../.env' });
+
+if (!fs.existsSync('uploads')) {
+    fs.mkdirSync('uploads');
+}
 
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('Connected to MongoDB'))
@@ -23,6 +29,9 @@ const io = new Server(httpServer, {
 app.use(cors());
 app.use(express.json());
 
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
+
 // Make io available in routes
 app.use((req, res, next) => {
     req.io = io;
@@ -31,6 +40,10 @@ app.use((req, res, next) => {
 
 import eventRoutes from './routes/events.js';
 app.use('/api/events', eventRoutes);
+import feedbackRoutes from './routes/feedbacks.js';
+app.use('/api/feedbacks', feedbackRoutes);
+import creativeEntryRoutes from './routes/creativeEntries.js';
+app.use('/api/creative-entries', creativeEntryRoutes);
 
 // Fallback route
 app.get('/', (req, res) => {

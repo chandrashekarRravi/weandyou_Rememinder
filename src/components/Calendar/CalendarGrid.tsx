@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import DayCell from './DayCell';
 import { useEvents } from '../../hooks/useEvents';
-import { isSameDay } from 'date-fns';
+import { useCreativeEntries } from '../../hooks/useCreativeEntries';
+import { isSameDay, parseISO } from 'date-fns';
 import { useCalendarContext } from '../../context/CalendarContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -15,6 +16,21 @@ const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days, filter }) => {
     const { events } = useEvents(currentDate);
+    const { creativeEntries } = useCreativeEntries(currentDate);
+    // Local state to control client dropdown visibility
+    const [clientOpen, setClientOpen] = useState(false);
+    const clientRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        const onDocClick = (ev: MouseEvent) => {
+            if (clientRef.current && !clientRef.current.contains(ev.target as Node)) {
+                setClientOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', onDocClick);
+        return () => document.removeEventListener('mousedown', onDocClick);
+    }, []);
+
     // Use global week index from context so it persists
     const { activeFilter, setActiveFilter, monthLabel } = useCalendarContext();
 
@@ -30,10 +46,41 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days, filter }
             if (!isSameDate) return false;
 
             if (filter === 'All') return true;
+
+            // Status filters
             if (filter === 'Pending' || filter === 'Ongoing' || filter === 'Completed') {
                 return event.status === filter;
             }
+
+            // Client filter (format: "client:Client Name")
+            if (typeof filter === 'string' && filter.startsWith('client:')) {
+                const clientName = filter.replace(/^client:/, '');
+                return (event.clientName?.trim() || 'No Client') === clientName;
+            }
+
+            // Category fallback
             return event.category === filter;
+        });
+    };
+
+    const getCreativeEntriesForDay = (date: Date) => {
+        return creativeEntries.filter(entry => {
+            const entryDateStr = entry.date || entry.createdAt;
+            if (!entryDateStr) return false;
+
+            const isSameDate = isSameDay(parseISO(entryDateStr), date);
+            if (!isSameDate) return false;
+
+            if (filter === 'All') return true;
+
+            // Creative Entries currently only support Category filtering
+            if (['Pending', 'Ongoing', 'Completed'].includes(filter) || filter.startsWith('client:')) {
+                return false;
+            }
+
+            // Category match (default to 'Other' if missing)
+            const cat = entry.category || 'Other';
+            return cat === filter;
         });
     };
 
@@ -57,6 +104,54 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days, filter }
 
             {/* Controls above calendar: Category & Status (moved from Sidebar) */}
             <div className="flex items-center justify-end gap-3 p-3 border-b border-gray-100 bg-white">
+                <div className="flex items-center space-x-2">
+                    <label className="text-xs text-gray-500">Client</label>
+
+                    {/* Searchable client dropdown built from events (shows brand in brackets) */}
+                    <div className="relative" ref={clientRef}>
+                        <input
+                            type="text"
+                            placeholder="Search client or brand"
+                            value={activeFilter.startsWith('client:') ? activeFilter.replace(/^client:/, '') : ''}
+                            onClick={() => setClientOpen(true)}
+                            onFocus={() => setClientOpen(true)}
+                            onChange={(e) => {
+                                const q = e.target.value;
+                                setActiveFilter(q === '' ? 'All' : `client:${q}`);
+                            }}
+                            className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100 text-sm w-64"
+                        />
+
+                        {/* dropdown list — only visible when input is clicked/open */}
+                        {clientOpen && (
+                            <div className="absolute mt-1 w-64 bg-white border border-gray-100 rounded-lg shadow-sm max-h-48 overflow-auto z-20">
+                                <button
+                                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                                    onClick={() => { setActiveFilter('All'); setClientOpen(false); }}
+                                >
+                                    All
+                                </button>
+
+                                {Array.from(new Map(events.map(ev => [
+                                    (ev.clientName?.trim() || 'No Client'),
+                                    { name: ev.clientName?.trim() || 'No Client', brand: ev.clientBrand }
+                                ]))).map(([, c]) => {
+                                    return (
+                                        <button
+                                            key={c.name}
+                                            className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex justify-between items-center"
+                                            onClick={() => { setActiveFilter(`client:${c.name}`); setClientOpen(false); }}
+                                        >
+                                            <span>{c.name}</span>
+                                            {c.brand && <span className="text-xs text-gray-400">({c.brand})</span>}
+                                        </button>
+                                    );
+                                })}
+
+                            </div>
+                        )}
+                    </div>
+                </div>
                 <div className="flex items-center space-x-2">
                     <label className="text-xs text-gray-500">Category</label>
                     <select
@@ -118,6 +213,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days, filter }
                                                 date={day}
                                                 currentMonth={currentDate}
                                                 events={getEventsForDay(day)}
+                                                creativeEntries={getCreativeEntriesForDay(day)}
                                             />
                                         ) : (
                                             <div className="p-2 h-full bg-gray-50" />
@@ -163,7 +259,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days, filter }
                     <FaChevronRight size={14} />
                 </button>
             </div> */}
-            
+
         </div>
     );
 };

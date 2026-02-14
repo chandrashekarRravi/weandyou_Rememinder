@@ -7,7 +7,7 @@ interface HeaderProps {}
 const PAGES = [
      {label:'Dashboard', to :   '/dashboard'},
     { label: 'Reminders', to: '/reminder' },
-    { label: 'Review', to: '/review' }
+   
 ];
 
 const Header: React.FC<HeaderProps> = () => {
