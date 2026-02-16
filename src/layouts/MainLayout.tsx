@@ -5,10 +5,10 @@ import Header from '../components/Calendar/Header';
 import { useCalendarContext } from '../context/CalendarContext';
 
 const MainLayout: React.FC = () => {
-    const {
-        activeFilter,
-        setActiveFilter
-    } = useCalendarContext();
+    // const {
+    //     activeFilter,
+    //     setActiveFilter
+    // } = useCalendarContext();
 
     const location = useLocation();
     const showSidebar = location.pathname === '/reminder' || location.pathname === '/review';
@@ -21,7 +21,7 @@ const MainLayout: React.FC = () => {
             {/* Content Area (Sidebar + Main) */}
             <div className="flex flex-1 overflow-hidden">
                 {/* Conditional Sidebar */}
-                {showSidebar && <Sidebar activeFilter={activeFilter} setActiveFilter={setActiveFilter} />}
+                {showSidebar && <Sidebar />}
 
                 {/* Main Content Area */}
                 <div className="flex-1 flex flex-col min-w-0">

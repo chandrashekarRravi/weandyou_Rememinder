@@ -46,14 +46,56 @@ router.get('/', async (req, res) => {
         let query = {};
 
         if (start && end) {
-            query.date = {
-                $gte: new Date(start),
-                $lte: new Date(end)
-            };
+            query.$or = [
+                { date: { $gte: new Date(start), $lte: new Date(end) } },
+                { createdAt: { $gte: new Date(start), $lte: new Date(end) } }
+            ];
         }
 
         const items = await CreativeEntry.find(query).sort({ createdAt: -1 });
         res.json(items);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Update Creative Entry (Status, Caption, etc.)
+router.put('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updatedEntry = await CreativeEntry.findByIdAndUpdate(id, req.body, { new: true });
+
+        if (!updatedEntry) {
+            return res.status(404).json({ message: 'Creative Entry not found' });
+        }
+
+        if (req.io) {
+            req.io.emit('creativeEntryUpdated', updatedEntry);
+        }
+
+        res.json(updatedEntry);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Delete Creative Entry
+router.delete('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const deletedEntry = await CreativeEntry.findByIdAndDelete(id);
+
+        if (!deletedEntry) {
+            return res.status(404).json({ message: 'Creative Entry not found' });
+        }
+
+        // Optional: Delete file from uploads/ if needed (fs.unlink)
+
+        if (req.io) {
+            req.io.emit('creativeEntryDeleted', id);
+        }
+
+        res.json({ message: 'Creative Entry deleted successfully' });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }

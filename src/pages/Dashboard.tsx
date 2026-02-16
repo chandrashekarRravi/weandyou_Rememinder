@@ -180,7 +180,7 @@ const Dashboard: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Recent Events */}
+                    {/* Recent Events
                     <div className="bg-white rounded-lg shadow overflow-hidden">
                         <div className="px-6 py-4 border-b">
                             <h3 className="text-lg font-medium">Recent Events</h3>
@@ -207,6 +207,8 @@ const Dashboard: React.FC = () => {
                             )}
                         </ul>
                     </div>
+                    */}
+
 
                     {/* Feedback Modal */}
                     {showFeedbackModal && (

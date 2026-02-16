@@ -19,8 +19,14 @@ const creativeEntrySchema = new mongoose.Schema({
         enum: ['Special Day', 'Engagement', 'Ideation', 'Other'],
         default: 'Other'
     },
+    status: {
+        type: String,
+        enum: ['Pending', 'Approved', 'Rejected'], // Aligned with Event statuses
+        default: 'Pending'
+    },
     date: { type: Date, required: true, default: Date.now, index: true },
     username: String,
+    clientName: String, // Added Client Name
     createdAt: { type: Date, default: Date.now, index: true } // Index for date-range queries
 });
 

@@ -4,16 +4,18 @@ import type { EventType } from '../../hooks/useEvents';
 import type { CreativeEntryType } from '../../hooks/useCreativeEntries';
 import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
-import { FaTimes, FaImage, FaVideo } from 'react-icons/fa';
+import { FaTimes, FaImage, FaVideo, FaTrash } from 'react-icons/fa';
 
 interface DayCellProps {
     date: Date;
     currentMonth: Date;
     events: EventType[];
     creativeEntries?: CreativeEntryType[];
+    onUpdateCreativeEntry: (id: string, updates: Partial<CreativeEntryType>) => Promise<void>;
+    onDeleteCreativeEntry: (id: string) => Promise<void>;
 }
 
-const DayCell: React.FC<DayCellProps> = React.memo(({ date, currentMonth, events, creativeEntries = [] }) => {
+const DayCell: React.FC<DayCellProps> = React.memo(({ date, currentMonth, events, creativeEntries = [], onUpdateCreativeEntry, onDeleteCreativeEntry }) => {
     const navigate = useNavigate();
     const isCurrentMonth = isSameMonth(date, currentMonth);
     const isDayToday = isToday(date);
@@ -44,7 +46,7 @@ const DayCell: React.FC<DayCellProps> = React.memo(({ date, currentMonth, events
             <div
                 onClick={handleClick}
                 className={clsx(
-                    "min-height-[120px] p-2 border-b border-r border-gray-100 transition-colors cursor-pointer hover:bg-gray-50",
+                    "h-32 min-h-32 p-2 border-b border-r border-gray-100 transition-colors cursor-pointer hover:bg-gray-50 flex flex-col",
                     !isCurrentMonth && "bg-gray-50/50 text-gray-400",
                     isCurrentMonth && "bg-white",
                 )}
@@ -88,7 +90,13 @@ const DayCell: React.FC<DayCellProps> = React.memo(({ date, currentMonth, events
                                 <div
                                     key={entry._id}
                                     onClick={(e) => handleEventClick(e, entry)}
-                                    className="text-[10px] px-1.5 py-0.5 rounded-md truncate font-medium border-l-2 shadow-sm cursor-pointer hover:opacity-80 bg-purple-50 text-purple-700 border-purple-400 flex items-center gap-1"
+                                    className={clsx(
+                                        "text-[10px] px-1.5 py-0.5 rounded-md truncate font-medium border-l-2 shadow-sm cursor-pointer hover:opacity-80 flex items-center gap-1",
+                                        (entry.category === 'Special Day') && "bg-orange-50 text-orange-700 border-orange-400",
+                                        (entry.category === 'Engagement') && "bg-stone-100 text-stone-600 border-stone-400",
+                                        (entry.category === 'Ideation') && "bg-green-50 text-green-700 border-green-400",
+                                        (entry.category === 'Other' || !entry.category) && "bg-blue-50 text-blue-700 border-blue-400",
+                                    )}
                                 >
                                     {entry.mediaId.startsWith('img') ? <FaImage size={8} /> : <FaVideo size={8} />}
                                     {entry.caption || entry.mediaId}
@@ -104,10 +112,9 @@ const DayCell: React.FC<DayCellProps> = React.memo(({ date, currentMonth, events
                 </div>
             </div>
 
-            {/* Event Detail Modal */}
             {selectedEvent && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm">
-                    <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl flex flex-col">
+                    <div className="bg-white rounded-3xl w-full max-w-4xl shadow-2xl flex flex-col max-h-[90vh]">
                         <div className="flex items-center justify-between p-6 border-b border-gray-100">
                             {/* Title based on type */}
                             <h2 className="text-xl font-bold text-gray-800">
@@ -121,7 +128,7 @@ const DayCell: React.FC<DayCellProps> = React.memo(({ date, currentMonth, events
                             </button>
                         </div>
 
-                        <div className="p-6 space-y-4 overflow-y-auto max-h-96">
+                        <div className="p-6 space-y-4 overflow-y-auto flex-1 h-full min-h-[400px]">
                             {'title' in selectedEvent ? (
                                 // Event Details
                                 <>
@@ -173,29 +180,111 @@ const DayCell: React.FC<DayCellProps> = React.memo(({ date, currentMonth, events
                             ) : (
                                 // Creative Entry Details
                                 <>
-                                    <div>
-                                        <label className="text-xs font-semibold text-gray-400 uppercase">Media ID</label>
-                                        <p className="text-gray-800 font-mono">{selectedEvent.mediaId}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-semibold text-gray-400 uppercase">Uploaded By</label>
-                                        <p className="text-gray-800">{selectedEvent.username}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-semibold text-gray-400 uppercase">Submitted At</label>
-                                        <p className="text-gray-800">{new Date(selectedEvent.createdAt).toLocaleString()}</p>
-                                    </div>
-                                    <div>
-                                        <label className="text-xs font-semibold text-gray-400 uppercase">Caption</label>
-                                        <p className="text-gray-700 italic">"{selectedEvent.caption}"</p>
-                                    </div>
-                                    <div className="mt-4">
-                                        <label className="text-xs font-semibold text-gray-400 uppercase mb-2 block">Preview</label>
-                                        {selectedEvent.mediaId.startsWith('vid') || selectedEvent.filePath.match(/\.(mp4|webm|ogg)$/i) ? (
-                                            <video src={selectedEvent.filePath} controls className="w-full rounded-lg bg-black" />
-                                        ) : (
-                                            <img src={selectedEvent.filePath} alt="Preview" className="w-full rounded-lg bg-gray-50 object-contain" />
-                                        )}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {/* Left Column: Media & Caption */}
+                                        <div className="space-y-4">
+                                            <div className="border-2 border-dashed border-gray-300 rounded-xl p-2 flex flex-col items-center justify-center bg-black/5 relative aspect-square w-full font-mono overflow-hidden">
+                                                {selectedEvent.mediaId.startsWith('vid') || selectedEvent.filePath.match(/\.(mp4|webm|ogg)$/i) ? (
+                                                    <video src={selectedEvent.filePath} controls className="max-h-full max-w-full rounded-lg" />
+                                                ) : (
+                                                    <img src={selectedEvent.filePath} alt="Preview" className="max-h-full max-w-full rounded-lg object-contain" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <label className="text-xs font-semibold text-gray-400 uppercase">Caption</label>
+                                                <p className="text-gray-700 italic border-l-2 border-gray-200 pl-3 py-1">"{selectedEvent.caption}"</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Right Column: Details & Actions */}
+                                        <div className="space-y-4">
+                                            <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 space-y-3">
+                                                <h3 className="text-sm font-bold text-indigo-800 uppercase tracking-wider mb-2">Entry Details</h3>
+
+                                                <div className="flex justify-between items-center">
+                                                    <label className="text-xs font-semibold text-gray-400 uppercase">Status</label>
+                                                    <div className="flex items-center gap-2">
+                                                        <select
+                                                            value={selectedEvent.status || 'Pending'}
+                                                            onChange={(e) => {
+                                                                const newStatus = e.target.value as any;
+                                                                setSelectedEvent({ ...selectedEvent, status: newStatus });
+                                                            }}
+                                                            className={clsx(
+                                                                "px-2 py-1 rounded-md text-xs font-semibold border cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500",
+                                                                selectedEvent.status === 'Approved' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                                                                    selectedEvent.status === 'Rejected' ? 'bg-red-100 text-red-700 border-red-200' :
+                                                                        'bg-yellow-100 text-yellow-700 border-yellow-200'
+                                                            )}
+                                                        >
+                                                            <option value="Pending">Pending</option>
+                                                            <option value="Approved">Approved</option>
+                                                            <option value="Rejected">Rejected</option>
+                                                        </select>
+                                                        <button
+                                                            onClick={async () => {
+                                                                await onUpdateCreativeEntry(selectedEvent._id, { status: selectedEvent.status });
+                                                                alert('Status Saved!');
+                                                            }}
+                                                            className="text-indigo-600 hover:text-indigo-800 text-xs font-bold underline"
+                                                        >
+                                                            Save
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <label className="text-xs font-semibold text-gray-400 uppercase">Media ID</label>
+                                                    <p className="text-gray-800 font-mono text-sm">{selectedEvent.mediaId}</p>
+                                                </div>
+
+                                                {selectedEvent.clientName && (
+                                                    <div>
+                                                        <label className="text-xs font-semibold text-gray-400 uppercase">Client</label>
+                                                        <p className="text-gray-800 font-medium">{selectedEvent.clientName}</p>
+                                                    </div>
+                                                )}
+
+                                                <div>
+                                                    <label className="text-xs font-semibold text-gray-400 uppercase">Category</label>
+                                                    <span className={clsx(
+                                                        "px-2 py-0.5 rounded text-[10px] font-medium border",
+                                                        (selectedEvent.category === 'Special Day') && "bg-orange-50 text-orange-700 border-orange-200",
+                                                        (selectedEvent.category === 'Engagement') && "bg-stone-50 text-stone-600 border-stone-200",
+                                                        (selectedEvent.category === 'Ideation') && "bg-green-50 text-green-700 border-green-200",
+                                                        (selectedEvent.category === 'Other' || !selectedEvent.category) && "bg-blue-50 text-blue-700 border-blue-200",
+                                                    )}>
+                                                        {selectedEvent.category || 'Other'}
+                                                    </span>
+                                                </div>
+
+                                                <div>
+                                                    <label className="text-xs font-semibold text-gray-400 uppercase">Posted Date</label>
+                                                    <p className="text-gray-800">{format(new Date(selectedEvent.date), 'MMM d, yyyy')}</p>
+                                                </div>
+
+                                                <div className="pt-2 border-t border-indigo-100">
+                                                    <label className="text-[10px] font-semibold text-gray-400 uppercase">Uploaded By</label>
+                                                    <div className="flex justify-between items-center">
+                                                        <p className="text-xs text-gray-600">{selectedEvent.username}</p>
+                                                        <p className="text-[10px] text-gray-400">{new Date(selectedEvent.createdAt).toLocaleDateString()}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={async () => {
+                                                    if (window.confirm('Are you sure you want to delete this Creative Entry?')) {
+                                                        await onDeleteCreativeEntry(selectedEvent._id);
+                                                        setSelectedEvent(null);
+                                                    }
+                                                }}
+                                                className="w-full py-2 bg-white border border-red-200 hover:bg-red-50 text-red-600 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm"
+                                            >
+                                                <FaTrash className="text-xs" />
+                                                Delete Entry
+                                            </button>
+                                        </div>
                                     </div>
                                 </>
                             )}

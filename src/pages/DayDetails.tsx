@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useEvents, type EventType } from '../hooks/useEvents';
 import EventCard from '../components/Event/EventCard';
 import EventModal from '../components/Event/EventModal';
-import { useCreativeEntries, type CreativeEntryType } from '../hooks/useCreativeEntries.ts';
+import { useCreativeEntries } from '../hooks/useCreativeEntries.ts';
 import { FaArrowLeft, FaPlus, FaImage, FaVideo } from 'react-icons/fa';
 import { format, parseISO, isSameDay } from 'date-fns';
 import { useCalendarContext } from '../context/CalendarContext';
@@ -77,7 +77,22 @@ const DayDetails: React.FC = () => {
         });
 
         // Convert to sorted array [clientName, events[]]
-        return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+        const entries = Array.from(map.entries());
+
+        // Sort events within each client: Pending first
+        entries.forEach(([, events]) => {
+            events.sort((a, b) => {
+                if (a.status === 'Pending' && b.status !== 'Pending') return -1;
+                if (a.status !== 'Pending' && b.status === 'Pending') return 1;
+                return 0;
+            });
+        });
+
+        return entries.sort((a, b) => {
+            // Optional: Sort clients with Pending events first?
+            // For now, keep alphabetical client sort as primary, but events inside are sorted.
+            return a[0].localeCompare(b[0]);
+        });
     }, [dayEvents]);
 
     const displayFilterLabel = React.useMemo(() => {

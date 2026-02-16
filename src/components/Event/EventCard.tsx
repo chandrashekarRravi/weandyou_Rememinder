@@ -1,6 +1,6 @@
 import React from 'react';
 import type { EventType } from '../../hooks/useEvents';
-import { FaClock, FaUser, FaTag, FaEdit, FaCheck } from 'react-icons/fa';
+import { FaClock, FaUser, FaTag, FaEdit, FaTrash } from 'react-icons/fa';
 import clsx from 'clsx';
 import axios from 'axios';
 
@@ -11,12 +11,34 @@ interface EventCardProps {
 
 const EventCard: React.FC<EventCardProps> = ({ event, onEdit }) => {
 
-    const handleMarkCompleted = async () => {
+    const handleStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newStatus = e.target.value;
         try {
-            await axios.put(`/api/events/${event._id}`, { status: 'Completed' });
+            await axios.put(`/api/events/${event._id}`, { status: newStatus });
             // Socket will handle the update propagation
         } catch (err) {
             console.error('Failed to update status', err);
+            alert('Failed to update status');
+        }
+    };
+
+    const handleDelete = async () => {
+        if (window.confirm('Are you sure you want to delete this event?')) {
+            try {
+                await axios.delete(`/api/events/${event._id}`);
+                // Socket will handle the removal
+            } catch (err) {
+                console.error('Failed to delete event', err);
+                alert('Failed to delete event');
+            }
+        }
+    };
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'Completed': return 'bg-green-100 text-green-700 border-green-200';
+            case 'Ongoing': return 'bg-blue-100 text-blue-700 border-blue-200';
+            default: return 'bg-yellow-100 text-yellow-700 border-yellow-200'; // Pending/Review
         }
     };
 
@@ -26,7 +48,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEdit }) => {
             <div className={clsx(
                 "absolute left-0 top-0 bottom-0 w-1.5",
                 event.status === 'Completed' ? "bg-green-500" :
-                    event.status === 'Ongoing' ? "bg-blue-500" : "bg-gray-300"
+                    event.status === 'Ongoing' ? "bg-blue-500" : "bg-yellow-500"
             )} />
 
             <div className="flex justify-between items-start mb-4 pl-2">
@@ -38,14 +60,23 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEdit }) => {
                     </div>
                     <h3 className="text-lg font-bold text-gray-800 leading-tight">{event.title}</h3>
                 </div>
-                <span className={clsx(
-                    "px-2.5 py-1 rounded-lg text-xs font-semibold",
-                    event.status === 'Completed' ? "bg-green-100 text-green-700" :
-                        event.status === 'Ongoing' ? "bg-blue-100 text-blue-700" :
-                            "bg-gray-100 text-gray-600"
-                )}>
-                    {event.status}
-                </span>
+
+                {/* Status Dropdown */}
+                <div className="relative">
+                    <select
+                        value={event.status}
+                        onChange={handleStatusChange}
+                        className={clsx(
+                            "appearance-none px-3 py-1 rounded-lg text-xs font-semibold border cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors",
+                            getStatusColor(event.status)
+                        )}
+                        style={{ paddingRight: '1rem', textAlignLast: 'center' }}
+                    >
+                        <option value="Pending">Review</option>
+                        <option value="Ongoing">Approved</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
             </div>
 
             <p className="text-gray-600 text-sm mb-6 pl-2 leading-relaxed">
@@ -65,7 +96,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEdit }) => {
                 </div>
             </div>
 
-            <div className="flex space-x-3 pl-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex space-x-3 pl-2 transition-opacity">
                 <button
                     onClick={onEdit}
                     className="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-700 py-2 rounded-xl text-sm font-semibold flex items-center justify-center space-x-2 transition-colors"
@@ -73,15 +104,13 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEdit }) => {
                     <FaEdit className="text-xs" />
                     <span>Edit</span>
                 </button>
-                {event.status !== 'Completed' && (
-                    <button
-                        onClick={handleMarkCompleted}
-                        className="flex-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 py-2 rounded-xl text-sm font-semibold flex items-center justify-center space-x-2 transition-colors"
-                    >
-                        <FaCheck className="text-xs" />
-                        <span>Complete</span>
-                    </button>
-                )}
+                <button
+                    onClick={handleDelete}
+                    className="flex-1 bg-red-50 hover:bg-red-100 text-red-600 py-2 rounded-xl text-sm font-semibold flex items-center justify-center space-x-2 transition-colors"
+                >
+                    <FaTrash className="text-xs" />
+                    <span>Delete</span>
+                </button>
             </div>
         </div>
     );

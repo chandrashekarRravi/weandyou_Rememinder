@@ -16,7 +16,7 @@ const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days, filter }) => {
     const { events } = useEvents(currentDate);
-    const { creativeEntries } = useCreativeEntries(currentDate);
+    const { creativeEntries, updateEntry, deleteEntry } = useCreativeEntries(currentDate);
     // Local state to control client dropdown visibility
     const [clientOpen, setClientOpen] = useState(false);
     const clientRef = useRef<HTMLDivElement | null>(null);
@@ -74,9 +74,16 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days, filter }
             if (filter === 'All') return true;
 
             // Creative Entries currently only support Category filtering
-            if (['Pending', 'Ongoing', 'Completed'].includes(filter) || filter.startsWith('client:')) {
-                return false;
-            }
+            // if (['Pending', 'Ongoing', 'Completed'].includes(filter) || filter.startsWith('client:')) {
+            //     return false;
+            // }
+
+            // Status Filtering for Creative Entries
+            if (filter === 'Pending') return entry.status === 'Pending'; // 'Pending' -> 'Pending' (Review)
+            if (filter === 'Ongoing') return entry.status === 'Approved'; // 'Ongoing' -> 'Approved'
+            if (filter === 'Completed') return false; // Creative Entries don't have 'Completed' status
+
+            if (filter.startsWith('client:')) return false; // No client for Creative Entries
 
             // Category match (default to 'Other' if missing)
             const cat = entry.category || 'Other';
@@ -103,33 +110,32 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days, filter }
             </div>
 
             {/* Controls above calendar: Category & Status (moved from Sidebar) */}
-            <div className="flex items-center justify-end gap-3 p-3 border-b border-gray-100 bg-white">
+            <div className="flex items-center justify-between gap-3 p-3 border-b border-gray-100 bg-white">
                 <div className="flex items-center space-x-2">
                     <label className="text-xs text-gray-500">Client</label>
 
-                    {/* Searchable client dropdown built from events (shows brand in brackets) */}
+                    {/* Client Dropdown */}
                     <div className="relative" ref={clientRef}>
-                        <input
-                            type="text"
-                            placeholder="Search client or brand"
-                            value={activeFilter.startsWith('client:') ? activeFilter.replace(/^client:/, '') : ''}
-                            onClick={() => setClientOpen(true)}
-                            onFocus={() => setClientOpen(true)}
-                            onChange={(e) => {
-                                const q = e.target.value;
-                                setActiveFilter(q === '' ? 'All' : `client:${q}`);
-                            }}
-                            className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100 text-sm w-64"
-                        />
+                        <button
+                            onClick={() => setClientOpen(!clientOpen)}
+                            className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100 text-sm w-64 flex justify-between items-center text-gray-700"
+                        >
+                            <span className="truncate">
+                                {activeFilter.startsWith('client:') ? activeFilter.replace(/^client:/, '') : 'All Clients'}
+                            </span>
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
 
-                        {/* dropdown list — only visible when input is clicked/open */}
+                        {/* dropdown list */}
                         {clientOpen && (
-                            <div className="absolute mt-1 w-64 bg-white border border-gray-100 rounded-lg shadow-sm max-h-48 overflow-auto z-20">
+                            <div className="absolute mt-1 w-64 bg-white border border-gray-100 rounded-lg shadow-lg max-h-[200px] overflow-y-auto z-20">
                                 <button
-                                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 transition-colors"
                                     onClick={() => { setActiveFilter('All'); setClientOpen(false); }}
                                 >
-                                    All
+                                    All Clients
                                 </button>
 
                                 {Array.from(new Map(events.map(ev => [
@@ -139,46 +145,48 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days, filter }
                                     return (
                                         <button
                                             key={c.name}
-                                            className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex justify-between items-center"
+                                            className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex justify-between items-center transition-colors border-t border-gray-50"
                                             onClick={() => { setActiveFilter(`client:${c.name}`); setClientOpen(false); }}
                                         >
-                                            <span>{c.name}</span>
-                                            {c.brand && <span className="text-xs text-gray-400">({c.brand})</span>}
+                                            <span className="truncate font-medium text-gray-700">{c.name}</span>
+                                            {c.brand && <span className="text-xs text-gray-400 ml-2 truncate max-w-[80px]">({c.brand})</span>}
                                         </button>
                                     );
                                 })}
-
                             </div>
                         )}
                     </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                    <label className="text-xs text-gray-500">Category</label>
-                    <select
-                        value={['Special Day', 'Engagement', 'Ideation', 'Other'].includes(activeFilter) ? activeFilter : 'All'}
-                        onChange={(e) => setActiveFilter(e.target.value)}
-                        className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100 text-sm"
-                    >
-                        <option value="All">All</option>
-                        <option value="Special Day">Special Day</option>
-                        <option value="Engagement">Engagement</option>
-                        <option value="Ideation">Ideation</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
 
-                <div className="flex items-center space-x-2">
-                    <label className="text-xs text-gray-500">Status</label>
-                    <select
-                        value={['Pending', 'Ongoing', 'Completed'].includes(activeFilter) ? activeFilter : 'All'}
-                        onChange={(e) => setActiveFilter(e.target.value)}
-                        className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100 text-sm"
-                    >
-                        <option value="All">All</option>
-                        <option value="Pending">Review</option>
-                        <option value="Ongoing">Approved</option>
-                        <option value="Completed">Completed</option>
-                    </select>
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center space-x-2">
+                        <label className="text-xs text-gray-500">Category</label>
+                        <select
+                            value={['Special Day', 'Engagement', 'Ideation', 'Other'].includes(activeFilter) ? activeFilter : 'All'}
+                            onChange={(e) => setActiveFilter(e.target.value)}
+                            className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100 text-sm"
+                        >
+                            <option value="All">All</option>
+                            <option value="Special Day">Special Day</option>
+                            <option value="Engagement">Engagement</option>
+                            <option value="Ideation">Ideation</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                        <label className="text-xs text-gray-500">Status</label>
+                        <select
+                            value={['Pending', 'Ongoing', 'Completed'].includes(activeFilter) ? activeFilter : 'All'}
+                            onChange={(e) => setActiveFilter(e.target.value)}
+                            className="px-3 py-2 bg-gray-50 rounded-lg border border-gray-100 text-sm"
+                        >
+                            <option value="All">All</option>
+                            <option value="Pending">Review</option>
+                            <option value="Ongoing">Approved</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
                 </div>
             </div>
             {/* Transposed month grid: left column = weekday labels, top row = week numbers */}
@@ -186,16 +194,16 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days, filter }
                 <div
                     className="inline-grid w-full"
                     style={{ gridTemplateColumns: `120px repeat(${weeks.length}, minmax(0, 1fr))` }}
-                >
-                    {/* Top-left header */}
+                >{/* Top-left header 
                     <div className="p-2 border-b border-r border-gray-100 bg-gray-50/50 flex items-center justify-center font-bold text-sm">WEEK</div>
 
-                    {/* Week number headers */}
+                    Week number headers 
                     {weeks.map((_, widx) => (
                         <div key={widx} className="p-2 border-b border-r border-gray-100 bg-gray-50/50 text-center text-sm font-semibold">
                             {widx + 1}
                         </div>
                     ))}
+ */}
 
                     {/* Weekday rows */}
                     {WEEKDAYS.map((wd, dayIdx) => (
@@ -214,6 +222,8 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days, filter }
                                                 currentMonth={currentDate}
                                                 events={getEventsForDay(day)}
                                                 creativeEntries={getCreativeEntriesForDay(day)}
+                                                onUpdateCreativeEntry={updateEntry}
+                                                onDeleteCreativeEntry={deleteEntry}
                                             />
                                         ) : (
                                             <div className="p-2 h-full bg-gray-50" />

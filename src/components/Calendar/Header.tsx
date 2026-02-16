@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { FaUserCircle, FaCalendarAlt } from 'react-icons/fa';
+import { FaUserCircle } from 'react-icons/fa';
 
-interface HeaderProps {}
+interface HeaderProps { }
 
 const PAGES = [
-     {label:'Dashboard', to :   '/dashboard'},
+    { label: 'Dashboard', to: '/dashboard' },
     { label: 'Reminders', to: '/reminder' },
-   
+
 ];
 
 const Header: React.FC<HeaderProps> = () => {
@@ -34,46 +34,47 @@ const Header: React.FC<HeaderProps> = () => {
     };
 
     return (
-        <header className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-100 shadow-sm sticky top-0 z-10">
-            <div className="flex items-center space-x-6">
-                {/* Logo */}
-                <div className="flex items-center space-x-2">
-                    <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center shadow-md">
-                        <FaCalendarAlt className="text-white text-lg" />
-                    </div>
-                    <span className="text-lg font-bold text-gray-800 tracking-tight">AVAIO</span>
-                </div>
+        <header className="flex items-center justify-between px-12 py-4 bg-white border-b border-gray-100 shadow-sm sticky top-0 z-10 relative">
 
-                <nav className="flex items-center space-x-4">
-                    {PAGES.map(p => (
-                        <NavLink
-                            key={p.to}
-                            to={p.to}
-                            className={({ isActive }) => isActive ? 'text-indigo-600 font-semibold' : 'text-gray-600 hover:text-indigo-600'}
-                        >
-                            {p.label}
-                        </NavLink>
-                    ))}
-                </nav>
+            {/* Left: Logo */}
+            <div className="flex items-center">
+                <img src="/AVAIO.png" alt="AVAIO" className="h-16 w-auto object-contain" />
             </div>
 
-            <div className="flex items-center space-x-4">
-                <div className="hidden sm:block text-sm text-gray-600">Signed in as <span className="font-medium text-gray-800">{username}</span></div>
+            {/* Center: Navigation */}
+            <nav className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex items-center space-x-8">
+                {PAGES.map(p => (
+                    <NavLink
+                        key={p.to}
+                        to={p.to}
+                        className={({ isActive }) => isActive
+                            ? 'text-indigo-600 font-bold text-base border-b-2 border-indigo-600 pb-0.5'
+                            : 'text-gray-500 hover:text-indigo-600 font-medium text-base transition-colors pb-0.5 border-b-2 border-transparent hover:border-indigo-100'}
+                    >
+                        {p.label}
+                    </NavLink>
+                ))}
+            </nav>
 
+            {/* Right: User Profile */}
+            <div className="flex items-center space-x-4">
                 <div className="relative" ref={ref}>
                     <button
                         onClick={() => setOpen(v => !v)}
-                        className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:shadow"
+                        className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:shadow hover:bg-gray-200 transition-all"
                         aria-label="User menu"
                     >
-                        <FaUserCircle size={20} />
+                        <FaUserCircle size={24} />
                     </button>
 
                     {open && (
-                        <div className="absolute right-0 mt-2 w-44 bg-white rounded-lg shadow-lg border border-gray-100 p-2 z-20">
-                            <div className="px-3 py-2 text-sm text-gray-700 font-medium">{username}</div>
-                            <div className="border-t border-gray-100 my-1" />
-                            <button onClick={handleLogout} className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-gray-50 rounded">Logout</button>
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 p-2 z-20 animate-fade-in-down">
+                            <div className="px-4 py-2 text-sm text-gray-700 font-medium border-b border-gray-50 mb-1">
+                                {username}
+                            </div>
+                            <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium">
+                                Sign Out
+                            </button>
                         </div>
                     )}
                 </div>
