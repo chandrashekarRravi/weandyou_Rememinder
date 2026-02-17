@@ -4,21 +4,20 @@ import { useCalendarContext } from '../context/CalendarContext.tsx';
 import { useEvents } from '../hooks/useEvents.ts';
 
 const Dashboard: React.FC = () => {
-    const { currentDate, daysRequired, activeFilter } = useCalendarContext();
+    const { currentDate, daysRequired } = useCalendarContext();
     const { events, loading } = useEvents(currentDate);
 
     const itemsWithReview = React.useMemo(() => events.filter(e => (e.review && e.review.trim() !== '')), [events]);
     const itemsWithCaptions = React.useMemo(() => events.filter(e => (e.captions && e.captions.trim() !== '')), [events]);
 
-    
+
     return (
         <div className="space-y-8">
             <CalendarGrid
                 currentDate={currentDate}
                 days={daysRequired}
-                filter={activeFilter}
             />
-{/* 
+            {/* 
 <section className="max-w-4xl mx-auto">
                 <div className="bg-white/50 backdrop-blur-sm p-4 rounded-2xl border border-gray-100/50 mb-4">
                     <h3 className="text-lg font-bold text-gray-800">Reviews & Captions</h3>
@@ -70,7 +69,7 @@ const Dashboard: React.FC = () => {
                 )}
             </section>
 */}
-            
+
         </div>
     );
 };

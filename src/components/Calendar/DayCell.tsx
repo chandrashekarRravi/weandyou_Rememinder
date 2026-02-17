@@ -198,7 +198,7 @@ const DayCell: React.FC<DayCellProps> = React.memo(({ date, currentMonth, events
 
                                         {/* Right Column: Details & Actions */}
                                         <div className="space-y-4">
-                                            <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 space-y-3">
+                                            <div className=" p-4 rounded-xl border border-gray-100 space-y-3">
                                                 <h3 className="text-sm font-bold text-indigo-800 uppercase tracking-wider mb-2">Entry Details</h3>
 
                                                 <div className="flex justify-between items-center">

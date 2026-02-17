@@ -100,7 +100,8 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
                 <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                     <div>
                         <h2 className="text-xl font-bold text-gray-800">New Creative Entry</h2>
-                        <p className="text-xs text-gray-500 mt-1">Logged in as: <span className="font-semibold">{username}</span> • {timestamp}</p>
+                        {/*<p className="text-xs text-gray-500 mt-1">Logged in as: <span className="font-semibold">{username}</span> • {timestamp}</p>
+                     */}
                     </div>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
                         <FaTimes />
@@ -170,8 +171,8 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
 
                     {/* Right Column: Details & Reminders */}
                     <div className="space-y-4">
-                        <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
-                            <h3 className="text-sm font-bold text-indigo-800 mb-3 uppercase tracking-wider">Entry Details</h3>
+                        <div className=" p-4 rounded-xl border border-gray-100">
+                            <h3 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Entry Details</h3>
 
                             <div className="space-y-4">
                                 <div>
@@ -205,7 +206,7 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
                                         <option value="Special Day">Special Day</option>
                                         <option value="Engagement">Engagement</option>
                                         <option value="Ideation">Ideation</option>
-                                        <option value="Other">Other</option>
+                                        <option value="Other">Select</option>
                                     </select>
                                 </div>
                             </div>

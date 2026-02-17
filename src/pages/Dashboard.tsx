@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useEvents } from '../hooks/useEvents';
 import { useCalendarContext } from '../context/CalendarContext';
-import CreativeEntryModal from '../components/CreativeEntryModal';
 
 const Dashboard: React.FC = () => {
     const { currentDate } = useCalendarContext();
@@ -23,9 +22,6 @@ const Dashboard: React.FC = () => {
     const [deleted, setDeleted] = useState(false);
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
     const [feedbackText, setFeedbackText] = useState('');
-
-    // --- New Creative Entry Modal State ---
-    const [isCreativeModalOpen, setIsCreativeModalOpen] = useState(false);
 
     useEffect(() => {
         if (!imageFile) {
@@ -117,21 +113,7 @@ const Dashboard: React.FC = () => {
         <div className="max-w-4xl mx-auto space-y-6">
             <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-semibold">Dashboard</h2>
-                <button
-                    onClick={() => setIsCreativeModalOpen(true)}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
-                >
-                    New +
-                </button>
             </div>
-
-            <CreativeEntryModal
-                isOpen={isCreativeModalOpen}
-                onClose={() => setIsCreativeModalOpen(false)}
-                onSuccess={() => {
-                    // Optional: refresh logic
-                }}
-            />
 
             {loading ? (
                 <div className="text-gray-400">Loading...</div>

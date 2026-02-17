@@ -30,42 +30,48 @@ const DayDetails: React.FC = () => {
         // 1. Filter by day
         if (!isSameDay(parseISO(e.date), dateObj)) return false;
 
-        // 2. Apply Sidebar / Calendar filter
-        if (activeFilter === 'All') return true;
-
-        // Status filters
-        if (activeFilter === 'Pending' || activeFilter === 'Ongoing' || activeFilter === 'Completed') {
-            return e.status === activeFilter;
+        // 2. Client Filter
+        if (activeFilter.client !== 'All') {
+            const evtClient = e.clientName?.trim() || 'No Client';
+            if (evtClient !== activeFilter.client) return false;
         }
 
-        // Client filter (format: "client:Client Name")
-        if (typeof activeFilter === 'string' && activeFilter.startsWith('client:')) {
-            const clientName = activeFilter.replace(/^client:/, '');
-            return (e.clientName?.trim() || 'No Client') === clientName;
+        // 3. Category Filter
+        if (activeFilter.category !== 'All') {
+            if (e.category !== activeFilter.category) return false;
         }
 
-        // Category fallback
-        return e.category === activeFilter;
+        // 4. Status Filter
+        if (activeFilter.status !== 'All') {
+            if (e.status !== activeFilter.status) return false;
+        }
+
+        return true;
     });
 
     const dayCreativeEntries = creativeEntries.filter(e => {
-        // 1. Filter by day (using Posting Date 'date' or fallback to createdAt)
+        // 1. Filter by day
         const dateStr = e.date || e.createdAt;
         if (!dateStr) return false;
-
         if (!isSameDay(parseISO(dateStr), dateObj)) return false;
 
-        // 2. Filter logic
-        if (activeFilter === 'All') return true;
+        // 2. Client Filter (exclude creative entries if specific client selected)
+        if (activeFilter.client !== 'All') return false;
 
-        // Hide on Status/Client filters
-        if (['Pending', 'Ongoing', 'Completed'].includes(activeFilter) || activeFilter.startsWith('client:')) {
-            return false;
+        // 3. Category Filter
+        if (activeFilter.category !== 'All') {
+            const cat = e.category || 'Other';
+            if (cat !== activeFilter.category) return false;
         }
 
-        // Category match
-        const cat = e.category || 'Other';
-        return cat === activeFilter;
+        // 4. Status Filter
+        if (activeFilter.status !== 'All') {
+            if (activeFilter.status === 'Pending' && e.status !== 'Pending') return false;
+            if (activeFilter.status === 'Ongoing' && e.status !== 'Approved') return false;
+            if (activeFilter.status === 'Completed') return false;
+        }
+
+        return true;
     });
 
     const groupedByClient = React.useMemo(() => {
@@ -89,21 +95,18 @@ const DayDetails: React.FC = () => {
         });
 
         return entries.sort((a, b) => {
-            // Optional: Sort clients with Pending events first?
-            // For now, keep alphabetical client sort as primary, but events inside are sorted.
             return a[0].localeCompare(b[0]);
         });
     }, [dayEvents]);
 
     const displayFilterLabel = React.useMemo(() => {
-        if (activeFilter === 'All') return 'All';
-        if (typeof activeFilter === 'string' && activeFilter.startsWith('client:')) {
-            const clientName = activeFilter.replace(/^client:/, '');
-            const ev = events.find(e => (e.clientName?.trim() || 'No Client') === clientName);
-            return ev ? `${clientName}${ev.clientBrand ? ` (${ev.clientBrand})` : ''}` : clientName;
-        }
-        return activeFilter;
-    }, [activeFilter, events]);
+        const parts = [];
+        if (activeFilter.client !== 'All') parts.push(activeFilter.client);
+        if (activeFilter.category !== 'All') parts.push(activeFilter.category);
+        if (activeFilter.status !== 'All') parts.push(activeFilter.status);
+
+        return parts.length > 0 ? parts.join(' • ') : 'All';
+    }, [activeFilter]);
 
     const handleAddEvent = () => {
         setSelectedEvent(null);
@@ -158,7 +161,7 @@ const DayDetails: React.FC = () => {
                     <div className="grid gap-4 pb-10">
                         {dayEvents.length === 0 && dayCreativeEntries.length === 0 ? (
                             <div className="text-center py-20 bg-white rounded-3xl border border-gray-100 border-dashed">
-                                <p className="text-gray-400 font-medium">No items found for {activeFilter}.</p>
+                                <p className="text-gray-400 font-medium">No items found for {displayFilterLabel}.</p>
                                 <button onClick={handleAddEvent} className="mt-4 text-indigo-600 font-semibold text-sm hover:underline">
                                     Create one?
                                 </button>

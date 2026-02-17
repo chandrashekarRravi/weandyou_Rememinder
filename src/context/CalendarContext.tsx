@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useState, type ReactNode } from 'react';
 import { useCalendar as useCalendarHook } from '../hooks/useCalendar';
 
+export interface FilterState {
+    client: string;
+    category: string;
+    status: string;
+}
+
 interface CalendarContextType {
     currentDate: Date;
     daysRequired: Date[];
@@ -13,8 +19,9 @@ interface CalendarContextType {
     setCurrentWeekIndex: React.Dispatch<React.SetStateAction<number>>;
     setMonth?: (monthIndex: number) => void;
 
-    activeFilter: string;
-    setActiveFilter: (filter: string) => void;
+    activeFilter: FilterState;
+    setActiveFilter: (filter: Partial<FilterState>) => void;
+    resetFilters: () => void;
 }
 
 const CalendarContext = createContext<CalendarContextType | undefined>(undefined);
@@ -24,11 +31,21 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
     const calendarLogic = useCalendarHook();
 
     // Lift Filter state here
-    const [activeFilter, setActiveFilter] = useState('All');
+    const [activeFilter, setActiveFilterState] = useState<FilterState>({
+        client: 'All',
+        category: 'All',
+        status: 'All'
+    });
+
+    const setActiveFilter = (updates: Partial<FilterState>) => {
+        setActiveFilterState(prev => ({ ...prev, ...updates }));
+    };
+
+    const resetFilters = () => {
+        setActiveFilterState({ client: 'All', category: 'All', status: 'All' });
+    };
 
     // Lift Week Index state here (so it persists or resets appropriately)
-    // Actually, typically week index resets when month changes, which useCalendar might not handle directly yet if it was local to Grid.
-    // Let's keep week index in the Context so it persists when switching views
     const [currentWeekIndex, setCurrentWeekIndex] = useState(0);
 
     // Reset week index when month changes (optional, but good UX)
@@ -41,7 +58,8 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
         currentWeekIndex,
         setCurrentWeekIndex,
         activeFilter,
-        setActiveFilter
+        setActiveFilter,
+        resetFilters
     };
 
     return (
