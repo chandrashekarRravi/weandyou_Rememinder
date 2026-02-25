@@ -120,15 +120,21 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
                         )}
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Media ID <span className="text-red-500">*</span></label>
-                            <input
-                                type="text"
-                                value={mediaId}
-                                onChange={(e) => setMediaId(e.target.value)}
-                                placeholder="e.g. img001 or vid001"
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                            />
-                            <p className="text-xs text-gray-400 mt-1">Must start with 'img' or 'vid'</p>
+                            <div className="flex items-center gap-3">
+                                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                                    Media ID <span className="text-red-500">*</span>
+                                </label>
+                                <div className="flex-1">
+                                    <input
+                                        type="text"
+                                        value={mediaId}
+                                        onChange={(e) => setMediaId(e.target.value)}
+                                        placeholder="e.g. img001 or vid001"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                                    />
+                                    <p className="text-xs text-gray-400 mt-1">Must start with 'img' or 'vid'</p>
+                                </div>
+                            </div>
                         </div>
 
                         <div>

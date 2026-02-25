@@ -1,268 +1,168 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useEvents } from '../hooks/useEvents';
+import React, { useState, useMemo } from 'react';
+import { useCreativeEntries } from '../hooks/useCreativeEntries';
 import { useCalendarContext } from '../context/CalendarContext';
+import FilterSelect from '../components/Calendar/FilterSelect';
 
 const Dashboard: React.FC = () => {
     const { currentDate } = useCalendarContext();
-    const { events, loading } = useEvents(currentDate);
+    const { creativeEntries, loading } = useCreativeEntries(currentDate);
 
-    const total = events.length;
-    const pending = events.filter(e => e.status === 'Pending').length;
-    const ongoing = events.filter(e => e.status === 'Ongoing').length;
-    const completed = events.filter(e => e.status === 'Completed').length;
+    // Dashboard-specific filter state
+    const [dashboardFilter, setDashboardFilter] = useState({
+        client: 'All',
+        category: 'All',
+        status: 'All'
+    });
 
-    const recent = events.slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 6);
+    // Generate Client Options from Creative Entries
+    const clientOptions = useMemo(() => {
+        const uniqueClients = new Set<string>();
+        creativeEntries.forEach(e => {
+            if (e.clientName) uniqueClients.add(e.clientName.trim());
+        });
+        return Array.from(uniqueClients).sort().map(c => ({ label: c, value: c }));
+    }, [creativeEntries]);
+
+    // Filtered Entries Logic
+    const filteredEntries = useMemo(() => {
+        return creativeEntries.filter(entry => {
+            if (dashboardFilter.client !== 'All' && entry.clientName !== dashboardFilter.client) return false;
+            if (dashboardFilter.category !== 'All' && (entry.category || 'Other') !== dashboardFilter.category) return false;
+            if (dashboardFilter.status !== 'All' && (entry.status || 'Pending') !== dashboardFilter.status) return false;
+            return true;
+        }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }, [creativeEntries, dashboardFilter]);
+
+
+    // Removed unused recent events logic
 
     // --- New UI state for Dashboard (Legacy/Feedback) ---
-    const [imageFile, setImageFile] = useState<File | null>(null);
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
-    const [caption, setCaption] = useState('');
-    const [approved, setApproved] = useState(false);
-    const [deleted, setDeleted] = useState(false);
-    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-    const [feedbackText, setFeedbackText] = useState('');
-
-    useEffect(() => {
-        if (!imageFile) {
-            setImagePreview(null);
-            return;
-        }
-        const url = URL.createObjectURL(imageFile);
-        setImagePreview(url);
-        return () => URL.revokeObjectURL(url);
-    }, [imageFile]);
-
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const f = e.target.files && e.target.files[0];
-        if (f) setImageFile(f);
-    };
-
-    const handleFeedbackToggle = (checked: boolean) => {
-        // open modal when toggling on; uncheck when cancelled
-        if (checked) {
-            setShowFeedbackModal(true);
-        } else {
-            setFeedbackText('');
-        }
-    };
-
-    const handleSaveFeedback = async () => {
-        try {
-            // Upload image first if present
-            let imageUrl: string | null = null;
-            if (imageFile) {
-                const fd = new FormData();
-                fd.append('file', imageFile);
-                const res = await axios.post('/api/feedbacks/upload', fd, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
-                imageUrl = res.data.url;
-            }
-
-            const payload = {
-                imageUrl,
-                caption,
-                approved,
-                deleted,
-                feedback: feedbackText
-            };
-
-            await axios.post('/api/feedbacks', payload);
-
-            setShowFeedbackModal(false);
-            setFeedbackText('');
-        } catch (err) {
-            console.error('Error saving feedback:', err);
-            setShowFeedbackModal(false);
-        }
-    };
-
-    const handleCancelFeedback = () => {
-        setShowFeedbackModal(false);
-        setFeedbackText('');
-    };
-
-    // Keyboard accessibility for modal: Esc to cancel, Enter to submit (Enter in textarea requires Ctrl/Cmd)
-    useEffect(() => {
-        if (!showFeedbackModal) return;
-        const onKey = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                handleCancelFeedback();
-            }
-            if (e.key === 'Enter') {
-                const active = document.activeElement as HTMLElement | null;
-                if (active && active.tagName === 'TEXTAREA') {
-                    // require Ctrl/Cmd+Enter when typing in textarea
-                    if (e.ctrlKey || e.metaKey) {
-                        e.preventDefault();
-                        handleSaveFeedback();
-                    }
-                } else {
-                    // Enter outside textarea -> submit
-                    e.preventDefault();
-                    handleSaveFeedback();
-                }
-            }
-        };
-        document.addEventListener('keydown', onKey);
-        return () => document.removeEventListener('keydown', onKey);
-    }, [showFeedbackModal, feedbackText, imageFile, caption, approved, deleted]);
+    // Removed legacy state and functions as they were unused and causing clutter/lint errors.
 
     return (
         <div className="max-w-4xl mx-auto space-y-6">
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold">Dashboard</h2>
-            </div>
 
             {loading ? (
-                <div className="text-gray-400">Loading...</div>
+                <div className="text-gray-400 align-center tp-50vh">Loading...</div>
             ) : (
                 <>
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="bg-white p-4 rounded-lg shadow">
-                            <h3 className="text-gray-500 text-sm">Total Events</h3>
-                            <p className="text-2xl font-bold">{total}</p>
+                    {/* Dashboard Feed: Filters & List */}
+                    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+
+                        {/* Filters Header */}
+                        <div className="p-4 border-b border-gray-100 bg-white flex flex-wrap items-center gap-4">
+                            <h3 className="text-lg font-bold text-gray-800 mr-4">Creative Entries</h3>
+
+                            <FilterSelect
+                                label="Client"
+                                value={dashboardFilter.client}
+                                options={clientOptions}
+                                onChange={(val) => setDashboardFilter(prev => ({ ...prev, client: val }))}
+                                placeholder="All Clients"
+                            />
+
+                            <div className="w-px h-8 bg-gray-100 mx-2 hidden md:block"></div>
+
+                            <FilterSelect
+                                label="Category"
+                                value={dashboardFilter.category}
+                                options={[
+                                    { label: 'Special Day', value: 'Special Day' },
+                                    { label: 'Engagement', value: 'Engagement' },
+                                    { label: 'Ideation', value: 'Ideation' },
+                                    { label: 'Other', value: 'Other' },
+                                ]}
+                                onChange={(val) => setDashboardFilter(prev => ({ ...prev, category: val }))}
+                                placeholder="All Categories"
+                            />
+
+                            <FilterSelect
+                                label="Status"
+                                value={dashboardFilter.status}
+                                options={[
+                                    { label: 'Pending', value: 'Pending' },
+                                    { label: 'Approved', value: 'Approved' },
+                                    { label: 'Rejected', value: 'Rejected' },
+                                ]}
+                                onChange={(val) => setDashboardFilter(prev => ({ ...prev, status: val }))}
+                                placeholder="All Status"
+                            />
                         </div>
-                        <div className="bg-white p-4 rounded-lg shadow border-l-4 border-yellow-500">
-                            <h3 className="text-gray-500 text-sm">Pending</h3>
-                            <p className="text-2xl font-bold">{pending}</p>
-                        </div>
-                        <div className="bg-white p-4 rounded-lg shadow border-l-4 border-blue-500">
-                            <h3 className="text-gray-500 text-sm">Ongoing</h3>
-                            <p className="text-2xl font-bold">{ongoing}</p>
-                        </div>
-                        <div className="bg-white p-4 rounded-lg shadow border-l-4 border-green-500">
-                            <h3 className="text-gray-500 text-sm">Completed</h3>
-                            <p className="text-2xl font-bold">{completed}</p>
+
+                        {/* Entries List */}
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-4">Media ID</th>
+                                        <th className="px-6 py-4">Client</th>
+                                        <th className="px-6 py-4">Category</th>
+                                        <th className="px-6 py-4">Status</th>
+                                        <th className="px-6 py-4">Uploaded By</th>
+                                        <th className="px-6 py-4">Timestamp</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {filteredEntries.length > 0 ? (
+                                        filteredEntries.map((entry) => (
+                                            <tr key={entry._id} className="hover:bg-gray-50/50 transition-colors group">
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200">
+                                                            {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
+                                                                <video src={entry.filePath} className="w-full h-full object-cover" />
+                                                            ) : (
+                                                                <img src={entry.filePath} alt="" className="w-full h-full object-cover" />
+                                                            )}
+                                                        </div>
+                                                        <div>
+                                                            <p className="font-mono text-xs font-medium text-gray-900">{entry.mediaId}</p>
+                                                            {entry.caption && <p className="text-[10px] text-gray-400 max-w-[150px] truncate">{entry.caption}</p>}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className="text-sm font-medium text-gray-700">{entry.clientName || '-'}</span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-2 py-1 rounded text-[10px] font-medium border ${entry.category === 'Special Day' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                                                        entry.category === 'Engagement' ? 'bg-stone-50 text-stone-600 border-stone-200' :
+                                                            entry.category === 'Ideation' ? 'bg-green-50 text-green-700 border-green-200' :
+                                                                'bg-blue-50 text-blue-700 border-blue-200'
+                                                        }`}>
+                                                        {entry.category || 'Other'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide ${entry.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                                                        entry.status === 'Rejected' ? 'bg-red-100 text-red-700' :
+                                                            'bg-yellow-100 text-yellow-700'
+                                                        }`}>
+                                                        {entry.status || 'Pending'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-sm text-gray-600">
+                                                    {entry.username || 'Unknown'}
+                                                </td>
+                                                <td className="px-6 py-4 text-xs text-gray-500">
+                                                    <div className="flex flex-col">
+                                                        <span className="font-medium text-gray-700">{new Date(entry.createdAt).toLocaleDateString()}</span>
+                                                        <span className="text-[10px]">{new Date(entry.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
+                                                No creative entries found for this month.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-
-                    {/* Quick Actions / Upload */}
-                    <div className="bg-white p-6 rounded-lg shadow space-y-4">
-                        <h3 className="text-lg font-medium">Quick Actions</h3>
-                        <div className="flex gap-4">
-                            <label className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                                Upload Image
-                                <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
-                            </label>
-                            <button
-                                onClick={() => handleFeedbackToggle(true)}
-                                className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200"
-                            >
-                                Give Feedback
-                            </button>
-                        </div>
-                        {imagePreview && (
-                            <div className="mt-4">
-                                <p className="text-sm text-gray-500 mb-2">Preview:</p>
-                                <img src={imagePreview} alt="Preview" className="h-32 w-auto object-cover rounded" />
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Recent Events
-                    <div className="bg-white rounded-lg shadow overflow-hidden">
-                        <div className="px-6 py-4 border-b">
-                            <h3 className="text-lg font-medium">Recent Events</h3>
-                        </div>
-                        <ul className="divide-y divide-gray-200">
-                            {recent.map(event => (
-                                <li key={event._id} className="px-6 py-4 hover:bg-gray-50">
-                                    <div className="flex justify-between items-center">
-                                        <div>
-                                            <p className="font-medium text-gray-900">{event.title}</p>
-                                            <p className="text-sm text-gray-500">{new Date(event.date).toLocaleDateString()}</p>
-                                        </div>
-                                        <span className={`px-2 py-1 text-xs rounded-full ${event.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                                            event.status === 'Ongoing' ? 'bg-blue-100 text-blue-800' :
-                                                'bg-yellow-100 text-yellow-800'
-                                            }`}>
-                                            {event.status}
-                                        </span>
-                                    </div>
-                                </li>
-                            ))}
-                            {recent.length === 0 && (
-                                <li className="px-6 py-4 text-center text-gray-500">No recent events</li>
-                            )}
-                        </ul>
-                    </div>
-                    */}
-
-
-                    {/* Feedback Modal */}
-                    {showFeedbackModal && (
-                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                            <div className="bg-white rounded-lg max-w-lg w-full p-6 space-y-4">
-                                <h3 className="text-xl font-bold">Provide Feedback</h3>
-
-                                {imagePreview && (
-                                    <div className="mb-4">
-                                        <img src={imagePreview} alt="To Upload" className="w-full h-48 object-contain rounded bg-gray-50" />
-                                    </div>
-                                )}
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Caption</label>
-                                    <input
-                                        type="text"
-                                        className="mt-1 block w-full border rounded p-2"
-                                        value={caption}
-                                        onChange={e => setCaption(e.target.value)}
-                                        placeholder="Add a caption..."
-                                    />
-                                </div>
-
-                                <div className="flex items-center space-x-4">
-                                    <label className="flex items-center space-x-2">
-                                        <input
-                                            type="checkbox"
-                                            checked={approved}
-                                            onChange={e => setApproved(e.target.checked)}
-                                            className="rounded"
-                                        />
-                                        <span>Mark Approved</span>
-                                    </label>
-                                    <label className="flex items-center space-x-2 text-red-600">
-                                        <input
-                                            type="checkbox"
-                                            checked={deleted}
-                                            onChange={e => setDeleted(e.target.checked)}
-                                            className="rounded"
-                                        />
-                                        <span>Mark for Deletion</span>
-                                    </label>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Feedback Details</label>
-                                    <textarea
-                                        className="mt-1 block w-full border rounded p-2 h-24"
-                                        value={feedbackText}
-                                        onChange={e => setFeedbackText(e.target.value)}
-                                        placeholder="Type your feedback here..."
-                                    />
-                                </div>
-
-                                <div className="flex justify-end space-x-3 pt-4">
-                                    <button
-                                        onClick={handleCancelFeedback}
-                                        className="px-4 py-2 border rounded hover:bg-gray-50"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button
-                                        onClick={handleSaveFeedback}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                                    >
-                                        Save Feedback
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
                 </>
             )}
         </div>

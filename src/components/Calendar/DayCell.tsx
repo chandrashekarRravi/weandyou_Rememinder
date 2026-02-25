@@ -46,7 +46,7 @@ const DayCell: React.FC<DayCellProps> = React.memo(({ date, currentMonth, events
             <div
                 onClick={handleClick}
                 className={clsx(
-                    "h-32 min-h-32 p-2 border-b border-r border-gray-100 transition-colors cursor-pointer hover:bg-gray-50 flex flex-col",
+                    "h-22 min-h-22 p-1.5 border-b border-r border-gray-100 transition-colors cursor-pointer hover:bg-gray-50 flex flex-col",
                     !isCurrentMonth && "bg-gray-50/50 text-gray-400",
                     isCurrentMonth && "bg-white",
                 )}

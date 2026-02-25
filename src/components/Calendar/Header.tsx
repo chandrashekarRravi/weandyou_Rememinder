@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { FaUserCircle } from 'react-icons/fa';
 import CreativeEntryModal from '../CreativeEntryModal';
+import { useEvents } from '../../hooks/useEvents';
+import { useCalendarContext } from '../../context/CalendarContext';
 
 interface HeaderProps { }
 
@@ -19,6 +21,15 @@ const Header: React.FC<HeaderProps> = () => {
     const ref = useRef<HTMLDivElement | null>(null);
 
     const username = typeof window !== 'undefined' ? (localStorage.getItem('username') || 'User') : 'User';
+
+    // Stats Logic for Dashboard Header
+    const { currentDate } = useCalendarContext();
+    const { events } = useEvents(currentDate);
+
+    const total = events.length;
+    const pending = events.filter(e => e.status === 'Pending').length;
+    const ongoing = events.filter(e => e.status === 'Ongoing').length;
+    const completed = events.filter(e => e.status === 'Completed').length;
 
     useEffect(() => {
         const onDoc = (e: MouseEvent) => {
@@ -62,8 +73,31 @@ const Header: React.FC<HeaderProps> = () => {
                 </nav>
             </div>
 
-            {/* Right: User Profile */}
-            <div className="flex items-center space-x-4">
+            {/* Right: Stats, Actions, Profile */}
+            <div className="flex items-center space-x-6">
+
+                {/* Stats Grid (Dashboard Only) */}
+                {location.pathname === '/' && (
+                    <div className="flex items-center space-x-2 mr-4">
+                        <div className="flex flex-col items-center px-3 py-1 bg-gray-50 rounded-lg border border-gray-100">
+                            <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Total</span>
+                            <span className="text-sm font-bold text-gray-800">{total}</span>
+                        </div>
+                        <div className="flex flex-col items-center px-3 py-1 bg-yellow-50 rounded-lg border border-yellow-100">
+                            <span className="text-[10px] text-yellow-600 uppercase font-bold tracking-wider">Pending</span>
+                            <span className="text-sm font-bold text-yellow-700">{pending}</span>
+                        </div>
+                        <div className="flex flex-col items-center px-3 py-1 bg-blue-50 rounded-lg border border-blue-100">
+                            <span className="text-[10px] text-blue-600 uppercase font-bold tracking-wider">Ongoing</span>
+                            <span className="text-sm font-bold text-blue-700">{ongoing}</span>
+                        </div>
+                        <div className="flex flex-col items-center px-3 py-1 bg-green-50 rounded-lg border border-green-100">
+                            <span className="text-[10px] text-green-600 uppercase font-bold tracking-wider">Done</span>
+                            <span className="text-sm font-bold text-green-700">{completed}</span>
+                        </div>
+                    </div>
+                )}
+
                 {/* New + Button (Dashboard Only) */}
                 {location.pathname === '/' && (
                     <button
