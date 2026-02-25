@@ -89,78 +89,182 @@ const Dashboard: React.FC = () => {
                             />
                         </div>
 
-                        {/* Entries List */}
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                                <thead>
-                                    <tr className="bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                        <th className="px-6 py-4">Media ID</th>
-                                        <th className="px-6 py-4">Client</th>
-                                        <th className="px-6 py-4">Category</th>
-                                        <th className="px-6 py-4">Status</th>
-                                        <th className="px-6 py-4">Uploaded By</th>
-                                        <th className="px-6 py-4">Timestamp</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {filteredEntries.length > 0 ? (
-                                        filteredEntries.map((entry) => (
-                                            <tr key={entry._id} className="hover:bg-gray-50/50 transition-colors group">
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200">
-                                                            {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
-                                                                <video src={entry.filePath} className="w-full h-full object-cover" />
-                                                            ) : (
-                                                                <img src={entry.filePath} alt="" className="w-full h-full object-cover" />
-                                                            )}
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-mono text-xs font-medium text-gray-900">{entry.mediaId}</p>
-                                                            {entry.caption && <p className="text-[10px] text-gray-400 max-w-[150px] truncate">{entry.caption}</p>}
+                        {/* Entries List Feed */}
+                        <div className="p-6 bg-gray-50">
+                            <div className="space-y-8">
+                                {filteredEntries.length > 0 ? (
+                                    filteredEntries.map((entry) => (
+                                        <div key={entry._id} className="bg-white border text-left border-gray-200 rounded-xl overflow-hidden shadow-sm">
+
+                                            {/* Top Section */}
+                                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border-b border-gray-100 bg-gray-50/50">
+                                                <div className="flex flex-wrap items-center gap-6">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-sm text-gray-500 font-medium">Media ID:</span>
+                                                        <span className="text-sm font-semibold text-gray-900 border-b border-gray-300 px-1">{entry.mediaId}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2 mb-1 sm:mb-0">
+                                                        <span className="text-sm text-gray-500 font-medium">Client Name:</span>
+                                                        <div className="flex items-center gap-2 border-b border-gray-300 pb-1">
+                                                            <span className="text-sm font-semibold text-gray-900">{entry.clientName || '-'}</span>
+                                                            <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                                                         </div>
                                                     </div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className="text-sm font-medium text-gray-700">{entry.clientName || '-'}</span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`px-2 py-1 rounded text-[10px] font-medium border ${entry.category === 'Special Day' ? 'bg-orange-50 text-orange-700 border-orange-200' :
-                                                        entry.category === 'Engagement' ? 'bg-stone-50 text-stone-600 border-stone-200' :
-                                                            entry.category === 'Ideation' ? 'bg-green-50 text-green-700 border-green-200' :
-                                                                'bg-blue-50 text-blue-700 border-blue-200'
-                                                        }`}>
-                                                        {entry.category || 'Other'}
+                                                </div>
+                                                <div className="text-xs text-gray-500 font-medium mt-2 sm:mt-0 flex sm:flex-col items-center sm:items-end gap-2 sm:gap-0">
+                                                    <span>{entry.username || 'Unknown'}</span>
+                                                    <span>
+                                                        {new Date(entry.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} {' '}
+                                                        {new Date(entry.createdAt).toLocaleDateString()}
                                                     </span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide ${entry.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                                                </div>
+                                            </div>
+
+                                            {/* Body Section */}
+                                            <div className="p-6">
+                                                <div className="text-sm font-bold text-gray-700 mb-4 pb-2 border-b border-gray-100 uppercase tracking-wider flex justify-between items-center">
+                                                    <span>Iteration 1</span>
+                                                    <span className={`px-2 py-1 rounded text-[10px] font-bold tracking-wide ${entry.status === 'Approved' ? 'bg-green-100 text-green-700' :
                                                         entry.status === 'Rejected' ? 'bg-red-100 text-red-700' :
                                                             'bg-yellow-100 text-yellow-700'
                                                         }`}>
-                                                        {entry.status || 'Pending'}
+                                                        STATUS: {entry.status || 'Pending'}
                                                     </span>
-                                                </td>
-                                                <td className="px-6 py-4 text-sm text-gray-600">
-                                                    {entry.username || 'Unknown'}
-                                                </td>
-                                                <td className="px-6 py-4 text-xs text-gray-500">
-                                                    <div className="flex flex-col">
-                                                        <span className="font-medium text-gray-700">{new Date(entry.createdAt).toLocaleDateString()}</span>
-                                                        <span className="text-[10px]">{new Date(entry.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                </div>
+
+                                                <div className="flex flex-col lg:flex-row gap-6">
+
+                                                    {/* Left Column: Image & Caption */}
+                                                    <div className="flex-none lg:w-[30%] space-y-4">
+                                                        <div className="w-full aspect-square bg-gray-100 rounded-lg flex border border-gray-200 overflow-hidden items-center justify-center relative group">
+                                                            {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
+                                                                <video src={entry.filePath} controls className="w-full h-full object-contain" />
+                                                            ) : (
+                                                                <img src={entry.filePath} alt="Creative" className="w-full h-full object-contain" />
+                                                            )}
+                                                            <div className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded">Image</div>
+                                                        </div>
+                                                        <div className="border border-gray-200 rounded-lg p-4 min-h-[100px] bg-gray-50">
+                                                            <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Captions</p>
+                                                            <p className="text-sm text-gray-700 whitespace-pre-wrap">{entry.caption || 'No caption provided.'}</p>
+                                                        </div>
                                                     </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
-                                                No creative entries found for this month.
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
+
+                                                    {/* Middle Column: Actions */}
+                                                    <div className="flex lg:flex-col items-center justify-center gap-4 lg:py-8 lg:px-2">
+                                                        <button className="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors bg-white shadow-sm" title="Feedback">
+                                                            <span className="font-bold">F</span>
+                                                        </button>
+                                                        <button className="w-10 h-10 rounded-full border border-green-300 bg-white flex items-center justify-center text-green-600 hover:bg-green-50 transition-colors shadow-sm" title="Approve">
+                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                                        </button>
+                                                        <button className="w-10 h-10 rounded-full border border-red-300 bg-white flex items-center justify-center text-red-600 hover:bg-red-50 transition-colors shadow-sm" title="Reject">
+                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Right Column: Feedback Box & Plus Button */}
+                                                    <div className="flex-1 flex gap-4">
+                                                        {/* Feedback Box */}
+                                                        <div className="flex-1 border border-gray-300 rounded-lg flex flex-col overflow-hidden bg-white shadow-sm h-[400px]">
+                                                            <div className="bg-gray-50 p-3 border-b border-gray-200">
+                                                                <h4 className="text-sm font-bold text-gray-700 text-center">Feedback of I 1</h4>
+                                                            </div>
+                                                            <div className="flex-1 p-4 overflow-y-auto space-y-4">
+                                                                {/* Mock Comment */}
+                                                                <div className="flex flex-col gap-1 items-start">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold">U</div>
+                                                                        <span className="text-xs font-semibold text-gray-700">Client User</span>
+                                                                        <span className="text-[10px] text-gray-400">10:30 AM 12/Oct</span>
+                                                                    </div>
+                                                                    <div className="bg-blue-50 text-gray-800 text-sm p-3 rounded-lg rounded-tl-none border border-blue-100 relative w-full max-w-sm">
+                                                                        Make the logo bigger please.
+                                                                        <div className="absolute -right-2 top-2 w-4 h-4 bg-white border border-gray-200 rounded-sm flex items-center justify-center cursor-pointer shadow-sm">
+                                                                            <svg className="w-3 h-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                                                        </div>
+                                                                        <div className="w-10 h-6 border-b-2 border-r-2 border-gray-300 absolute -bottom-5 right-4 rounded-br opacity-50"></div>
+                                                                    </div>
+                                                                </div>
+                                                                {/* Mock Reply */}
+                                                                <div className="flex flex-col gap-1 items-end mt-4">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="text-[10px] text-gray-400">11:15 AM 12/Oct</span>
+                                                                        <span className="text-xs font-semibold text-gray-700">Creative Team</span>
+                                                                        <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px] font-bold">C</div>
+                                                                    </div>
+                                                                    <div className="bg-indigo-50 text-gray-800 text-sm p-3 rounded-lg rounded-tr-none border border-indigo-100 relative max-w-sm">
+                                                                        Updated the logo size. Check Iteration 2.
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            {/* Input Box */}
+                                                            <div className="p-3 border-t border-gray-200 bg-gray-50">
+                                                                <div className="flex items-center gap-2 border border-gray-300 rounded-md p-1 bg-white focus-within:ring-2 focus-within:ring-indigo-500 transition-shadow">
+                                                                    <input type="text" placeholder="Type feedback..." className="flex-1 bg-transparent px-2 py-1 text-sm outline-none" />
+                                                                    <svg className="w-4 h-4 text-gray-400 cursor-pointer ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                                                                    <button className="p-2 text-indigo-600 hover:bg-indigo-50 rounded transition-colors ml-1" title="Send">
+                                                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Plus Button Container */}
+                                                        <div className="flex flex-col items-center justify-center ml-2 relative min-w-[60px]">
+                                                            <button className="w-12 h-12 rounded-full border border-gray-400 flex items-center justify-center text-gray-700 hover:bg-gray-100 transition-colors shrink-0 shadow-sm z-10 bg-white" title="Accept & Add New Iteration">
+                                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" /></svg>
+                                                            </button>
+                                                            <div className="absolute top-[calc(50%+30px)] right-full mr-2 hidden lg:flex items-center">
+                                                                <div className="w-12 border-t border-gray-400"></div>
+                                                            </div>
+                                                            <div className="mt-2 text-center text-[10px] text-gray-500 w-20 leading-tight">
+                                                                After this accept<br />add to new one
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Footer Strip */}
+                                            <div className="px-6 pb-6 pt-2">
+                                                <div className="grid grid-cols-[repeat(auto-fit,minmax(12px,1fr))] h-3 border border-gray-300 divide-x divide-gray-300 mb-4 bg-gray-50 max-w-2xl mx-auto">
+                                                    {[...Array(30)].map((_, i) => (
+                                                        <div key={i} className="h-full"></div>
+                                                    ))}
+                                                </div>
+
+                                                <div className="flex flex-wrap items-center gap-4 border-t border-dashed border-gray-200 pt-4 max-w-2xl mx-auto">
+                                                    <span className="text-xs font-bold text-gray-500">I 1:</span>
+                                                    <div className="border border-gray-300 p-1 w-24 h-16 rounded overflow-hidden bg-gray-100 flex items-center justify-center relative">
+                                                        {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
+                                                            <video src={entry.filePath} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <img src={entry.filePath} alt="Thumb" className="w-full h-full object-cover" />
+                                                        )}
+                                                        <div className="absolute inset-0 bg-white/20"></div>
+                                                    </div>
+
+                                                    <div className="flex-1"></div>
+
+                                                    <div className="text-sm font-mono text-gray-500 tracking-widest flex items-center gap-3">
+                                                        <span className="cursor-pointer hover:text-indigo-600">&lt;</span>
+                                                        <span className="w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center text-xs font-bold bg-white text-gray-800">1</span>
+                                                        <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs text-gray-400">2</span>
+                                                        <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs text-gray-400">3</span>
+                                                        <span className="cursor-pointer hover:text-indigo-600">&gt;</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="bg-white p-12 text-center text-gray-400 rounded-xl border border-gray-200 shadow-sm">
+                                        No creative entries found for this month.
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </>
