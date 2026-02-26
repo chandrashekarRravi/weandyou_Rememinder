@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaTimes, FaCloudUploadAlt } from 'react-icons/fa';
 
@@ -6,9 +6,14 @@ interface CreativeEntryModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
+    initialData?: {
+        mediaId?: string;
+        clientName?: string;
+        category?: string;
+    };
 }
 
-const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose, onSuccess }) => {
+const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose, onSuccess, initialData }) => {
     const [mediaId, setMediaId] = useState('');
     const [clientName, setClientName] = useState('');
     const [file, setFile] = useState<File | null>(null);
@@ -19,10 +24,23 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState('');
 
+    useEffect(() => {
+        if (isOpen) {
+            setMediaId(initialData?.mediaId || '');
+            setClientName(initialData?.clientName || '');
+            setCategory(initialData?.category || 'Other');
+            // Reset other fields on open
+            setFile(null);
+            setPreview(null);
+            setCaption('');
+            setDate(new Date().toISOString().split('T')[0]);
+            setError('');
+        }
+    }, [isOpen, initialData]);
+
     // Auto-captured details
     // For now, hardcoded as per instructions to ignore login
     const username = "CreativeTeamUser";
-    const timestamp = new Date().toLocaleString();
 
     if (!isOpen) return null;
 

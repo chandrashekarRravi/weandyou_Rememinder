@@ -4,7 +4,6 @@ const creativeEntrySchema = new mongoose.Schema({
     mediaId: {
         type: String,
         required: true,
-        unique: true,
         validate: {
             validator: function (v) {
                 return /^img|^vid/.test(v);
