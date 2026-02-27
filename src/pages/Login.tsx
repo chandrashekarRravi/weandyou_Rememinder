@@ -1,0 +1,103 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth, type Role } from '../context/AuthContext';
+import { FiLock, FiUser } from 'react-icons/fi';
+
+const MOCK_USERS = [
+    { username: 'admin', password: 'admin123', role: 'Admin' as Role },
+    { username: 'team', password: 'team123', role: 'Team' as Role },
+    { username: 'client', password: 'client123', role: 'Client' as Role },
+];
+
+const Login: React.FC = () => {
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const { login } = useAuth();
+    const navigate = useNavigate();
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+
+        const user = MOCK_USERS.find(u => u.username === username && u.password === password);
+
+        if (user) {
+            login({ username: user.username, role: user.role });
+            navigate('/');
+        } else {
+            setError('Invalid username or password');
+        }
+    };
+
+    return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg border border-gray-100">
+                <div>
+                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                        Sign in to AVAIO
+                    </h2>
+                    <p className="mt-2 text-center text-sm text-gray-600">
+                        Use one of the demo accounts
+                    </p>
+                    <div className="mt-4 p-4 bg-indigo-50 rounded-md text-xs text-indigo-700 font-mono">
+                        <p>Admin: admin / admin123</p>
+                        <p>Team: team / team123</p>
+                        <p>Client: client / client123</p>
+                    </div>
+                </div>
+                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+                    <div className="rounded-md shadow-sm space-y-4">
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <FiUser className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <input
+                                id="username"
+                                name="username"
+                                type="text"
+                                required
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                className="appearance-none rounded-lg relative block w-full px-3 py-3 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                placeholder="Username"
+                            />
+                        </div>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <FiLock className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                required
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="appearance-none rounded-lg relative block w-full px-3 py-3 pl-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                placeholder="Password"
+                            />
+                        </div>
+                    </div>
+
+                    {error && (
+                        <div className="text-red-500 text-sm text-center font-medium bg-red-50 p-2 rounded">
+                            {error}
+                        </div>
+                    )}
+
+                    <div>
+                        <button
+                            type="submit"
+                            className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors shadow-sm"
+                        >
+                            Sign in
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+export default Login;

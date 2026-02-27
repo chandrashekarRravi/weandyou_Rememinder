@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaTimes, FaCloudUploadAlt } from 'react-icons/fa';
+import { useAuth } from '../context/AuthContext';
 
 interface CreativeEntryModalProps {
     isOpen: boolean;
@@ -38,9 +39,10 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
         }
     }, [isOpen, initialData]);
 
+    const { user } = useAuth();
     // Auto-captured details
-    // For now, hardcoded as per instructions to ignore login
-    const username = "CreativeTeamUser";
+    // If no user is logged in, use "UnknownUser" as fallback
+    const username = user?.username || "UnknownUser";
 
     if (!isOpen) return null;
 

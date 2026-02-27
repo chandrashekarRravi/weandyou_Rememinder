@@ -4,6 +4,7 @@ import { FaUserCircle } from 'react-icons/fa';
 import CreativeEntryModal from '../CreativeEntryModal';
 import { useEvents } from '../../hooks/useEvents';
 import { useCalendarContext } from '../../context/CalendarContext';
+import { useAuth } from '../../context/AuthContext';
 
 interface HeaderProps { }
 
@@ -20,7 +21,7 @@ const Header: React.FC<HeaderProps> = () => {
     const location = useLocation();
     const ref = useRef<HTMLDivElement | null>(null);
 
-    const username = typeof window !== 'undefined' ? (localStorage.getItem('username') || 'User') : 'User';
+    const { user, logout } = useAuth();
 
     // Stats Logic for Dashboard Header
     const { currentDate } = useCalendarContext();
@@ -42,8 +43,8 @@ const Header: React.FC<HeaderProps> = () => {
     }, []);
 
     const handleLogout = () => {
-        localStorage.removeItem('username');
-        navigate('/');
+        logout();
+        navigate('/login');
         setOpen(false);
     };
 
@@ -120,7 +121,8 @@ const Header: React.FC<HeaderProps> = () => {
                     {open && (
                         <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 p-2 z-20 animate-fade-in-down">
                             <div className="px-4 py-2 text-sm text-gray-700 font-medium border-b border-gray-50 mb-1">
-                                {username}
+                                <div className="font-bold">{user?.username}</div>
+                                <div className="text-xs text-indigo-500 uppercase">{user?.role}</div>
                             </div>
                             <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium">
                                 Sign Out
