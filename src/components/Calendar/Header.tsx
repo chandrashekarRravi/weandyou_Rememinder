@@ -11,7 +11,6 @@ interface HeaderProps { }
 const PAGES = [
     { label: 'Dashboard', to: '/dashboard' },
     { label: 'Reminders', to: '/reminder' },
-
 ];
 
 const Header: React.FC<HeaderProps> = () => {
@@ -60,7 +59,7 @@ const Header: React.FC<HeaderProps> = () => {
 
                 {/* Navigation */}
                 <nav className="flex items-center space-x-8">
-                    {PAGES.map(p => (
+                    {PAGES.filter(p => user?.role !== 'Client' || p.label === 'Dashboard').map(p => (
                         <NavLink
                             key={p.to}
                             to={p.to}
@@ -87,7 +86,7 @@ const Header: React.FC<HeaderProps> = () => {
             <div className="flex items-center space-x-6">
 
                 {/* Stats Grid (Dashboard Only) */}
-                {location.pathname === '/' && (
+                {location.pathname === '/' && user?.role !== 'Client' && (
                     <div className="flex items-center space-x-2 mr-4">
                         <div className="flex flex-col items-center px-3 py-1 bg-gray-50 rounded-lg border border-gray-100">
                             <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Total</span>
@@ -109,7 +108,7 @@ const Header: React.FC<HeaderProps> = () => {
                 )}
 
                 {/* New + Button (Dashboard Only) */}
-                {location.pathname === '/' && (
+                {location.pathname === '/' && user?.role !== 'Client' && (
                     <button
                         onClick={() => setIsCreativeModalOpen(true)}
                         className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"

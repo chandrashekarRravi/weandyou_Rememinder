@@ -106,15 +106,18 @@ const Dashboard: React.FC = () => {
                         <div className="p-4 border-b border-gray-100 bg-white flex flex-wrap items-center gap-4">
                             <h3 className="text-lg font-bold text-gray-800 mr-4">Creative Entries</h3>
 
-                            <FilterSelect
-                                label="Client"
-                                value={dashboardFilter.client}
-                                options={clientOptions}
-                                onChange={(val) => setDashboardFilter(prev => ({ ...prev, client: val }))}
-                                placeholder="All Clients"
-                            />
-
-                            <div className="w-px h-8 bg-gray-100 mx-2 hidden md:block"></div>
+                            {user?.role !== 'Client' && (
+                                <>
+                                    <FilterSelect
+                                        label="Client"
+                                        value={dashboardFilter.client}
+                                        options={clientOptions}
+                                        onChange={(val) => setDashboardFilter(prev => ({ ...prev, client: val }))}
+                                        placeholder="All Clients"
+                                    />
+                                    <div className="w-px h-8 bg-gray-100 mx-2 hidden md:block"></div>
+                                </>
+                            )}
 
                             <FilterSelect
                                 label="Category"
@@ -242,7 +245,7 @@ const Dashboard: React.FC = () => {
                                                             >
                                                                 <span className="font-bold">F</span>
                                                             </button>
-                                                            {user?.role !== 'Team' && (
+                                                            {user?.role !== 'Team' && user?.role !== 'Client' && (
                                                                 <>
                                                                     <button className="w-10 h-10 rounded-full border border-green-300 bg-white flex items-center justify-center text-green-600 hover:bg-green-50 transition-colors shadow-sm" title="Approve">
                                                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
@@ -303,42 +306,46 @@ const Dashboard: React.FC = () => {
                                                                         </div>
                                                                     </div>
 
-                                                                    {/* Plus Button Container (Small / Side) */}
-                                                                    <div className="flex flex-col items-center justify-center ml-2 relative min-w-[60px]">
-                                                                        <button
-                                                                            onClick={() => { setModalInitialData({ mediaId: entry.mediaId, clientName, category: entry.category }); setIsModalOpen(true); }}
-                                                                            className="w-12 h-12 rounded-full border border-gray-400 flex items-center justify-center text-gray-700 hover:bg-gray-100 transition-colors shrink-0 shadow-sm z-10 bg-white"
-                                                                            title="Accept & Add New Iteration"
-                                                                        >
-                                                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" /></svg>
-                                                                        </button>
-                                                                        <div className="absolute top-[calc(50%+30px)] right-full mr-2 hidden lg:flex items-center">
-                                                                            <div className="w-12 border-t border-gray-400"></div>
+                                                                    {/* Plus Button Container (Small / Side) - Hidden for Clients */}
+                                                                    {user?.role !== 'Client' && (
+                                                                        <div className="flex flex-col items-center justify-center ml-2 relative min-w-[60px]">
+                                                                            <button
+                                                                                onClick={() => { setModalInitialData({ mediaId: entry.mediaId, clientName, category: entry.category }); setIsModalOpen(true); }}
+                                                                                className="w-12 h-12 rounded-full border border-gray-400 flex items-center justify-center text-gray-700 hover:bg-gray-100 transition-colors shrink-0 shadow-sm z-10 bg-white"
+                                                                                title="Accept & Add New Iteration"
+                                                                            >
+                                                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" /></svg>
+                                                                            </button>
+                                                                            <div className="absolute top-[calc(50%+30px)] right-full mr-2 hidden lg:flex items-center">
+                                                                                <div className="w-12 border-t border-gray-400"></div>
+                                                                            </div>
+                                                                            <div className="mt-2 text-center text-[10px] text-gray-500 w-20 leading-tight">
+                                                                                After this accept<br />add to new one
+                                                                            </div>
                                                                         </div>
-                                                                        <div className="mt-2 text-center text-[10px] text-gray-500 w-20 leading-tight">
-                                                                            After this accept<br />add to new one
-                                                                        </div>
-                                                                    </div>
+                                                                    )}
                                                                 </>
                                                             ) : (
-                                                                /* Plus Button Container (Large / Center) */
-                                                                <div className="flex-1 flex items-center justify-center h-[400px]">
-                                                                    <div className="flex flex-col items-center justify-center relative group">
-                                                                        <button
-                                                                            onClick={() => { setModalInitialData({ mediaId: entry.mediaId, clientName, category: entry.category }); setIsModalOpen(true); }}
-                                                                            className="w-24 h-24 rounded-full border-2 border-dashed border-gray-400 flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-gray-600 hover:border-gray-500 transition-all shrink-0 shadow-sm z-10 bg-white"
-                                                                            title="Accept & Add New Iteration"
-                                                                        >
-                                                                            <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" /></svg>
-                                                                        </button>
-                                                                        <div className="absolute right-full mr-4 hidden lg:flex items-center top-[120px]">
-                                                                            <div className="w-32 border-t border-gray-300"></div>
-                                                                        </div>
-                                                                        <div className="mt-6 text-center text-sm font-medium text-gray-500 leading-tight">
-                                                                            After this accept<br />add to new one
+                                                                /* Plus Button Container (Large / Center) - Hidden for Clients */
+                                                                user?.role !== 'Client' ? (
+                                                                    <div className="flex-1 flex items-center justify-center h-[400px]">
+                                                                        <div className="flex flex-col items-center justify-center relative group">
+                                                                            <button
+                                                                                onClick={() => { setModalInitialData({ mediaId: entry.mediaId, clientName, category: entry.category }); setIsModalOpen(true); }}
+                                                                                className="w-24 h-24 rounded-full border-2 border-dashed border-gray-400 flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-gray-600 hover:border-gray-500 transition-all shrink-0 shadow-sm z-10 bg-white"
+                                                                                title="Accept & Add New Iteration"
+                                                                            >
+                                                                                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" /></svg>
+                                                                            </button>
+                                                                            <div className="absolute right-full mr-4 hidden lg:flex items-center top-[120px]">
+                                                                                <div className="w-32 border-t border-gray-300"></div>
+                                                                            </div>
+                                                                            <div className="mt-6 text-center text-sm font-medium text-gray-500 leading-tight">
+                                                                                After this accept<br />add to new one
+                                                                            </div>
                                                                         </div>
                                                                     </div>
-                                                                </div>
+                                                                ) : <div className="flex-1 flex items-center justify-center h-[400px]"></div>
                                                             )}
                                                         </div>
                                                     </div>

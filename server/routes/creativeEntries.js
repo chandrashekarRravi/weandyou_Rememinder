@@ -53,6 +53,11 @@ router.get('/', protect, async (req, res) => {
             ];
         }
 
+        // If user is a Client, ONLY show them their own creative entries
+        if (req.user && req.user.role === 'Client') {
+            query.clientName = req.user.username;
+        }
+
         const items = await CreativeEntry.find(query).sort({ createdAt: -1 });
         res.json(items);
     } catch (err) {

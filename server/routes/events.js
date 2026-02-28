@@ -12,6 +12,12 @@ router.get('/', protect, async (req, res) => {
         if (start && end) {
             query.date = { $gte: new Date(start), $lte: new Date(end) };
         }
+
+        // If user is a Client, ONLY show them their own events
+        if (req.user && req.user.role === 'Client') {
+            query.clientName = req.user.username;
+        }
+
         const events = await Event.find(query).sort({ date: 1 });
         res.json(events);
     } catch (err) {

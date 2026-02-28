@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { SocketProvider } from './context/SocketContext';
 import { CalendarProvider } from './context/CalendarContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -12,8 +12,18 @@ import Clients from './pages/Clients';
 import './index.css';
 
 const ProtectedRoute = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const location = useLocation();
+
   if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  // Restrict Client role to Dashboard only
+  if (user?.role === 'Client') {
+    if (location.pathname !== '/' && location.pathname !== '/login') {
+      return <Navigate to="/" replace />;
+    }
+  }
+
   return <Outlet />;
 };
 
