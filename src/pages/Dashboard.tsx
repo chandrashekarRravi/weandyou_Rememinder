@@ -2,12 +2,14 @@ import React, { useState, useMemo } from 'react';
 import { useCreativeEntries } from '../hooks/useCreativeEntries';
 import { useClients } from '../hooks/useClients';
 import { useCalendarContext } from '../context/CalendarContext';
+import { useAuth } from '../context/AuthContext';
 import FilterSelect from '../components/Calendar/FilterSelect';
 import CreativeEntryModal from '../components/CreativeEntryModal';
 
 const Dashboard: React.FC = () => {
     const { currentDate } = useCalendarContext();
     const { creativeEntries, loading } = useCreativeEntries(currentDate);
+    const { user } = useAuth();
 
     const [activeFeedbackId, setActiveFeedbackId] = useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -240,12 +242,16 @@ const Dashboard: React.FC = () => {
                                                             >
                                                                 <span className="font-bold">F</span>
                                                             </button>
-                                                            <button className="w-10 h-10 rounded-full border border-green-300 bg-white flex items-center justify-center text-green-600 hover:bg-green-50 transition-colors shadow-sm" title="Approve">
-                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                                                            </button>
-                                                            <button className="w-10 h-10 rounded-full border border-red-300 bg-white flex items-center justify-center text-red-600 hover:bg-red-50 transition-colors shadow-sm" title="Reject">
-                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
-                                                            </button>
+                                                            {user?.role !== 'Team' && (
+                                                                <>
+                                                                    <button className="w-10 h-10 rounded-full border border-green-300 bg-white flex items-center justify-center text-green-600 hover:bg-green-50 transition-colors shadow-sm" title="Approve">
+                                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                                                    </button>
+                                                                    <button className="w-10 h-10 rounded-full border border-red-300 bg-white flex items-center justify-center text-red-600 hover:bg-red-50 transition-colors shadow-sm" title="Reject">
+                                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                                    </button>
+                                                                </>
+                                                            )}
                                                         </div>
 
                                                         {/* Right Column: Feedback Box & Plus Button */}

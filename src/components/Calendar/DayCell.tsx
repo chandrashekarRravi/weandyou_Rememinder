@@ -5,6 +5,7 @@ import type { CreativeEntryType } from '../../hooks/useCreativeEntries';
 import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { FaTimes, FaImage, FaVideo, FaTrash } from 'react-icons/fa';
+import { useAuth } from '../../context/AuthContext';
 
 interface DayCellProps {
     date: Date;
@@ -20,6 +21,7 @@ const DayCell: React.FC<DayCellProps> = React.memo(({ date, currentMonth, events
     const isCurrentMonth = isSameMonth(date, currentMonth);
     const isDayToday = isToday(date);
     const [selectedEvent, setSelectedEvent] = useState<EventType | CreativeEntryType | null>(null);
+    const { user } = useAuth();
 
     const handleClick = () => {
         navigate(`/day/${format(date, 'yyyy-MM-dd')}`);
@@ -204,32 +206,45 @@ const DayCell: React.FC<DayCellProps> = React.memo(({ date, currentMonth, events
                                                 <div className="flex justify-between items-center">
                                                     <label className="text-xs font-semibold text-gray-400 uppercase">Status</label>
                                                     <div className="flex items-center gap-2">
-                                                        <select
-                                                            value={selectedEvent.status || 'Pending'}
-                                                            onChange={(e) => {
-                                                                const newStatus = e.target.value as any;
-                                                                setSelectedEvent({ ...selectedEvent, status: newStatus });
-                                                            }}
-                                                            className={clsx(
-                                                                "px-2 py-1 rounded-md text-xs font-semibold border cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500",
+                                                        {user?.role === 'Team' ? (
+                                                            <span className={clsx(
+                                                                "px-2 py-1 rounded-md text-xs font-semibold border",
                                                                 selectedEvent.status === 'Approved' ? 'bg-blue-100 text-blue-700 border-blue-200' :
                                                                     selectedEvent.status === 'Rejected' ? 'bg-red-100 text-red-700 border-red-200' :
                                                                         'bg-yellow-100 text-yellow-700 border-yellow-200'
-                                                            )}
-                                                        >
-                                                            <option value="Pending">Pending</option>
-                                                            <option value="Approved">Approved</option>
-                                                            <option value="Rejected">Rejected</option>
-                                                        </select>
-                                                        <button
-                                                            onClick={async () => {
-                                                                await onUpdateCreativeEntry(selectedEvent._id, { status: selectedEvent.status });
-                                                                alert('Status Saved!');
-                                                            }}
-                                                            className="text-indigo-600 hover:text-indigo-800 text-xs font-bold underline"
-                                                        >
-                                                            Save
-                                                        </button>
+                                                            )}>
+                                                                {selectedEvent.status || 'Pending'}
+                                                            </span>
+                                                        ) : (
+                                                            <>
+                                                                <select
+                                                                    value={selectedEvent.status || 'Pending'}
+                                                                    onChange={(e) => {
+                                                                        const newStatus = e.target.value as any;
+                                                                        setSelectedEvent({ ...selectedEvent, status: newStatus });
+                                                                    }}
+                                                                    className={clsx(
+                                                                        "px-2 py-1 rounded-md text-xs font-semibold border cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500",
+                                                                        selectedEvent.status === 'Approved' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                                                                            selectedEvent.status === 'Rejected' ? 'bg-red-100 text-red-700 border-red-200' :
+                                                                                'bg-yellow-100 text-yellow-700 border-yellow-200'
+                                                                    )}
+                                                                >
+                                                                    <option value="Pending">Pending</option>
+                                                                    <option value="Approved">Approved</option>
+                                                                    <option value="Rejected">Rejected</option>
+                                                                </select>
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        await onUpdateCreativeEntry(selectedEvent._id, { status: selectedEvent.status });
+                                                                        alert('Status Saved!');
+                                                                    }}
+                                                                    className="text-indigo-600 hover:text-indigo-800 text-xs font-bold underline"
+                                                                >
+                                                                    Save
+                                                                </button>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 </div>
 
@@ -272,18 +287,20 @@ const DayCell: React.FC<DayCellProps> = React.memo(({ date, currentMonth, events
                                                 </div>
                                             </div>
 
-                                            <button
-                                                onClick={async () => {
-                                                    if (window.confirm('Are you sure you want to delete this Creative Entry?')) {
-                                                        await onDeleteCreativeEntry(selectedEvent._id);
-                                                        setSelectedEvent(null);
-                                                    }
-                                                }}
-                                                className="w-full py-2 bg-white border border-red-200 hover:bg-red-50 text-red-600 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm"
-                                            >
-                                                <FaTrash className="text-xs" />
-                                                Delete Entry
-                                            </button>
+                                            {user?.role !== 'Team' && (
+                                                <button
+                                                    onClick={async () => {
+                                                        if (window.confirm('Are you sure you want to delete this Creative Entry?')) {
+                                                            await onDeleteCreativeEntry(selectedEvent._id);
+                                                            setSelectedEvent(null);
+                                                        }
+                                                    }}
+                                                    className="w-full py-2 bg-white border border-red-200 hover:bg-red-50 text-red-600 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors shadow-sm"
+                                                >
+                                                    <FaTrash className="text-xs" />
+                                                    Delete Entry
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </>

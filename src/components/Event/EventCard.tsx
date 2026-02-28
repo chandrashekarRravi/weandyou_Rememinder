@@ -3,6 +3,7 @@ import type { EventType } from '../../hooks/useEvents';
 import { FaClock, FaUser, FaTag, FaEdit, FaTrash } from 'react-icons/fa';
 import clsx from 'clsx';
 import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
 
 interface EventCardProps {
     event: EventType;
@@ -10,6 +11,7 @@ interface EventCardProps {
 }
 
 const EventCard: React.FC<EventCardProps> = ({ event, onEdit }) => {
+    const { user } = useAuth();
 
     const handleStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newStatus = e.target.value;
@@ -63,19 +65,30 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEdit }) => {
 
                 {/* Status Dropdown */}
                 <div className="relative">
-                    <select
-                        value={event.status}
-                        onChange={handleStatusChange}
-                        className={clsx(
-                            "appearance-none px-3 py-1 rounded-lg text-xs font-semibold border cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors",
-                            getStatusColor(event.status)
-                        )}
-                        style={{ paddingRight: '1rem', textAlignLast: 'center' }}
-                    >
-                        <option value="Pending">Review</option>
-                        <option value="Ongoing">Approved</option>
-                        <option value="Completed">Completed</option>
-                    </select>
+                    {user?.role === 'Team' ? (
+                        <div
+                            className={clsx(
+                                "px-3 py-1 rounded-lg text-xs font-semibold border text-center inline-block",
+                                getStatusColor(event.status)
+                            )}
+                        >
+                            {event.status === 'Pending' ? 'Review' : event.status === 'Ongoing' ? 'Approved' : 'Completed'}
+                        </div>
+                    ) : (
+                        <select
+                            value={event.status}
+                            onChange={handleStatusChange}
+                            className={clsx(
+                                "appearance-none px-3 py-1 rounded-lg text-xs font-semibold border cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors",
+                                getStatusColor(event.status)
+                            )}
+                            style={{ paddingRight: '1rem', textAlignLast: 'center' }}
+                        >
+                            <option value="Pending">Review</option>
+                            <option value="Ongoing">Approved</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    )}
                 </div>
             </div>
 
@@ -96,22 +109,24 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEdit }) => {
                 </div>
             </div>
 
-            <div className="flex space-x-3 pl-2 transition-opacity">
-                <button
-                    onClick={onEdit}
-                    className="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-700 py-2 rounded-xl text-sm font-semibold flex items-center justify-center space-x-2 transition-colors"
-                >
-                    <FaEdit className="text-xs" />
-                    <span>Edit</span>
-                </button>
-                <button
-                    onClick={handleDelete}
-                    className="flex-1 bg-red-50 hover:bg-red-100 text-red-600 py-2 rounded-xl text-sm font-semibold flex items-center justify-center space-x-2 transition-colors"
-                >
-                    <FaTrash className="text-xs" />
-                    <span>Delete</span>
-                </button>
-            </div>
+            {user?.role !== 'Team' && (
+                <div className="flex space-x-3 pl-2 transition-opacity">
+                    <button
+                        onClick={onEdit}
+                        className="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-700 py-2 rounded-xl text-sm font-semibold flex items-center justify-center space-x-2 transition-colors"
+                    >
+                        <FaEdit className="text-xs" />
+                        <span>Edit</span>
+                    </button>
+                    <button
+                        onClick={handleDelete}
+                        className="flex-1 bg-red-50 hover:bg-red-100 text-red-600 py-2 rounded-xl text-sm font-semibold flex items-center justify-center space-x-2 transition-colors"
+                    >
+                        <FaTrash className="text-xs" />
+                        <span>Delete</span>
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

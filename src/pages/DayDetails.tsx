@@ -7,11 +7,13 @@ import { useCreativeEntries } from '../hooks/useCreativeEntries.ts';
 import { FaArrowLeft, FaPlus, FaImage, FaVideo } from 'react-icons/fa';
 import { format, parseISO, isSameDay } from 'date-fns';
 import { useCalendarContext } from '../context/CalendarContext';
+import { useAuth } from '../context/AuthContext';
 
 const DayDetails: React.FC = () => {
     const { date } = useParams<{ date: string }>();
     const navigate = useNavigate();
     const { activeFilter } = useCalendarContext();
+    const { user } = useAuth();
 
     // Modal State
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -145,13 +147,15 @@ const DayDetails: React.FC = () => {
                     </div>
                 </div>
 
-                <button
-                    onClick={handleAddEvent}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 shadow-lg shadow-indigo-200 transition-all active:scale-95"
-                >
-                    <FaPlus />
-                    <span>Add Event</span>
-                </button>
+                {user?.role !== 'Team' && (
+                    <button
+                        onClick={handleAddEvent}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold flex items-center space-x-2 shadow-lg shadow-indigo-200 transition-all active:scale-95"
+                    >
+                        <FaPlus />
+                        <span>Add Event</span>
+                    </button>
+                )}
             </header>
 
             {isLoading ? (
