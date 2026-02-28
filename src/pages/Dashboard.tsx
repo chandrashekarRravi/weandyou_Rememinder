@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useCreativeEntries } from '../hooks/useCreativeEntries';
+import { useClients } from '../hooks/useClients';
 import { useCalendarContext } from '../context/CalendarContext';
 import FilterSelect from '../components/Calendar/FilterSelect';
 import CreativeEntryModal from '../components/CreativeEntryModal';
@@ -19,14 +20,12 @@ const Dashboard: React.FC = () => {
         status: 'All'
     });
 
-    // Generate Client Options from Creative Entries
+    const { clients } = useClients();
+
+    // Generate Client Options from Clients API
     const clientOptions = useMemo(() => {
-        const uniqueClients = new Set<string>();
-        creativeEntries.forEach(e => {
-            if (e.clientName) uniqueClients.add(e.clientName.trim());
-        });
-        return Array.from(uniqueClients).sort().map(c => ({ label: c, value: c }));
-    }, [creativeEntries]);
+        return clients.map(c => ({ label: c.clientName, value: c.clientName }));
+    }, [clients]);
 
     // Filtered & Grouped Entries Logic
     const groupedEntries = useMemo(() => {

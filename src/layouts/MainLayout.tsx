@@ -2,7 +2,6 @@ import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from '../components/Sidebar/Sidebar';
 import Header from '../components/Calendar/Header';
-import { useCalendarContext } from '../context/CalendarContext';
 
 const MainLayout: React.FC = () => {
     // const {

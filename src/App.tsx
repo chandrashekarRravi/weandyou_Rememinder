@@ -8,6 +8,7 @@ import Rememinder from './pages/Reminder.tsx';
 import Review from './pages/Review.tsx';
 import DayDetails from './pages/DayDetails';
 import Login from './pages/Login';
+import Clients from './pages/Clients';
 import './index.css';
 
 const ProtectedRoute = () => {
@@ -29,6 +30,7 @@ function App() {
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/reminder" element={<Rememinder />} />
                   <Route path="/review" element={<Review />} />
+                  <Route path="/clients" element={<Clients />} />
                   <Route path="/day/:date" element={<DayDetails />} />
                 </Route>
               </Route>

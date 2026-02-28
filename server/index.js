@@ -40,16 +40,19 @@ app.use((req, res, next) => {
 
 import eventRoutes from './routes/events.js';
 app.use('/api/events', eventRoutes);
+
 import feedbackRoutes from './routes/feedbacks.js';
 app.use('/api/feedbacks', feedbackRoutes);
+
 import creativeEntryRoutes from './routes/creativeEntries.js';
 app.use('/api/creative-entries', creativeEntryRoutes);
 
+import clientRoutes from './routes/clients.js';
+app.use('/api/clients', clientRoutes);
 // Fallback route
 app.get('/', (req, res) => {
     res.send('Calendar API is running');
 });
-
 const PORT = process.env.PORT || 5000;
 
 httpServer.listen(PORT, () => {

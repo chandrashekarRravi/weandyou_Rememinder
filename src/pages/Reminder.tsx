@@ -1,15 +1,9 @@
 import React from 'react';
 import CalendarGrid from '../components/Calendar/CalendarGrid.tsx';
 import { useCalendarContext } from '../context/CalendarContext.tsx';
-import { useEvents } from '../hooks/useEvents.ts';
 
 const Dashboard: React.FC = () => {
     const { currentDate, daysRequired } = useCalendarContext();
-    const { events, loading } = useEvents(currentDate);
-
-    const itemsWithReview = React.useMemo(() => events.filter(e => (e.review && e.review.trim() !== '')), [events]);
-    const itemsWithCaptions = React.useMemo(() => events.filter(e => (e.captions && e.captions.trim() !== '')), [events]);
-
 
     return (
         <div className="space-y-8">

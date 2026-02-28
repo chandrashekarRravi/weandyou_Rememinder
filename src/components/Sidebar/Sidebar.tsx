@@ -1,6 +1,5 @@
 import React from 'react';
 import { useCalendarContext } from '../../context/CalendarContext';
-import { format } from 'date-fns';
 
 const MONTH_NAMES = [
     'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'
@@ -32,11 +31,8 @@ const Sidebar: React.FC = () => {
                     ))}
                 </div>
             </div>
-            {/*<div className="mt-auto px-2">
-                <div className="text-xs text-gray-400 mt-2">Today: {format(currentDate, 'MMMM d, yyyy')}</div>
-            </div>
- */}
-        </aside>
+
+        </aside >
     );
 };
 

@@ -71,8 +71,17 @@ const Header: React.FC<HeaderProps> = () => {
                             {p.label}
                         </NavLink>
                     ))}
-                </nav>
-            </div>
+                    {user?.role === 'Admin' && (
+                        <NavLink
+                            to="/clients"
+                            className={({ isActive }) => isActive
+                                ? 'text-indigo-600 font-bold text-base border-b-2 border-indigo-600 pb-0.5'
+                                : 'text-gray-500 hover:text-indigo-600 font-medium text-base transition-colors pb-0.5 border-b-2 border-transparent hover:border-indigo-100'}
+                        >
+                            Clients
+                        </NavLink>
+                    )}
+                </nav>            </div>
 
             {/* Right: Stats, Actions, Profile */}
             <div className="flex items-center space-x-6">

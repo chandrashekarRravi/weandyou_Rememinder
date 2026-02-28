@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FaTimes, FaCloudUploadAlt } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import { useClients } from '../hooks/useClients';
 
 interface CreativeEntryModalProps {
     isOpen: boolean;
@@ -40,6 +41,7 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
     }, [isOpen, initialData]);
 
     const { user } = useAuth();
+    const { clients } = useClients();
     // Auto-captured details
     // If no user is logged in, use "UnknownUser" as fallback
     const username = user?.username || "UnknownUser";
@@ -202,14 +204,18 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
 
                             <div className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Client Name</label>
-                                    <input
-                                        type="text"
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Client Name <span className="text-red-500">*</span></label>
+                                    <select
                                         value={clientName}
                                         onChange={(e) => setClientName(e.target.value)}
-                                        placeholder="e.g. Acme Corp"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all bg-white"
-                                    />
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                                        required
+                                    >
+                                        <option value="" disabled>Select a Client</option>
+                                        {clients.map(c => (
+                                            <option key={c._id} value={c.clientName}>{c.clientName}</option>
+                                        ))}
+                                    </select>
                                 </div>
 
                                 <div>
