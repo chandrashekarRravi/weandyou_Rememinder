@@ -38,6 +38,9 @@ app.use((req, res, next) => {
     next();
 });
 
+import authRoutes from './routes/auth.js';
+app.use('/api/auth', authRoutes);
+
 import eventRoutes from './routes/events.js';
 app.use('/api/events', eventRoutes);
 

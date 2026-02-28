@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../utils/axios';
 import { startOfMonth, endOfMonth } from 'date-fns';
 import { useSocket } from '../context/SocketContext';
 
@@ -29,7 +29,7 @@ export const useCreativeEntries = (currentDate: Date) => {
             const start = monthStartStr;
             const end = endOfMonth(currentDate).toISOString();
             console.log('Fetching entries for range:', { start, end });
-            const response = await axios.get('/api/creative-entries', {
+            const response = await api.get('/api/creative-entries', {
                 params: { start, end }
             });
             console.log('Fetched Creative Entries:', response.data);
@@ -73,7 +73,7 @@ export const useCreativeEntries = (currentDate: Date) => {
 
     const updateEntry = async (id: string, updates: Partial<CreativeEntryType>) => {
         try {
-            const response = await axios.put(`/api/creative-entries/${id}`, updates);
+            const response = await api.put(`/api/creative-entries/${id}`, updates);
             // Optimistic update
             setCreativeEntries(prev => prev.map(entry => entry._id === id ? { ...entry, ...updates } : entry));
             return response.data;
@@ -85,7 +85,7 @@ export const useCreativeEntries = (currentDate: Date) => {
 
     const deleteEntry = async (id: string) => {
         try {
-            await axios.delete(`/api/creative-entries/${id}`);
+            await api.delete(`/api/creative-entries/${id}`);
             // Optimistic update
             setCreativeEntries(prev => prev.filter(entry => entry._id !== id));
         } catch (error) {

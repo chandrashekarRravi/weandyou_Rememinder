@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../utils/axios';
 import { useSocket } from '../context/SocketContext';
 
 export interface ClientType {
@@ -18,7 +18,7 @@ export const useClients = () => {
     const fetchClients = useCallback(async () => {
         try {
             setLoading(true);
-            const { data } = await axios.get('/api/clients');
+            const { data } = await api.get('/api/clients');
             setClients(data);
             setError(null);
         } catch (err: any) {
@@ -50,12 +50,12 @@ export const useClients = () => {
     }, [socket]);
 
     const createClient = async (clientName: string, contactEmail?: string) => {
-        const { data } = await axios.post('/api/clients', { clientName, contactEmail });
+        const { data } = await api.post('/api/clients', { clientName, contactEmail });
         return data;
     };
 
     const deleteClient = async (id: string) => {
-        await axios.delete(`/api/clients/${id}`);
+        await api.delete(`/api/clients/${id}`);
     };
 
     return { clients, loading, error, createClient, deleteClient, fetchClients };

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../utils/axios';
 import { useSocket } from '../context/SocketContext';
 import { startOfMonth, endOfMonth } from 'date-fns';
 
@@ -34,7 +34,7 @@ export const useEvents = (currentDate: Date) => {
         try {
             const start = monthStartStr;
             const end = endOfMonth(currentDate).toISOString();
-            const response = await axios.get('/api/events', {
+            const response = await api.get('/api/events', {
                 params: { start, end }
             });
             setEvents(response.data);

@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import CreativeEntry from '../models/CreativeEntry.js';
+import { protect, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -13,14 +14,14 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Upload endpoint: returns URL (similar to feedbacks but distinct if needed)
-router.post('/upload', upload.single('file'), (req, res) => {
+router.post('/upload', protect, upload.single('file'), (req, res) => {
     if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
     const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
     res.json({ url });
 });
 
 // Create Creative Entry record
-router.post('/', async (req, res) => {
+router.post('/', protect, async (req, res) => {
     try {
         const entry = new CreativeEntry(req.body);
         const saved = await entry.save();
@@ -40,7 +41,7 @@ router.post('/', async (req, res) => {
 });
 
 // List Creative Entries (supports date range optional)
-router.get('/', async (req, res) => {
+router.get('/', protect, async (req, res) => {
     try {
         const { start, end } = req.query;
         let query = {};
@@ -60,7 +61,7 @@ router.get('/', async (req, res) => {
 });
 
 // Update Creative Entry (Status, Caption, etc.)
-router.put('/:id', async (req, res) => {
+router.put('/:id', protect, async (req, res) => {
     try {
         const { id } = req.params;
         const updatedEntry = await CreativeEntry.findByIdAndUpdate(id, req.body, { new: true });
@@ -80,7 +81,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete Creative Entry
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', protect, authorize('Admin'), async (req, res) => {
     try {
         const { id } = req.params;
         const deletedEntry = await CreativeEntry.findByIdAndDelete(id);

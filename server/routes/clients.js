@@ -1,10 +1,11 @@
 import express from 'express';
 import Client from '../models/Client.js';
+import { protect, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // Get all clients
-router.get('/', async (req, res) => {
+router.get('/', protect, async (req, res) => {
     try {
         const clients = await Client.find().sort({ clientName: 1 });
         res.json(clients);
@@ -14,7 +15,7 @@ router.get('/', async (req, res) => {
 });
 
 // Create new client
-router.post('/', async (req, res) => {
+router.post('/', protect, authorize('Admin'), async (req, res) => {
     try {
         const client = new Client(req.body);
         const saved = await client.save();
@@ -32,7 +33,7 @@ router.post('/', async (req, res) => {
 });
 
 // Delete client
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', protect, authorize('Admin'), async (req, res) => {
     try {
         const { id } = req.params;
         const deleted = await Client.findByIdAndDelete(id);

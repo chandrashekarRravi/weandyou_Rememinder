@@ -1,10 +1,11 @@
 import express from 'express';
 import Event from '../models/Event.js';
+import { protect, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
 // Get all events (optional filter by date range)
-router.get('/', async (req, res) => {
+router.get('/', protect, async (req, res) => {
     try {
         const { start, end } = req.query;
         let query = {};
@@ -19,7 +20,7 @@ router.get('/', async (req, res) => {
 });
 
 // Create event
-router.post('/', async (req, res) => {
+router.post('/', protect, authorize('Admin'), async (req, res) => {
     console.log('Create event payload:', req.body);
     const event = new Event(req.body);
     try {
@@ -34,7 +35,7 @@ router.post('/', async (req, res) => {
 });
 
 // Update event
-router.put('/:id', async (req, res) => {
+router.put('/:id', protect, authorize('Admin'), async (req, res) => {
     console.log('Update event payload for', req.params.id, req.body);
     try {
         const updatedEvent = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -47,7 +48,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete event
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', protect, authorize('Admin'), async (req, res) => {
     try {
         await Event.findByIdAndDelete(req.params.id);
         req.io.emit('eventDeleted', req.params.id);

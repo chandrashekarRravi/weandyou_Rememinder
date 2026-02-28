@@ -2,7 +2,7 @@ import React from 'react';
 import type { EventType } from '../../hooks/useEvents';
 import { FaClock, FaUser, FaTag, FaEdit, FaTrash } from 'react-icons/fa';
 import clsx from 'clsx';
-import axios from 'axios';
+import api from '../../utils/axios';
 import { useAuth } from '../../context/AuthContext';
 
 interface EventCardProps {
@@ -16,7 +16,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEdit }) => {
     const handleStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newStatus = e.target.value;
         try {
-            await axios.put(`/api/events/${event._id}`, { status: newStatus });
+            await api.put(`/api/events/${event._id}`, { status: newStatus });
             // Socket will handle the update propagation
         } catch (err) {
             console.error('Failed to update status', err);
@@ -27,7 +27,7 @@ const EventCard: React.FC<EventCardProps> = ({ event, onEdit }) => {
     const handleDelete = async () => {
         if (window.confirm('Are you sure you want to delete this event?')) {
             try {
-                await axios.delete(`/api/events/${event._id}`);
+                await api.delete(`/api/events/${event._id}`);
                 // Socket will handle the removal
             } catch (err) {
                 console.error('Failed to delete event', err);

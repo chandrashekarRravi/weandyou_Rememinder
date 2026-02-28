@@ -1,13 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth, type Role } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { FiLock, FiUser } from 'react-icons/fi';
-
-const MOCK_USERS = [
-    { username: 'admin', password: 'admin123', role: 'Admin' as Role },
-    { username: 'team', password: 'team123', role: 'Team' as Role },
-    { username: 'client', password: 'client123', role: 'Client' as Role },
-];
+import api from '../utils/axios';
 
 const Login: React.FC = () => {
     const [username, setUsername] = useState('');
@@ -16,17 +11,18 @@ const Login: React.FC = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
 
-        const user = MOCK_USERS.find(u => u.username === username && u.password === password);
-
-        if (user) {
-            login({ username: user.username, role: user.role });
+        try {
+            const res = await api.post('/api/auth/login', { username, password });
+            const data = res.data;
+            login({ username: data.username, role: data.role }, data.token);
             navigate('/');
-        } else {
-            setError('Invalid username or password');
+        } catch (err: any) {
+            console.error('Login error', err);
+            setError(err.response?.data?.message || 'Invalid username or password');
         }
     };
 

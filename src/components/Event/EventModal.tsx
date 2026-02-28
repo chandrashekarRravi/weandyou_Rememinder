@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../utils/axios';
 import { FaTimes } from 'react-icons/fa';
 import type { EventType } from '../../hooks/useEvents';
 
@@ -15,8 +15,8 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, onSave, initia
     const [formData, setFormData] = useState({
         title: '',
         description: '',
-        review:'',
-        captions:'',
+        review: '',
+        captions: '',
         startTime: '',
         endTime: '',
         clientName: '',
@@ -32,8 +32,8 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, onSave, initia
                 title: eventToEdit.title,
                 description: eventToEdit.description || '',
                 startTime: eventToEdit.startTime || '',
-                review:eventToEdit.review ||'',
-                captions:eventToEdit.captions ||'',
+                review: eventToEdit.review || '',
+                captions: eventToEdit.captions || '',
                 endTime: eventToEdit.endTime || '',
                 clientName: eventToEdit.clientName || '',
                 clientBrand: eventToEdit.clientBrand || '',
@@ -45,8 +45,8 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, onSave, initia
             setFormData({
                 title: '',
                 description: '',
-                review:'',
-                captions:'',
+                review: '',
+                captions: '',
                 startTime: '',
                 endTime: '',
                 clientName: '',
@@ -70,9 +70,9 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, onSave, initia
             };
 
             if (eventToEdit) {
-                await axios.put(`/api/events/${eventToEdit._id}`, payload);
+                await api.put(`/api/events/${eventToEdit._id}`, payload);
             } else {
-                await axios.post('/api/events', payload);
+                await api.post('/api/events', payload);
             }
             onSave();
             onClose();
@@ -208,7 +208,7 @@ const EventModal: React.FC<EventModalProps> = ({ isOpen, onClose, onSave, initia
                         />
                     </div>
                     {/* captions */}
-<div>
+                    <div>
                         <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Captions</label>
                         <textarea
                             rows={3}

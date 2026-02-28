@@ -2,6 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import Feedback from '../models/Feedback.js';
+import { protect } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -13,14 +14,14 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // Upload endpoint: returns URL
-router.post('/upload', upload.single('file'), (req, res) => {
+router.post('/upload', protect, upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
   const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
   res.json({ url });
 });
 
 // Create feedback record
-router.post('/', async (req, res) => {
+router.post('/', protect, async (req, res) => {
   try {
     const fb = new Feedback(req.body);
     const saved = await fb.save();
@@ -31,7 +32,7 @@ router.post('/', async (req, res) => {
 });
 
 // List feedback records
-router.get('/', async (req, res) => {
+router.get('/', protect, async (req, res) => {
   try {
     const items = await Feedback.find().sort({ createdAt: -1 });
     res.json(items);

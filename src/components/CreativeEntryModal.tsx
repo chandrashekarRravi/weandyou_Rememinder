@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../utils/axios';
 import { FaTimes, FaCloudUploadAlt } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useClients } from '../hooks/useClients';
@@ -77,13 +77,13 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
             // 1. Upload File
             const fd = new FormData();
             fd.append('file', file);
-            const uploadRes = await axios.post('/api/creative-entries/upload', fd, {
+            const uploadRes = await api.post('/api/creative-entries/upload', fd, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             const filePath = uploadRes.data.url;
 
             // 2. Save Entry
-            await axios.post('/api/creative-entries', {
+            await api.post('/api/creative-entries', {
                 mediaId,
                 clientName,
                 filePath,

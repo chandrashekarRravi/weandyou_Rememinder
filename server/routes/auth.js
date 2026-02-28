@@ -1,0 +1,92 @@
+import express from 'express';
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
+import { protect } from '../middleware/auth.js';
+
+const router = express.Router();
+
+// Generate JWT
+const generateToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET || 'fallback_secret', {
+        expiresIn: '30d',
+    });
+};
+
+// @desc    Auth user & get token
+// @route   POST /api/auth/login
+// @access  Public
+router.post('/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+
+        // Check for user
+        const user = await User.findOne({ username }).select('+password');
+        if (user && (await user.matchPassword(password))) {
+            res.json({
+                _id: user._id,
+                username: user.username,
+                role: user.role,
+                token: generateToken(user._id),
+            });
+        } else {
+            res.status(401).json({ message: 'Invalid username or password' });
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// @desc    Get current user profile
+// @route   GET /api/auth/me
+// @access  Private
+router.get('/me', protect, async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (user) {
+            res.json({
+                _id: user._id,
+                username: user.username,
+                role: user.role,
+            });
+        } else {
+            res.status(404).json({ message: 'User not found' });
+        }
+    } catch (error) {
+        console.error('Get profile error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// @desc    Log out user / clear cookie or client token
+// @route   POST /api/auth/logout
+// @access  Private
+router.post('/logout', protect, (req, res) => {
+    // For Bearer tokens kept in local storage, actual logout is handled client-side
+    // This endpoint remains to be functionally complete or if we switch to HTTP-Only cookies
+    res.json({ message: 'Logged out successfully' });
+});
+
+// @desc    Seed temporary mock users
+// @route   POST /api/auth/seed
+// @access  Public
+router.post('/seed', async (req, res) => {
+    try {
+        const users = await User.find({});
+        if (users.length > 0) {
+            return res.status(400).json({ message: 'Users already seeded' });
+        }
+
+        await User.create([
+            { username: 'admin', password: 'admin123', role: 'Admin' },
+            { username: 'team', password: 'team123', role: 'Team' },
+            { username: 'client', password: 'client123', role: 'Client' }
+        ]);
+
+        res.status(201).json({ message: 'Mock users seeded' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+})
+
+export default router;
