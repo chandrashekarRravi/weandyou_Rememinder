@@ -1,5 +1,6 @@
 import express from 'express';
 import Client from '../models/Client.js';
+import User from '../models/User.js';
 import { protect, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -18,7 +19,31 @@ router.get('/', protect, async (req, res) => {
 router.post('/', protect, authorize('Admin'), async (req, res) => {
     try {
         const client = new Client(req.body);
+
+        // Auto-generate User for the client
+        const currentYear = new Date().getFullYear();
+        const autoPassword = `${client.clientName}@${currentYear}`;
+
+        // First, check if user exists (to prevent client creation if user exists but client doesn't)
+        const existingUser = await User.findOne({ username: client.clientName });
+        if (existingUser) {
+            return res.status(400).json({ message: 'A user with this client name already exists.' });
+        }
+
         const saved = await client.save();
+
+        // Create the user after client is successfully saved
+        try {
+            await User.create({
+                username: client.clientName,
+                password: autoPassword,
+                role: 'Client'
+            });
+        } catch (userErr) {
+            // If user creation fails, we should ideally rollback client creation
+            await Client.findByIdAndDelete(saved._id);
+            return res.status(400).json({ message: 'Failed to create user credentials for client: ' + userErr.message });
+        }
 
         if (req.io) {
             req.io.emit('clientCreated', saved);
@@ -41,6 +66,9 @@ router.delete('/:id', protect, authorize('Admin'), async (req, res) => {
         if (!deleted) {
             return res.status(404).json({ message: 'Client not found' });
         }
+
+        // Also delete the associated User account
+        await User.findOneAndDelete({ username: deleted.clientName });
 
         if (req.io) {
             req.io.emit('clientDeleted', id);

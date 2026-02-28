@@ -53,8 +53,15 @@ const Clients: React.FC = () => {
             </div>
 
             {/* Add New Client Form */}
-            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                <h2 className="text-lg font-semibold text-gray-800 mb-4">Add New Client</h2>
+            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-4">
+                <div>
+                    <h2 className="text-lg font-semibold text-gray-800">Add New Client</h2>
+                    <p className="text-sm text-indigo-600 bg-indigo-50 p-3 rounded-lg mt-2 border border-indigo-100">
+                        <span className="font-semibold">Note:</span> Adding a new client will automatically generate a User account for them so they can log in. <br />
+                        <b>Username:</b> [Client Name]<br />
+                        <b>Password:</b> [Client Name]@{new Date().getFullYear()}
+                    </p>
+                </div>
                 <form onSubmit={handleCreate} className="flex gap-4">
                     <input
                         type="text"
