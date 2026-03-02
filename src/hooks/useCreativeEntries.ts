@@ -16,22 +16,29 @@ export interface CreativeEntryType {
     status?: 'Pending' | 'Approved' | 'Rejected';
 }
 
-export const useCreativeEntries = (currentDate: Date) => {
+export interface UseCreativeEntriesOptions {
+    fetchAll?: boolean;
+}
+
+export const useCreativeEntries = (currentDate: Date, options?: UseCreativeEntriesOptions) => {
     const [creativeEntries, setCreativeEntries] = useState<CreativeEntryType[]>([]);
     const [loading, setLoading] = useState(false);
     const socket = useSocket();
 
+    const fetchAll = options?.fetchAll || false;
     const monthStartStr = startOfMonth(currentDate).toISOString();
+    const monthEndStr = endOfMonth(currentDate).toISOString();
 
     const fetchEntries = useCallback(async () => {
         setLoading(true);
         try {
-            const start = monthStartStr;
-            const end = endOfMonth(currentDate).toISOString();
-            console.log('Fetching entries for range:', { start, end });
-            const response = await api.get('/api/creative-entries', {
-                params: { start, end }
-            });
+            const params: any = {};
+            if (!fetchAll) {
+                params.start = monthStartStr;
+                params.end = monthEndStr;
+            }
+            console.log('Fetching entries for range:', params);
+            const response = await api.get('/api/creative-entries', { params });
             console.log('Fetched Creative Entries:', response.data);
             setCreativeEntries(response.data);
         } catch (error) {
@@ -39,7 +46,7 @@ export const useCreativeEntries = (currentDate: Date) => {
         } finally {
             setLoading(false);
         }
-    }, [monthStartStr]);
+    }, [monthStartStr, monthEndStr, fetchAll]);
 
     useEffect(() => {
         fetchEntries();

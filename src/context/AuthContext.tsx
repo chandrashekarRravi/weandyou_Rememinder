@@ -4,6 +4,7 @@ import api from '../utils/axios';
 export type Role = 'Admin' | 'Team' | 'Client';
 
 export interface User {
+    _id: string;
     username: string;
     role: Role;
 }
@@ -31,7 +32,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setToken(storedToken);
             api.get('/api/auth/me', { headers: { Authorization: `Bearer ${storedToken}` } })
                 .then(res => {
-                    setUser({ username: res.data.username, role: res.data.role });
+                    setUser({ _id: res.data._id, username: res.data.username, role: res.data.role });
                     setLoading(false);
                 })
                 .catch(err => {

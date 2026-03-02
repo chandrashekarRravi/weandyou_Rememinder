@@ -3,15 +3,18 @@ import { useCreativeEntries } from '../hooks/useCreativeEntries';
 import { useClients } from '../hooks/useClients';
 import { useCalendarContext } from '../context/CalendarContext';
 import { useAuth } from '../context/AuthContext';
+import { useIterationFeedback } from '../hooks/useIterationFeedback';
 import FilterSelect from '../components/Calendar/FilterSelect';
 import CreativeEntryModal from '../components/CreativeEntryModal';
 
 const Dashboard: React.FC = () => {
     const { currentDate } = useCalendarContext();
-    const { creativeEntries, loading } = useCreativeEntries(currentDate);
+    const { creativeEntries, loading } = useCreativeEntries(currentDate, { fetchAll: true });
     const { user } = useAuth();
 
     const [activeFeedbackId, setActiveFeedbackId] = useState<string | null>(null);
+    const { feedbacks, addFeedback, loading: feedbacksLoading } = useIterationFeedback(activeFeedbackId);
+    const [feedbackText, setFeedbackText] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalInitialData, setModalInitialData] = useState<{ mediaId?: string; clientName?: string; category?: string }>();
 
@@ -267,42 +270,80 @@ const Dashboard: React.FC = () => {
                                                                             <h4 className="text-sm font-bold text-gray-700 text-center">Feedback of Iteration {iterIdx + 1}</h4>
                                                                         </div>
                                                                         <div className="flex-1 p-4 overflow-y-auto space-y-4">
-                                                                            {/* Mock Comment */}
-                                                                            <div className="flex flex-col gap-1 items-start">
-                                                                                <div className="flex items-center gap-2">
-                                                                                    <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-bold">U</div>
-                                                                                    <span className="text-xs font-semibold text-gray-700">Client User</span>
-                                                                                    <span className="text-[10px] text-gray-400">10:30 AM 12/Oct</span>
+                                                                            {feedbacksLoading ? (
+                                                                                <div className="text-center text-gray-400 text-sm mt-10">Loading comments...</div>
+                                                                            ) : feedbacks.length === 0 ? (
+                                                                                <div className="text-center text-gray-400 text-sm mt-10">
+                                                                                    No feedback yet.<br />Start the conversation!
                                                                                 </div>
-                                                                                <div className="bg-blue-50 text-gray-800 text-sm p-3 rounded-lg rounded-tl-none border border-blue-100 relative w-full max-w-sm">
-                                                                                    Make the logo bigger please.
-                                                                                    <div className="absolute -right-2 top-2 w-4 h-4 bg-white border border-gray-200 rounded-sm flex items-center justify-center cursor-pointer shadow-sm">
-                                                                                        <svg className="w-3 h-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                                                                                    </div>
-                                                                                    <div className="w-10 h-6 border-b-2 border-r-2 border-gray-300 absolute -bottom-5 right-4 rounded-br opacity-50"></div>
-                                                                                </div>
-                                                                            </div>
-                                                                            {/* Mock Reply */}
-                                                                            <div className="flex flex-col gap-1 items-end mt-4">
-                                                                                <div className="flex items-center gap-2">
-                                                                                    <span className="text-[10px] text-gray-400">11:15 AM 12/Oct</span>
-                                                                                    <span className="text-xs font-semibold text-gray-700">Creative Team</span>
-                                                                                    <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px] font-bold">C</div>
-                                                                                </div>
-                                                                                <div className="bg-indigo-50 text-gray-800 text-sm p-3 rounded-lg rounded-tr-none border border-indigo-100 relative max-w-sm">
-                                                                                    Updated the logo size. Check Iteration 2.
-                                                                                </div>
-                                                                            </div>
+                                                                            ) : (
+                                                                                feedbacks.map((fb) => {
+                                                                                    const isCurrentUser = fb.userId === user?._id;
+
+                                                                                    if (!isCurrentUser) {
+                                                                                        // Someone else's comment (Left side)
+                                                                                        return (
+                                                                                            <div key={fb._id} className="flex flex-col gap-1 items-start">
+                                                                                                <div className="flex items-center gap-2">
+                                                                                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${fb.role === 'Client' ? 'bg-blue-100 text-blue-700' : 'bg-indigo-100 text-indigo-700'}`}>
+                                                                                                        {fb.username?.charAt(0).toUpperCase() || 'U'}
+                                                                                                    </div>
+                                                                                                    <span className="text-xs font-semibold text-gray-700">{fb.username || 'User'}</span>
+                                                                                                    <span className="text-[10px] text-gray-400">
+                                                                                                        {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                                                    </span>
+                                                                                                </div>
+                                                                                                <div className={`text-sm p-3 rounded-lg rounded-tl-none border relative w-full max-w-sm ${fb.role === 'Client' ? 'bg-blue-50 text-gray-800 border-blue-100' : 'bg-gray-50 text-gray-800 border-gray-200'}`}>
+                                                                                                    {fb.text}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        );
+                                                                                    } else {
+                                                                                        // Current user's comment (Right side)
+                                                                                        return (
+                                                                                            <div key={fb._id} className="flex flex-col gap-1 items-end mt-4">
+                                                                                                <div className="flex items-center gap-2">
+                                                                                                    <span className="text-[10px] text-gray-400">
+                                                                                                        {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                                                    </span>
+                                                                                                    <span className="text-xs font-semibold text-gray-700">You ({fb.role})</span>
+                                                                                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${fb.role === 'Client' ? 'bg-blue-100 text-blue-700' : 'bg-indigo-100 text-indigo-700'}`}>
+                                                                                                        {fb.username?.charAt(0).toUpperCase() || 'U'}
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                                <div className={`text-sm p-3 rounded-lg rounded-tr-none border relative max-w-sm ${fb.role === 'Client' ? 'bg-blue-50 text-gray-800 border-blue-100' : 'bg-indigo-50 text-indigo-900 border-indigo-100'}`}>
+                                                                                                    {fb.text}
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        );
+                                                                                    }
+                                                                                })
+                                                                            )}
                                                                         </div>
                                                                         {/* Input Box */}
                                                                         <div className="p-3 border-t border-gray-200 bg-gray-50">
-                                                                            <div className="flex items-center gap-2 border border-gray-300 rounded-md p-1 bg-white focus-within:ring-2 focus-within:ring-indigo-500 transition-shadow">
-                                                                                <input type="text" placeholder="Type feedback..." className="flex-1 bg-transparent px-2 py-1 text-sm outline-none" />
+                                                                            <form
+                                                                                onSubmit={async (e) => {
+                                                                                    e.preventDefault();
+                                                                                    if (feedbackText.trim()) {
+                                                                                        await addFeedback(feedbackText);
+                                                                                        setFeedbackText('');
+                                                                                    }
+                                                                                }}
+                                                                                className="flex items-center gap-2 border border-gray-300 rounded-md p-1 bg-white focus-within:ring-2 focus-within:ring-indigo-500 transition-shadow"
+                                                                            >
+                                                                                <input
+                                                                                    type="text"
+                                                                                    placeholder="Type feedback..."
+                                                                                    value={feedbackText}
+                                                                                    onChange={(e) => setFeedbackText(e.target.value)}
+                                                                                    className="flex-1 bg-transparent px-2 py-1 text-sm outline-none"
+                                                                                />
                                                                                 <svg className="w-4 h-4 text-gray-400 cursor-pointer ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                                                                                <button className="p-2 text-indigo-600 hover:bg-indigo-50 rounded transition-colors ml-1" title="Send">
+                                                                                <button type="submit" className="p-2 text-indigo-600 hover:bg-indigo-50 rounded transition-colors ml-1" title="Send" disabled={!feedbackText.trim()}>
                                                                                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
                                                                                 </button>
-                                                                            </div>
+                                                                            </form>
                                                                         </div>
                                                                     </div>
 

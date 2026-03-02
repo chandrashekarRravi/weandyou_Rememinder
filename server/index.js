@@ -50,6 +50,9 @@ app.use('/api/feedbacks', feedbackRoutes);
 import creativeEntryRoutes from './routes/creativeEntries.js';
 app.use('/api/creative-entries', creativeEntryRoutes);
 
+import iterationFeedbackRoutes from './routes/iterationFeedbacks.js';
+app.use('/api/iteration-feedbacks', iterationFeedbackRoutes);
+
 import clientRoutes from './routes/clients.js';
 app.use('/api/clients', clientRoutes);
 // Fallback route
