@@ -9,8 +9,30 @@ import CreativeEntryModal from '../components/CreativeEntryModal';
 
 const Dashboard: React.FC = () => {
     const { currentDate } = useCalendarContext();
-    const { creativeEntries, loading } = useCreativeEntries(currentDate, { fetchAll: true });
+    const { creativeEntries, loading, updateEntry } = useCreativeEntries(currentDate, { fetchAll: true });
     const { user } = useAuth();
+
+    const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{ id: string, status: 'Approved' | 'Rejected' } | null>(null);
+
+    const handleStatusUpdate = async (id: string, newStatus: 'Approved' | 'Rejected') => {
+        setPendingStatusUpdate({ id, status: newStatus });
+    };
+
+    const confirmStatusUpdate = async () => {
+        if (!pendingStatusUpdate) return;
+        try {
+            await updateEntry(pendingStatusUpdate.id, { status: pendingStatusUpdate.status });
+        } catch (error) {
+            console.error('Failed to update status', error);
+            // Optionally could use a toast notification here instead of alert
+        } finally {
+            setPendingStatusUpdate(null);
+        }
+    };
+
+    const cancelStatusUpdate = () => {
+        setPendingStatusUpdate(null);
+    };
 
     const [activeFeedbackId, setActiveFeedbackId] = useState<string | null>(null);
     const { feedbacks, addFeedback, loading: feedbacksLoading } = useIterationFeedback(activeFeedbackId);
@@ -97,7 +119,7 @@ const Dashboard: React.FC = () => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-7xl mx-auto space-y-6">
             {loading ? (
                 <div className="text-gray-400 align-center tp-50vh">Loading...</div>
             ) : (
@@ -233,14 +255,14 @@ const Dashboard: React.FC = () => {
                                                                 )}
                                                                 <div className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded">Image</div>
                                                             </div>
-                                                            <div className="border border-gray-200 rounded-lg p-4 min-h-[100px] bg-gray-50">
+                                                            <div className="border border-gray-200 rounded-lg p-4 min-h-[10px] bg-gray-50">
                                                                 <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Captions</p>
                                                                 <p className="text-sm text-gray-700 whitespace-pre-wrap">{entry.caption || 'No caption provided.'}</p>
                                                             </div>
                                                         </div>
 
                                                         {/* Middle Column: Actions */}
-                                                        <div className="flex lg:flex-col items-center justify-center gap-4 lg:py-8 lg:px-2">
+                                                        <div className="flex lg:flex-col items-center justify-center gap-4 lg:py-8 lg:px-2 relative">
                                                             <button
                                                                 onClick={() => setActiveFeedbackId(activeFeedbackIdForClient ? null : entry._id)}
                                                                 className={`w-10 h-10 rounded-full border flex items-center justify-center transition-colors shadow-sm ${activeFeedbackIdForClient ? 'border-indigo-300 bg-indigo-50 text-indigo-600' : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-100'}`}
@@ -250,10 +272,14 @@ const Dashboard: React.FC = () => {
                                                             </button>
                                                             {user?.role !== 'Team' && user?.role !== 'Client' && (
                                                                 <>
-                                                                    <button className="w-10 h-10 rounded-full border border-green-300 bg-white flex items-center justify-center text-green-600 hover:bg-green-50 transition-colors shadow-sm" title="Approve">
+                                                                    <button
+                                                                        onClick={() => handleStatusUpdate(entry._id, 'Approved')}
+                                                                        className="w-10 h-10 rounded-full border border-green-300 bg-white flex items-center justify-center text-green-600 hover:bg-green-50 transition-colors shadow-sm" title="Approve">
                                                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                                                                     </button>
-                                                                    <button className="w-10 h-10 rounded-full border border-red-300 bg-white flex items-center justify-center text-red-600 hover:bg-red-50 transition-colors shadow-sm" title="Reject">
+                                                                    <button
+                                                                        onClick={() => handleStatusUpdate(entry._id, 'Rejected')}
+                                                                        className="w-10 h-10 rounded-full border border-red-300 bg-white flex items-center justify-center text-red-600 hover:bg-red-50 transition-colors shadow-sm" title="Reject">
                                                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
                                                                     </button>
                                                                 </>
@@ -358,7 +384,7 @@ const Dashboard: React.FC = () => {
                                                                                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" /></svg>
                                                                             </button>
                                                                             <div className="absolute top-[calc(50%+30px)] right-full mr-2 hidden lg:flex items-center">
-                                                                                <div className="w-12 border-t border-gray-400"></div>
+
                                                                             </div>
                                                                             <div className="mt-2 text-center text-[10px] text-gray-500 w-20 leading-tight">
                                                                                 After this accept<br />add to new one
@@ -379,7 +405,7 @@ const Dashboard: React.FC = () => {
                                                                                 <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" /></svg>
                                                                             </button>
                                                                             <div className="absolute right-full mr-4 hidden lg:flex items-center top-[120px]">
-                                                                                <div className="w-32 border-t border-gray-300"></div>
+
                                                                             </div>
                                                                             <div className="mt-6 text-center text-sm font-medium text-gray-500 leading-tight">
                                                                                 After this accept<br />add to new one
@@ -393,58 +419,60 @@ const Dashboard: React.FC = () => {
                                                 </div>
 
                                                 {/* Footer Strip - Iterations */}
-                                                {currentMediaGroup.length > 0 && (
-                                                    <div className="px-6 pb-6 pt-2">
-                                                        <div className="grid grid-cols-[repeat(auto-fit,minmax(12px,1fr))] h-3 border border-gray-300 divide-x divide-gray-300 mb-4 bg-gray-50 max-w-2xl mx-auto">
-                                                            {[...Array(30)].map((_, i) => (
-                                                                <div key={i} className="h-full"></div>
-                                                            ))}
-                                                        </div>
-
-                                                        <div className="flex flex-wrap items-center gap-4 border-t border-dashed border-gray-200 pt-4 max-w-2xl mx-auto">
-                                                            <span className="text-xs font-bold text-gray-500">I {iterIdx + 1}:</span>
-                                                            <div className="border border-gray-300 p-1 w-24 h-16 rounded overflow-hidden bg-gray-100 flex items-center justify-center relative">
-                                                                {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
-                                                                    <video src={entry.filePath} className="w-full h-full object-cover" />
-                                                                ) : (
-                                                                    <img src={entry.filePath} alt="Thumb" className="w-full h-full object-cover" />
-                                                                )}
-                                                                <div className="absolute inset-0 bg-white/20"></div>
-                                                            </div>
-
-                                                            <div className="flex-1"></div>
-
-                                                            <div className="text-sm font-mono text-gray-500 tracking-widest flex items-center gap-3">
-                                                                <span
-                                                                    onClick={() => updateViewState(clientName, { iterationIndex: Math.max(0, iterIdx - 1) })}
-                                                                    className={`cursor-pointer ${iterIdx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-indigo-600'}`}
-                                                                >
-                                                                    &lt;
-                                                                </span>
-
-                                                                {currentMediaGroup.map((_, i) => (
-                                                                    <span
-                                                                        key={i}
-                                                                        onClick={() => updateViewState(clientName, { iterationIndex: i })}
-                                                                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs cursor-pointer transition-colors ${i === iterIdx
-                                                                            ? 'border border-gray-300 font-bold bg-white text-gray-800 shadow-sm'
-                                                                            : 'text-gray-400 hover:bg-gray-200 hover:text-gray-700'
-                                                                            }`}
-                                                                    >
-                                                                        {i + 1}
-                                                                    </span>
+                                                {
+                                                    currentMediaGroup.length > 0 && (
+                                                        <div className="px-6 pb-6 pt-2">
+                                                            <div className="grid grid-cols-[repeat(auto-fit,minmax(12px,1fr))] h-3 border border-gray-300 divide-x divide-gray-300 mb-4 bg-gray-50 max-w-2xl mx-auto">
+                                                                {[...Array(30)].map((_, i) => (
+                                                                    <div key={i} className="h-full"></div>
                                                                 ))}
+                                                            </div>
 
-                                                                <span
-                                                                    onClick={() => updateViewState(clientName, { iterationIndex: Math.min(maxIterationIndexes[mediaIdx] - 1, iterIdx + 1) })}
-                                                                    className={`cursor-pointer ${iterIdx === maxIterationIndexes[mediaIdx] - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-indigo-600'}`}
-                                                                >
-                                                                    &gt;
-                                                                </span>
+                                                            <div className="flex flex-wrap items-center gap-4 border-t border-dashed border-gray-200 pt-4 max-w-2xl mx-auto">
+                                                                <span className="text-xs font-bold text-gray-500">I {iterIdx + 1}:</span>
+                                                                <div className="border border-gray-300 p-1 w-24 h-16 rounded overflow-hidden bg-gray-100 flex items-center justify-center relative">
+                                                                    {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
+                                                                        <video src={entry.filePath} className="w-full h-full object-cover" />
+                                                                    ) : (
+                                                                        <img src={entry.filePath} alt="Thumb" className="w-full h-full object-cover" />
+                                                                    )}
+                                                                    <div className="absolute inset-0 bg-white/20"></div>
+                                                                </div>
+
+                                                                <div className="flex-1"></div>
+
+                                                                <div className="text-sm font-mono text-gray-500 tracking-widest flex items-center gap-3">
+                                                                    <span
+                                                                        onClick={() => updateViewState(clientName, { iterationIndex: Math.max(0, iterIdx - 1) })}
+                                                                        className={`cursor-pointer ${iterIdx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-indigo-600'}`}
+                                                                    >
+                                                                        &lt;
+                                                                    </span>
+
+                                                                    {currentMediaGroup.map((_, i) => (
+                                                                        <span
+                                                                            key={i}
+                                                                            onClick={() => updateViewState(clientName, { iterationIndex: i })}
+                                                                            className={`w-6 h-6 rounded-full flex items-center justify-center text-xs cursor-pointer transition-colors ${i === iterIdx
+                                                                                ? 'border border-gray-300 font-bold bg-white text-gray-800 shadow-sm'
+                                                                                : 'text-gray-400 hover:bg-gray-200 hover:text-gray-700'
+                                                                                }`}
+                                                                        >
+                                                                            {i + 1}
+                                                                        </span>
+                                                                    ))}
+
+                                                                    <span
+                                                                        onClick={() => updateViewState(clientName, { iterationIndex: Math.min(maxIterationIndexes[mediaIdx] - 1, iterIdx + 1) })}
+                                                                        className={`cursor-pointer ${iterIdx === maxIterationIndexes[mediaIdx] - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-indigo-600'}`}
+                                                                    >
+                                                                        &gt;
+                                                                    </span>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                )}
+                                                    )
+                                                }
 
                                             </div>
                                         )
@@ -458,7 +486,53 @@ const Dashboard: React.FC = () => {
                         </div>
                     </div>
                 </>
+            )
+            }
+            {/* Status Confirmation Modal */}
+            {pendingStatusUpdate && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={cancelStatusUpdate}></div>
+                    <div className="bg-white rounded-3xl shadow-xl w-full max-w-[340px] p-6 flex flex-col items-center relative z-10 animate-fade-in text-center">
+                        <div className="mb-4">
+                            {pendingStatusUpdate.status === 'Approved' ? (
+                                <svg className="w-14 h-14 text-green-500 mx-auto drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            ) : (
+                                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" className="text-red-500 mx-auto drop-shadow-sm">
+                                    <path d="M12 4.16875L2.34375 20.8313H21.6562L12 4.16875Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    <path d="M12 10.8313V15.8313" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    <circle cx="12" cy="18.3313" r="1.5" fill="currentColor" />
+                                </svg>
+                            )}
+                        </div>
+                        <h3 className="text-[22px] font-bold text-gray-800 mb-2">
+                            {pendingStatusUpdate.status === 'Approved' ? 'Approve Entry' : 'Reject Entry'}
+                        </h3>
+                        <p className="text-gray-600 text-[15px] mb-8 font-medium">
+                            You're going to {pendingStatusUpdate.status === 'Approved' ? 'approve' : 'reject'} this "Entry"
+                        </p>
+                        <div className="flex gap-3 w-full">
+                            <button
+                                onClick={cancelStatusUpdate}
+                                className="flex-1 py-3 px-2 bg-[#EAEAEA] hover:bg-[#dfdfdf] text-gray-800 font-semibold rounded-xl transition-colors text-[15px]"
+                            >
+                                No, keep it.
+                            </button>
+                            <button
+                                onClick={confirmStatusUpdate}
+                                className={`flex-1 py-3 px-2 text-white font-semibold rounded-xl transition-all text-[15px] shadow-[0_8px_20px_-6px_rgba(0,0,0,0.5)] ${pendingStatusUpdate.status === 'Approved'
+                                    ? 'bg-green-500 hover:bg-green-600 shadow-green-500/50'
+                                    : 'bg-[#FF3B30] hover:bg-[#e6352b] shadow-red-500/50'
+                                    }`}
+                            >
+                                Yes, {pendingStatusUpdate.status}!
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
+
             {/* Creative Entry Modal */}
             <CreativeEntryModal
                 isOpen={isModalOpen}
@@ -466,7 +540,7 @@ const Dashboard: React.FC = () => {
                 onClose={() => setIsModalOpen(false)}
                 onSuccess={() => setIsModalOpen(false)}
             />
-        </div>
+        </div >
     );
 };
 

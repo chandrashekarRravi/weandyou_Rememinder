@@ -46,7 +46,7 @@ const Clients: React.FC = () => {
     }
 
     return (
-        <div className="p-8 max-w-4xl mx-auto space-y-8 animate-fade-in">
+        <div className="p-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Client Management</h1>
                 <p className="text-gray-500 text-sm mt-1">Manage the global list of clients used across the platform.</p>
