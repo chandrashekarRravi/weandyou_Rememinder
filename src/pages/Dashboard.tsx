@@ -7,6 +7,7 @@ import { useIterationFeedback } from '../hooks/useIterationFeedback';
 import FilterSelect from '../components/Calendar/FilterSelect';
 import CreativeEntryModal from '../components/CreativeEntryModal';
 import { AnimatePresence, motion } from 'framer-motion';
+import { FaRegComment } from 'react-icons/fa';
 
 const Dashboard: React.FC = () => {
     const { currentDate } = useCalendarContext();
@@ -277,7 +278,7 @@ const Dashboard: React.FC = () => {
                                                                 className={`w-10 h-10 rounded-full border flex items-center justify-center transition-colors shadow-sm ${activeFeedbackIdForClient ? 'border-indigo-300 bg-indigo-50 text-indigo-600' : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-100'}`}
                                                                 title="Feedback"
                                                             >
-                                                                <span className="font-bold">F</span>
+                                                                <FaRegComment className="w-5 h-5" />
                                                             </button>
                                                             {user?.role !== 'Team' && user?.role !== 'Client' && (
                                                                 <>

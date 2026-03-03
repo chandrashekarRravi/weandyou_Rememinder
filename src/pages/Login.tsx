@@ -20,9 +20,10 @@ const Login: React.FC = () => {
             const data = res.data;
             login({ username: data.username, role: data.role }, data.token);
             navigate('/');
-        } catch (err: any) {
-            console.error('Login error', err);
-            setError(err.response?.data?.message || 'Invalid username or password');
+        } catch (err: unknown) {
+            const error = err as any;
+            console.error('Login error', error);
+            setError(error.response?.data?.message || 'Invalid username or password');
         }
     };
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useClients } from '../hooks/useClients';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
+import { FaPlus, FaTrash } from 'react-icons/fa';
 
 const Clients: React.FC = () => {
     const { clients, loading, createClient, deleteClient } = useClients();
@@ -24,8 +25,9 @@ const Clients: React.FC = () => {
         try {
             await createClient(newClientName.trim());
             setNewClientName('');
-        } catch (err: any) {
-            setError(err.response?.data?.message || err.message || 'Error creating client');
+        } catch (err: unknown) {
+            const error = err as any;
+            setError(error.response?.data?.message || error.message || 'Error creating client');
         } finally {
             setSubmitting(false);
         }
@@ -35,8 +37,9 @@ const Clients: React.FC = () => {
         if (window.confirm(`Are you sure you want to delete the client "${name}"?`)) {
             try {
                 await deleteClient(id);
-            } catch (err: any) {
-                alert(err.response?.data?.message || 'Error deleting client');
+            } catch (err: unknown) {
+                const error = err as any;
+                alert(error.response?.data?.message || 'Error deleting client');
             }
         }
     };
@@ -76,7 +79,13 @@ const Clients: React.FC = () => {
                         disabled={submitting || !newClientName.trim()}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
                     >
-                        {submitting ? 'Adding...' : 'Add Client'}
+                        <div className="flex items-center gap-2">
+                            {submitting ? 'Adding...' : (
+                                <>
+                                    <FaPlus className="text-sm" /> Add Client
+                                </>
+                            )}
+                        </div>
                     </button>
                 </form>
                 {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
@@ -99,9 +108,9 @@ const Clients: React.FC = () => {
                                 </div>
                                 <button
                                     onClick={() => handleDelete(client._id, client.clientName)}
-                                    className="text-red-500 hover:text-red-700 text-sm font-medium px-3 py-1 bg-red-50 hover:bg-red-100 rounded transition-colors"
+                                    className="text-red-500 hover:text-red-700 text-sm font-medium px-3 py-1 bg-red-50 hover:bg-red-100 rounded transition-colors flex items-center gap-1.5"
                                 >
-                                    Remove
+                                    <FaTrash className="text-xs" /> Remove
                                 </button>
                             </li>
                         ))}
