@@ -18,7 +18,7 @@ const Login: React.FC = () => {
         try {
             const res = await api.post('/api/auth/login', { username, password });
             const data = res.data;
-            login({ username: data.username, role: data.role }, data.token);
+            login({ _id: data._id, username: data.username, role: data.role }, data.token);
             navigate('/');
         } catch (err: unknown) {
             const error = err as any;

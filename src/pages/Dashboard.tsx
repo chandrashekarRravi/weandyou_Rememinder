@@ -431,7 +431,7 @@ const Dashboard: React.FC = () => {
                                                 {/* Footer Strip - Iterations */}
                                                 {
                                                     currentMediaGroup.length > 0 && (
-                                                        <div className="px-6 pb-6 pt-2">
+                                                        <div className="px-6 pb-6 pt-0">
                                                             <div className="grid grid-cols-[repeat(auto-fit,minmax(12px,1fr))] h-3 border border-gray-300 divide-x divide-gray-300 mb-4 bg-gray-50 max-w-2xl mx-auto">
                                                                 {[...Array(30)].map((_, i) => (
                                                                     <div key={i} className="h-full"></div>
