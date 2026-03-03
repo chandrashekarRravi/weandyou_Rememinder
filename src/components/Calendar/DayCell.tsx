@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { FaTimes, FaImage, FaVideo, FaTrash } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface DayCellProps {
     date: Date;
@@ -21,6 +22,7 @@ const DayCell: React.FC<DayCellProps> = React.memo(({ date, currentMonth, events
     const isCurrentMonth = isSameMonth(date, currentMonth);
     const isDayToday = isToday(date);
     const [selectedEvent, setSelectedEvent] = useState<EventType | CreativeEntryType | null>(null);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const { user } = useAuth();
 
     const handleClick = () => {
@@ -189,7 +191,12 @@ const DayCell: React.FC<DayCellProps> = React.memo(({ date, currentMonth, events
                                                 {selectedEvent.mediaId.startsWith('vid') || selectedEvent.filePath.match(/\.(mp4|webm|ogg)$/i) ? (
                                                     <video src={selectedEvent.filePath} controls className="max-h-full max-w-full rounded-lg" />
                                                 ) : (
-                                                    <img src={selectedEvent.filePath} alt="Preview" className="max-h-full max-w-full rounded-lg object-contain" />
+                                                    <img
+                                                        src={selectedEvent.filePath}
+                                                        alt="Preview"
+                                                        className="max-h-full max-w-full rounded-lg object-contain cursor-pointer transition-transform hover:scale-[1.02]"
+                                                        onClick={() => setSelectedImage(selectedEvent.filePath)}
+                                                    />
                                                 )}
                                             </div>
                                             <div>
@@ -309,6 +316,38 @@ const DayCell: React.FC<DayCellProps> = React.memo(({ date, currentMonth, events
                     </div>
                 </div>
             )}
+
+            {/* Image Lightbox Modal */}
+            <AnimatePresence>
+                {selectedImage && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                        onClick={() => setSelectedImage(null)}
+                    >
+                        <button
+                            onClick={() => setSelectedImage(null)}
+                            className="absolute top-6 right-6 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 transition-colors"
+                        >
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                        <motion.img
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                            src={selectedImage}
+                            alt="Fullscreen Creative"
+                            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </>
     );
 });

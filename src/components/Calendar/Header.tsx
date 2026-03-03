@@ -3,6 +3,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { FaUserCircle } from 'react-icons/fa';
 import CreativeEntryModal from '../CreativeEntryModal';
 import { useEvents } from '../../hooks/useEvents';
+import { useCreativeEntries } from '../../hooks/useCreativeEntries';
 import { useCalendarContext } from '../../context/CalendarContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -24,12 +25,29 @@ const Header: React.FC<HeaderProps> = () => {
 
     // Stats Logic for Dashboard Header
     const { currentDate } = useCalendarContext();
-    const { events } = useEvents(currentDate);
+    const { events } = useEvents(currentDate, { fetchAll: true });
+    // Also fetch all creative entries for stats
+    const { creativeEntries } = useCreativeEntries(currentDate, { fetchAll: true });
 
-    const total = events.length;
-    const pending = events.filter(e => e.status === 'Pending').length;
-    const ongoing = events.filter(e => e.status === 'Ongoing').length;
-    const completed = events.filter(e => e.status === 'Completed').length;
+    // Combine both models for accurate total state:
+    // Calendar events have statuses: Pending, Ongoing, Completed
+    // Creative entries have statuses: Pending (or null), Approved, Rejected
+    // We'll map Approved -> Ongoing, Rejected -> Completed (or omit Rejected from completed?)
+    const total = events.length + creativeEntries.length;
+
+    const pendingEvents = events.filter(e => e.status === 'Pending').length;
+    const pendingEntries = creativeEntries.filter(e => !e.status || e.status === 'Pending').length;
+    const pending = pendingEvents + pendingEntries;
+
+    const ongoingEvents = events.filter(e => e.status === 'Ongoing').length;
+    const ongoingEntries = creativeEntries.filter(e => e.status === 'Approved').length;
+    const ongoing = ongoingEvents + ongoingEntries;
+
+    const completedEvents = events.filter(e => e.status === 'Completed').length;
+    // Assuming Rejected entries shouldn't necessarily be "Completed"? Or maybe they should? 
+    // Wait, the user has "correct and wrong button". "Approved" means "Ongoing". 
+    // Let's just count Completed events for the "Done" stat for now.
+    const completed = completedEvents;
 
     useEffect(() => {
         const onDoc = (e: MouseEvent) => {

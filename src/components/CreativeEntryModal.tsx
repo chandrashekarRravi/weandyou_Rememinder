@@ -161,26 +161,32 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Upload File <span className="text-red-500">*</span></label>
-                            <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 flex flex-col items-center justify-center hover:bg-gray-50 transition-colors relative aspect-square w-full">
+                            <div className={`border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center hover:bg-gray-50 transition-colors relative w-full ${!preview ? 'aspect-square p-6' : 'overflow-hidden'}`}>
                                 {!preview ? (
                                     <>
                                         <FaCloudUploadAlt className="text-4xl text-gray-400 mb-2" />
                                         <p className="text-sm text-gray-500 text-center">Click to upload image or video</p>
                                     </>
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-black rounded-lg overflow-hidden">
+                                    <div className="w-full flex items-center justify-center bg-black relative z-10">
                                         {file?.type.startsWith('video') || (preview && preview.match(/\.(mp4|webm|ogg)$/)) ? (
-                                            <video src={preview} controls className="max-h-full max-w-full" />
+                                            <video src={preview} controls className="w-full h-auto max-h-[60vh] object-contain block" />
                                         ) : (
-                                            <img src={preview} alt="Preview" className="max-h-full max-w-full object-contain" />
+                                            <img src={preview} alt="Preview" className="w-full h-auto max-h-[60vh] object-contain block" />
                                         )}
+                                        {/* Optional button to click for a new file later */}
+                                        <div className="absolute top-2 right-2 flex gap-2">
+                                            <div className="bg-black/60 text-white text-xs px-2 py-1 rounded select-none cursor-pointer hover:bg-black/80 flex items-center gap-1 transition-colors">
+                                                <FaCloudUploadAlt /> Change
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
                                 <input
                                     type="file"
                                     accept="image/*,video/*"
                                     onChange={handleFileChange}
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                                 />
                             </div>
                         </div>

@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import DayCell from './DayCell';
 import { useEvents } from '../../hooks/useEvents';
 import { useCreativeEntries } from '../../hooks/useCreativeEntries';
+import { useClients } from '../../hooks/useClients';
 import { isSameDay, parseISO } from 'date-fns';
 import { useCalendarContext } from '../../context/CalendarContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,6 +18,7 @@ const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days }) => {
     const { events } = useEvents(currentDate);
     const { creativeEntries, updateEntry, deleteEntry } = useCreativeEntries(currentDate);
+    const { clients } = useClients();
 
     // Context now provides objects for activeFilter and partial update setter
     const { activeFilter, setActiveFilter, monthLabel } = useCalendarContext();
@@ -27,21 +29,13 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days }) => {
         weeks.push(days.slice(i, i + 7));
     }
 
-    // Generate unique clients from events
+    // Generate unique clients from global clients
     const clientOptions = useMemo(() => {
-        const uniqueClients = new Map<string, { label: string; value: string; subLabel?: string }>();
-        events.forEach(ev => {
-            const name = ev.clientName?.trim() || 'No Client';
-            if (!uniqueClients.has(name)) {
-                uniqueClients.set(name, {
-                    label: name,
-                    value: name,
-                    subLabel: ev.clientBrand
-                });
-            }
-        });
-        return Array.from(uniqueClients.values()).sort((a, b) => a.label.localeCompare(b.label));
-    }, [events]);
+        return clients.map(c => ({
+            label: c.clientName,
+            value: c.clientName
+        })).sort((a, b) => a.label.localeCompare(b.label));
+    }, [clients]);
 
     const categoryOptions = [
         { label: 'Special Day', value: 'Special Day' },
@@ -89,8 +83,11 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days }) => {
             const isSameDate = isSameDay(parseISO(entryDateStr), date);
             if (!isSameDate) return false;
 
-            // Client Filter - Creative Entries don't typically have clients
-            if (activeFilter.client !== 'All') return false;
+            // Client Filter
+            if (activeFilter.client !== 'All') {
+                const entryClient = entry.clientName?.trim() || 'No Client';
+                if (entryClient !== activeFilter.client) return false;
+            }
 
             // Category Filter
             if (activeFilter.category !== 'All') {

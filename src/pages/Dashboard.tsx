@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useIterationFeedback } from '../hooks/useIterationFeedback';
 import FilterSelect from '../components/Calendar/FilterSelect';
 import CreativeEntryModal from '../components/CreativeEntryModal';
+import { AnimatePresence, motion } from 'framer-motion';
 
 const Dashboard: React.FC = () => {
     const { currentDate } = useCalendarContext();
@@ -13,6 +14,7 @@ const Dashboard: React.FC = () => {
     const { user } = useAuth();
 
     const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{ id: string, status: 'Approved' | 'Rejected' } | null>(null);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
     const handleStatusUpdate = async (id: string, newStatus: 'Approved' | 'Rejected') => {
         setPendingStatusUpdate({ id, status: newStatus });
@@ -247,13 +249,20 @@ const Dashboard: React.FC = () => {
                                                     <div className="flex flex-col lg:flex-row gap-6">
                                                         {/* Left Column: Image & Caption */}
                                                         <div className="flex-none lg:w-[30%] space-y-4">
-                                                            <div className="w-full aspect-square bg-gray-100 rounded-lg flex border border-gray-200 overflow-hidden items-center justify-center relative group">
+                                                            <div className="w-full bg-gray-100 rounded-lg flex border border-gray-200 overflow-hidden items-center justify-center relative group">
                                                                 {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
-                                                                    <video src={entry.filePath} controls className="w-full h-full object-contain" />
+                                                                    <video src={entry.filePath} controls className="w-full h-auto block" />
                                                                 ) : (
-                                                                    <img src={entry.filePath} alt="Creative" className="w-full h-full object-contain" />
+                                                                    <img
+                                                                        src={entry.filePath}
+                                                                        alt="Creative"
+                                                                        className="w-full h-auto block cursor-pointer transition-transform hover:scale-[1.02]"
+                                                                        onClick={() => setSelectedImage(entry.filePath)}
+                                                                    />
                                                                 )}
-                                                                <div className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded">Image</div>
+                                                                <div className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded pointer-events-none">
+                                                                    {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? 'Video' : 'Image'}
+                                                                </div>
                                                             </div>
                                                             <div className="border border-gray-200 rounded-lg p-4 min-h-[10px] bg-gray-50">
                                                                 <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Captions</p>
@@ -540,6 +549,38 @@ const Dashboard: React.FC = () => {
                 onClose={() => setIsModalOpen(false)}
                 onSuccess={() => setIsModalOpen(false)}
             />
+
+            {/* Image Lightbox Modal */}
+            <AnimatePresence>
+                {selectedImage && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+                        onClick={() => setSelectedImage(null)}
+                    >
+                        <button
+                            onClick={() => setSelectedImage(null)}
+                            className="absolute top-6 right-6 text-white bg-black/50 hover:bg-black/70 rounded-full p-2 transition-colors"
+                        >
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                        <motion.img
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                            src={selectedImage}
+                            alt="Fullscreen Creative"
+                            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking the image itself
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div >
     );
 };

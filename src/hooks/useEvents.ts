@@ -20,7 +20,7 @@ export interface EventType {
     // other fields...
 }
 
-export const useEvents = (currentDate: Date) => {
+export const useEvents = (currentDate: Date, options?: { fetchAll?: boolean }) => {
     const [events, setEvents] = useState<EventType[]>([]);
     const [loading, setLoading] = useState(false);
     const socket = useSocket();
@@ -28,22 +28,24 @@ export const useEvents = (currentDate: Date) => {
     // Stabilize the date dependency by using the start of the month string
     // This prevents infinite loops if the passed 'currentDate' object reference changes but represents the same month
     const monthStartStr = startOfMonth(currentDate).toISOString();
+    const fetchAll = options?.fetchAll;
 
     const fetchEvents = useCallback(async () => {
         setLoading(true);
         try {
-            const start = monthStartStr;
-            const end = endOfMonth(currentDate).toISOString();
-            const response = await api.get('/api/events', {
-                params: { start, end }
-            });
+            const params: any = {};
+            if (!fetchAll) {
+                params.start = monthStartStr;
+                params.end = endOfMonth(currentDate).toISOString();
+            }
+            const response = await api.get('/api/events', { params });
             setEvents(response.data);
         } catch (error) {
             console.error('Error fetching events:', error);
         } finally {
             setLoading(false);
         }
-    }, [monthStartStr]);
+    }, [monthStartStr, fetchAll, currentDate]);
 
     useEffect(() => {
         fetchEvents();
