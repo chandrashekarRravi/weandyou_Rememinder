@@ -5,7 +5,6 @@ import { useCreativeEntries } from '../../hooks/useCreativeEntries';
 import { useClients } from '../../hooks/useClients';
 import { isSameDay, parseISO } from 'date-fns';
 import { useCalendarContext } from '../../context/CalendarContext';
-import { motion, AnimatePresence } from 'framer-motion';
 import FilterSelect from './FilterSelect';
 
 interface CalendarGridProps {
@@ -21,7 +20,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days }) => {
     const { clients } = useClients();
 
     // Context now provides objects for activeFilter and partial update setter
-    const { activeFilter, setActiveFilter, monthLabel } = useCalendarContext();
+    const { activeFilter, setActiveFilter } = useCalendarContext();
 
     // Split days into weeks (chunks of 7)
     const weeks: Date[][] = [];
