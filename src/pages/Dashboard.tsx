@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useCreativeEntries } from '../hooks/useCreativeEntries';
+import { useEvents } from '../hooks/useEvents';
 import { useClients } from '../hooks/useClients';
 import { useCalendarContext } from '../context/CalendarContext';
 import { useAuth } from '../context/AuthContext';
@@ -13,6 +14,13 @@ const Dashboard: React.FC = () => {
     const { currentDate } = useCalendarContext();
     const { creativeEntries, loading, updateEntry } = useCreativeEntries(currentDate, { fetchAll: true });
     const { user } = useAuth();
+    const { events } = useEvents(currentDate, { fetchAll: true });
+
+    // Calculate generic stats for mobile top row
+    const total = events.length + creativeEntries.length;
+    const pending = events.filter(e => e.status === 'Pending').length + creativeEntries.filter(e => !e.status || e.status === 'Pending').length;
+    const ongoing = events.filter(e => e.status === 'Ongoing').length + creativeEntries.filter(e => e.status === 'Approved').length;
+    const completed = events.filter(e => e.status === 'Completed').length;
 
     const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{ id: string, status: 'Approved' | 'Rejected' } | null>(null);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -123,6 +131,41 @@ const Dashboard: React.FC = () => {
 
     return (
         <div className="max-w-7xl mx-auto space-y-6">
+
+            {/* Mobile-only Stats & Action Row */}
+            {user?.role !== 'Client' && (
+                <div className="md:hidden flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-xl font-bold text-gray-800">Dashboard</h2>
+                        <button
+                            onClick={() => setIsModalOpen(true)}
+                            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg shadow-sm"
+                        >
+                            New +
+                        </button>
+                    </div>
+                    {/* Stats */}
+                    <div className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-hide">
+                        <div className="flex flex-col items-center px-4 py-2 bg-white rounded-lg border border-gray-100 min-w-[70px] shadow-sm">
+                            <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Total</span>
+                            <span className="text-sm font-bold text-gray-800">{total}</span>
+                        </div>
+                        <div className="flex flex-col items-center px-4 py-2 bg-yellow-50 rounded-lg border border-yellow-100 min-w-[70px] shadow-sm">
+                            <span className="text-[10px] text-yellow-600 uppercase font-bold tracking-wider">Pending</span>
+                            <span className="text-sm font-bold text-yellow-700">{pending}</span>
+                        </div>
+                        <div className="flex flex-col items-center px-4 py-2 bg-blue-50 rounded-lg border border-blue-100 min-w-[70px] shadow-sm">
+                            <span className="text-[10px] text-blue-600 uppercase font-bold tracking-wider">Ongoing</span>
+                            <span className="text-sm font-bold text-blue-700">{ongoing}</span>
+                        </div>
+                        <div className="flex flex-col items-center px-4 py-2 bg-green-50 rounded-lg border border-green-100 min-w-[70px] shadow-sm">
+                            <span className="text-[10px] text-green-600 uppercase font-bold tracking-wider">Done</span>
+                            <span className="text-sm font-bold text-green-700">{completed}</span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {loading ? (
                 <div className="text-gray-400 align-center tp-50vh">Loading...</div>
             ) : (

@@ -13,6 +13,7 @@ interface CalendarGridProps {
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days }) => {
     const { events } = useEvents(currentDate);
@@ -20,7 +21,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days }) => {
     const { clients } = useClients();
 
     // Context now provides objects for activeFilter and partial update setter
-    const { activeFilter, setActiveFilter } = useCalendarContext();
+    const { activeFilter, setActiveFilter, setMonth } = useCalendarContext();
 
     // Split days into weeks (chunks of 7)
     const weeks: Date[][] = [];
@@ -48,6 +49,8 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days }) => {
         { label: 'Approved', value: 'Ongoing' },
         { label: 'Completed', value: 'Completed' },
     ];
+
+    const monthOptions = MONTH_NAMES.map((m, idx) => ({ label: m, value: idx.toString() }));
 
     const getEventsForDay = (date: Date) => {
         return events.filter(event => {
@@ -115,6 +118,18 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days }) => {
 
             {/* Filter Controls */}
             <div className="flex flex-wrap items-center gap-4 p-4 border-b border-gray-100 bg-white">
+
+                {/* Mobile Month Tap */}
+                <div className="w-full md:hidden mb-2">
+                    <FilterSelect
+                        label="Month"
+                        value={currentDate.getMonth().toString()}
+                        options={monthOptions}
+                        onChange={(val) => setMonth?.(parseInt(val))}
+                        placeholder="Select Month"
+                    />
+                </div>
+
                 <FilterSelect
                     label="Client"
                     value={activeFilter.client}
@@ -142,8 +157,8 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days }) => {
                 />
             </div>
 
-            {/* Transposed month grid: left column = weekday labels, top row = week numbers */}
-            <div className="flex-1 overflow-auto">
+            {/* Desktop Transposed month grid: left column = weekday labels, top row = week numbers */}
+            <div className="hidden md:block flex-1 overflow-auto">
                 <div
                     className="inline-grid w-full"
                     style={{ gridTemplateColumns: `80px repeat(${weeks.length}, minmax(0, 1fr))` }}
@@ -174,6 +189,36 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days }) => {
                                 );
                             })}
                         </React.Fragment>
+                    ))}
+                </div>
+            </div>
+
+            {/* Mobile Standard Grid: top row = weekday labels, scrolling vertically */}
+            <div className="md:hidden flex-1 overflow-auto bg-white">
+                <div className="grid grid-cols-7 w-full border-t border-l border-gray-100 min-w-[300px]">
+                    {/* Weekday headers */}
+                    {WEEKDAYS.map(wd => (
+                        <div key={`m-header-${wd}`} className="p-2 border-b border-r border-gray-100 bg-gray-50/50 flex items-center justify-center text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-wider sticky top-0 z-10">
+                            {wd.substring(0, 3)}
+                        </div>
+                    ))}
+
+                    {/* Days */}
+                    {days.map((day, idx) => (
+                        <div key={`m-day-${idx}`} className="border-b border-r border-gray-100 min-h-[100px] h-full sm:min-h-[120px]">
+                            {day ? (
+                                <DayCell
+                                    date={day}
+                                    currentMonth={currentDate}
+                                    events={getEventsForDay(day)}
+                                    creativeEntries={getCreativeEntriesForDay(day)}
+                                    onUpdateCreativeEntry={updateEntry}
+                                    onDeleteCreativeEntry={deleteEntry}
+                                />
+                            ) : (
+                                <div className="p-1 h-full bg-gray-50" />
+                            )}
+                        </div>
                     ))}
                 </div>
             </div>
