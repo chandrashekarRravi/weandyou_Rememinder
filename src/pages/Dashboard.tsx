@@ -535,27 +535,71 @@ const Dashboard: React.FC = () => {
                                                                         </div>
                                                                     </div>
                                                                 ) : (
-                                                                    <div className="flex flex-col md:flex-row gap-8 items-start justify-center mt-2">
-                                                                        <div className="flex-1 w-full bg-gray-50 rounded-xl flex border border-gray-200 overflow-hidden items-center justify-center relative p-2 shadow-sm">
-                                                                            {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
-                                                                                <video src={entry.filePath} controls className="w-full max-h-[500px] object-contain block rounded-lg bg-black/5" />
-                                                                            ) : (
-                                                                                <img
-                                                                                    src={entry.filePath}
-                                                                                    alt="Creative"
-                                                                                    className="w-full max-h-[500px] object-contain block cursor-pointer transition-transform hover:scale-[1.02] rounded-lg"
-                                                                                    onClick={() => setSelectedImage(entry.filePath)}
-                                                                                />
-                                                                            )}
-                                                                            <div className="absolute top-4 right-4 bg-black/60 text-white text-[10px] px-2 py-1 rounded pointer-events-none">
-                                                                                {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? 'Video' : 'Image'}
+                                                                    <div className="flex flex-col gap-6 mt-2">
+                                                                        {/* Media + Caption row */}
+                                                                        <div className="flex flex-col md:flex-row gap-6 items-start">
+                                                                            <div className="flex-1 w-full bg-gray-50 rounded-xl flex border border-gray-200 overflow-hidden items-center justify-center relative p-2 shadow-sm">
+                                                                                {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
+                                                                                    <video src={entry.filePath} controls className="w-full max-h-[400px] object-contain block rounded-lg bg-black/5" />
+                                                                                ) : (
+                                                                                    <img
+                                                                                        src={entry.filePath}
+                                                                                        alt="Creative"
+                                                                                        className="w-full max-h-[400px] object-contain block cursor-pointer transition-transform hover:scale-[1.02] rounded-lg"
+                                                                                        onClick={() => setSelectedImage(entry.filePath)}
+                                                                                    />
+                                                                                )}
+                                                                                <div className="absolute top-4 right-4 bg-black/60 text-white text-[10px] px-2 py-1 rounded pointer-events-none">
+                                                                                    {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? 'Video' : 'Image'}
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="flex-1 w-full bg-white border border-gray-200 shadow-sm rounded-xl p-6 min-h-[100px] flex flex-col">
+                                                                                <p className="text-xs font-semibold text-gray-500 uppercase mb-3 border-b border-gray-100 pb-2">Caption</p>
+                                                                                <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed flex-1">
+                                                                                    {entry.caption || 'No caption provided.'}
+                                                                                </p>
                                                                             </div>
                                                                         </div>
-                                                                        <div className="flex-1 w-full bg-white border border-gray-200 shadow-sm rounded-xl p-6 min-h-[100px] flex flex-col">
-                                                                            <p className="text-xs font-semibold text-gray-500 uppercase mb-3 border-b border-gray-100 pb-2">Caption</p>
-                                                                            <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed flex-1">
-                                                                                {entry.caption || 'No caption provided.'}
-                                                                            </p>
+
+                                                                        {/* Read-only feedback panel */}
+                                                                        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                                                                            <div className="bg-gray-50 px-4 py-2.5 border-b border-gray-200 flex items-center gap-2">
+                                                                                <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 17a2 2 0 100-4 2 2 0 000 4zm6-6V9a6 6 0 10-12 0v2a2 2 0 00-2 2v7a2 2 0 002 2h12a2 2 0 002-2v-7a2 2 0 00-2-2z" /></svg>
+                                                                                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Client Feedback — Read Only</h4>
+                                                                            </div>
+                                                                            <div className="p-4 max-h-[240px] overflow-y-auto space-y-3">
+                                                                                {feedbacksLoading ? (
+                                                                                    <div className="text-center text-gray-400 text-sm py-6">Loading feedback...</div>
+                                                                                ) : sortedFeedbacks.length === 0 ? (
+                                                                                    <div className="text-center text-gray-400 text-sm py-6">No feedback was recorded for this iteration.</div>
+                                                                                ) : (
+                                                                                    sortedFeedbacks.map((fb) => {
+                                                                                        const isCurrentUser = fb.userId === user?._id;
+                                                                                        return (
+                                                                                            <div key={fb._id} className={`flex flex-col gap-0.5 ${isCurrentUser ? 'items-end' : 'items-start'}`}>
+                                                                                                <div className={`text-sm p-3 rounded-lg border max-w-[80%] ${
+                                                                                                    fb.role === 'Client' ? 'bg-blue-50 border-blue-100 text-gray-800'
+                                                                                                    : isCurrentUser ? 'bg-indigo-50 border-indigo-100 text-indigo-900'
+                                                                                                    : 'bg-gray-50 border-gray-200 text-gray-800'
+                                                                                                }`}>
+                                                                                                    <div className="flex items-center gap-2 mb-1">
+                                                                                                        <span className="text-xs font-semibold text-gray-700">
+                                                                                                            {isCurrentUser ? `You (${fb.role})` : (fb.username || 'User')}
+                                                                                                        </span>
+                                                                                                        {fb.role === 'Client' && (
+                                                                                                            <span className="text-[9px] bg-blue-100 text-blue-600 font-bold px-1.5 py-0.5 rounded">CLIENT</span>
+                                                                                                        )}
+                                                                                                        <span className="text-[10px] text-gray-400 ml-auto">
+                                                                                                            {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}, {new Date(fb.createdAt).toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                                                                                        </span>
+                                                                                                    </div>
+                                                                                                    <p className="text-sm">{fb.text}</p>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        );
+                                                                                    })
+                                                                                )}
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 )}
