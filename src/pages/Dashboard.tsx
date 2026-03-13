@@ -25,6 +25,9 @@ const Dashboard: React.FC = () => {
     const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{ id: string, status: 'Approved' | 'Rejected' } | null>(null);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
+    // State for toggling feedback inputs per entry
+    const [showFeedbackInputs, setShowFeedbackInputs] = useState<Record<string, boolean>>({});
+
     const handleStatusUpdate = async (id: string, newStatus: 'Approved' | 'Rejected') => {
         setPendingStatusUpdate({ id, status: newStatus });
     };
@@ -50,6 +53,13 @@ const Dashboard: React.FC = () => {
     const [feedbackText, setFeedbackText] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalInitialData, setModalInitialData] = useState<{ mediaId?: string; clientName?: string; category?: string }>();
+
+    // Sort feedbacks to show latest first (descending order by createdAt)
+    const sortedFeedbacks = useMemo(() => {
+        return [...feedbacks].sort((a, b) => 
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+    }, [feedbacks]);
 
     // Dashboard-specific filter state
     const [dashboardFilter, setDashboardFilter] = useState({
@@ -110,6 +120,9 @@ const Dashboard: React.FC = () => {
     // Key: ClientName, Value: { mediaIndex: number, iterationIndex: number }
     const [viewState, setViewState] = useState<Record<string, { mediaIndex: number, iterationIndex: number }>>({});
 
+    // Carousel slide direction per client: 1 = forward (right), -1 = backward (left)
+    const [slideDirection, setSlideDirection] = useState<Record<string, number>>({});
+
     // Helper to get active indices for a client
     const getActiveState = (clientName: string, maxMediaIndex: number, maxIterationIndexes: number[]) => {
         const state = viewState[clientName] || { mediaIndex: 0, iterationIndex: -1 }; // -1 means latest
@@ -122,10 +135,43 @@ const Dashboard: React.FC = () => {
         return { mediaIdx, iterIdx };
     };
 
-    const updateViewState = (clientName: string, updates: Partial<{ mediaIndex: number, iterationIndex: number }>) => {
+    const updateViewState = (clientName: string, updates: Partial<{ mediaIndex: number, iterationIndex: number }>, direction?: number) => {
+        if (direction !== undefined) {
+            setSlideDirection(prev => ({ ...prev, [clientName]: direction }));
+        }
         setViewState(prev => ({
             ...prev,
             [clientName]: { ...(prev[clientName] || { mediaIndex: 0, iterationIndex: -1 }), ...updates }
+        }));
+    };
+
+    // Carousel slide variants
+    const carouselVariants = {
+        enter: (dir: number) => ({ x: dir > 0 ? '100%' : '-100%', opacity: 0 }),
+        center: { x: 0, opacity: 1 },
+        exit: (dir: number) => ({ x: dir > 0 ? '-100%' : '100%', opacity: 0 }),
+    };
+
+    // Sync activeFeedbackId with the currently-viewed iteration (avoids setState-in-render)
+    React.useEffect(() => {
+        if (groupedEntries.length === 0) return;
+        // Pick the first client group's active entry as the feedback target
+        const firstGroup = groupedEntries[0];
+        const maxMediaIndex = firstGroup.mediaGroups.length - 1;
+        const maxIterationIndexes = firstGroup.mediaGroups.map(mg => mg.length);
+        const { mediaIdx, iterIdx } = getActiveState(firstGroup.clientName, maxMediaIndex, maxIterationIndexes);
+        const entry = firstGroup.mediaGroups[mediaIdx][iterIdx];
+        if (entry && activeFeedbackId !== entry._id) {
+            setActiveFeedbackId(entry._id);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [viewState, groupedEntries]);
+
+    // Toggle feedback input for a specific entry
+    const toggleFeedbackInput = (entryId: string) => {
+        setShowFeedbackInputs(prev => ({
+            ...prev,
+            [entryId]: !prev[entryId]
         }));
     };
 
@@ -229,7 +275,6 @@ const Dashboard: React.FC = () => {
 
                                         const currentMediaGroup = mediaGroups[mediaIdx];
                                         const entry = currentMediaGroup[iterIdx];
-                                        const activeFeedbackIdForClient = activeFeedbackId === entry._id; // Is feedback open for this specific iteration?
 
                                         return (
                                             <div key={clientName} className="bg-white border text-left border-gray-200 rounded-xl overflow-hidden shadow-sm relative">
@@ -278,281 +323,266 @@ const Dashboard: React.FC = () => {
                                                     </div>
                                                 </div>
 
-                                                {/* Body Section */}
-                                                <div className="p-6 xl:px-12">
-                                                    <div className="text-sm font-bold text-gray-700 mb-4 pb-2 border-b border-gray-100 uppercase tracking-wider flex justify-between items-center">
-                                                        <span>Iteration {iterIdx + 1}</span>
-                                                        <span className={`px-2 py-1 rounded text-[10px] font-bold tracking-wide ${entry.status === 'Approved' ? 'bg-green-100 text-green-700' :
-                                                            entry.status === 'Rejected' ? 'bg-red-100 text-red-700' :
-                                                                'bg-yellow-100 text-yellow-700'
-                                                            }`}>
-                                                            STATUS: {entry.status || 'Pending'}
-                                                        </span>
-                                                    </div>
-
-                                                    {(!entry.status || entry.status === 'Pending') ? (
-                                                        <div className="flex flex-col lg:flex-row gap-6">
-                                                            {/* Left Column: Image & Caption */}
-                                                            <div className="flex-none lg:w-[30%] space-y-4">
-                                                                <div className="w-full bg-gray-100 rounded-lg flex border border-gray-200 overflow-hidden items-center justify-center relative group">
-                                                                    {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
-                                                                        <video src={entry.filePath} controls className="w-full h-auto block" />
-                                                                    ) : (
-                                                                        <img
-                                                                            src={entry.filePath}
-                                                                            alt="Creative"
-                                                                            className="w-full h-auto block cursor-pointer transition-transform hover:scale-[1.02]"
-                                                                            onClick={() => setSelectedImage(entry.filePath)}
-                                                                        />
-                                                                    )}
-                                                                    <div className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded pointer-events-none">
-                                                                        {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? 'Video' : 'Image'}
-                                                                    </div>
+                                                {/* Body Section - Carousel for iterations */}
+                                                <div className="overflow-hidden">
+                                                    <AnimatePresence custom={slideDirection[clientName] ?? 1} mode="wait">
+                                                        <motion.div
+                                                            key={`${clientName}-${mediaIdx}-${iterIdx}`}
+                                                            custom={slideDirection[clientName] ?? 1}
+                                                            variants={carouselVariants}
+                                                            initial="enter"
+                                                            animate="center"
+                                                            exit="exit"
+                                                            transition={{ type: 'tween', ease: 'easeInOut', duration: 0.3 }}
+                                                        >
+                                                            <div className="p-6 xl:px-12">
+                                                                <div className="text-sm font-bold text-gray-700 mb-4 pb-2 border-b border-gray-100 uppercase tracking-wider flex justify-between items-center">
+                                                                    <span>Iteration {iterIdx + 1} <span className="text-gray-400 font-normal text-xs ml-1">of {currentMediaGroup.length}</span></span>
+                                                                    <span className={`px-2 py-1 rounded text-[10px] font-bold tracking-wide ${
+                                                                        entry.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                                                                        entry.status === 'Rejected' ? 'bg-red-100 text-red-700' :
+                                                                        'bg-yellow-100 text-yellow-700'
+                                                                    }`}>
+                                                                        STATUS: {entry.status || 'Pending'}
+                                                                    </span>
                                                                 </div>
-                                                                <div className="border border-gray-200 rounded-lg p-4 min-h-[10px] bg-gray-50">
-                                                                    <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Captions</p>
-                                                                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{entry.caption || 'No caption provided.'}</p>
-                                                                </div>
-                                                            </div>
 
-                                                            {/* Middle Column: Actions */}
-                                                            <div className="flex lg:flex-col items-center justify-center gap-4 lg:py-8 lg:px-2 relative">
-                                                                <button
-                                                                    onClick={() => setActiveFeedbackId(activeFeedbackIdForClient ? null : entry._id)}
-                                                                    className={`w-10 h-10 rounded-full border flex items-center justify-center transition-colors shadow-sm ${activeFeedbackIdForClient ? 'border-indigo-300 bg-indigo-50 text-indigo-600' : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-100'}`}
-                                                                    title="Feedback"
-                                                                >
-                                                                    <FaRegComment className="w-5 h-5" />
-                                                                </button>
-                                                                {user?.role !== 'Team' && user?.role !== 'Client' && (!entry.status || entry.status === 'Pending') && (
-                                                                    <>
-                                                                        <button
-                                                                            onClick={() => handleStatusUpdate(entry._id, 'Approved')}
-                                                                            className="w-10 h-10 rounded-full border border-green-300 bg-white flex items-center justify-center text-green-600 hover:bg-green-50 transition-colors shadow-sm" title="Approve">
-                                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => handleStatusUpdate(entry._id, 'Rejected')}
-                                                                            className="w-10 h-10 rounded-full border border-red-300 bg-white flex items-center justify-center text-red-600 hover:bg-red-50 transition-colors shadow-sm" title="Reject">
-                                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
-                                                                        </button>
-                                                                    </>
-                                                                )}
-                                                            </div>
-
-                                                            {/* Right Column: Feedback Box & Plus Button */}
-                                                            <div className="flex-1 flex gap-4">
-                                                                {activeFeedbackIdForClient ? (
-                                                                    <>
-                                                                        {/* Feedback Box */}
-                                                                        <div className="flex-1 border border-gray-300 rounded-lg flex flex-col overflow-hidden bg-white shadow-sm h-[400px]">
-                                                                            <div className="bg-gray-50 p-3 border-b border-gray-200">
-                                                                                <h4 className="text-sm font-bold text-gray-700 text-center">Feedback of Iteration {iterIdx + 1}</h4>
-                                                                            </div>
-                                                                            <div className="flex-1 p-4 overflow-y-auto space-y-4">
-                                                                                {feedbacksLoading ? (
-                                                                                    <div className="text-center text-gray-400 text-sm mt-10">Loading comments...</div>
-                                                                                ) : feedbacks.length === 0 ? (
-                                                                                    <div className="text-center text-gray-400 text-sm mt-10">
-                                                                                        No feedback yet.<br />Start the conversation!
-                                                                                    </div>
+                                                                {(!entry.status || entry.status === 'Pending') ? (
+                                                                    <div className="flex flex-col lg:flex-row gap-6">
+                                                                        {/* Left Column: Image & Caption */}
+                                                                        <div className="flex-none lg:w-[30%] space-y-4">
+                                                                            <div className="w-full bg-gray-100 rounded-lg flex border border-gray-200 overflow-hidden items-center justify-center relative group">
+                                                                                {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
+                                                                                    <video src={entry.filePath} controls className="w-full h-auto block" />
                                                                                 ) : (
-                                                                                    feedbacks.map((fb) => {
-                                                                                        const isCurrentUser = fb.userId === user?._id;
+                                                                                    <img
+                                                                                        src={entry.filePath}
+                                                                                        alt="Creative"
+                                                                                        className="w-full h-auto block cursor-pointer transition-transform hover:scale-[1.02]"
+                                                                                        onClick={() => setSelectedImage(entry.filePath)}
+                                                                                    />
+                                                                                )}
+                                                                                <div className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded pointer-events-none">
+                                                                                    {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? 'Video' : 'Image'}
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="border border-gray-200 rounded-lg p-4 min-h-[10px] bg-gray-50">
+                                                                                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Captions</p>
+                                                                                <p className="text-sm text-gray-700 whitespace-pre-wrap">{entry.caption || 'No caption provided.'}</p>
+                                                                            </div>
+                                                                        </div>
 
-                                                                                        if (!isCurrentUser) {
-                                                                                            // Someone else's comment (Left side)
-                                                                                            return (
-                                                                                                <div key={fb._id} className="flex flex-col gap-1 items-start">
-                                                                                                    <div className="flex items-center gap-2">
-                                                                                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${fb.role === 'Client' ? 'bg-blue-100 text-blue-700' : 'bg-indigo-100 text-indigo-700'}`}>
-                                                                                                            {fb.username?.charAt(0).toUpperCase() || 'U'}
+                                                                        {/* Middle Column: Actions */}
+                                                                        <div className="flex lg:flex-col items-center justify-center gap-4 lg:py-8 lg:px-2 relative">
+                                                                            {user?.role !== 'Team' && user?.role !== 'Client' && (!entry.status || entry.status === 'Pending') && (
+                                                                                <>
+                                                                                    <button
+                                                                                        onClick={() => handleStatusUpdate(entry._id, 'Approved')}
+                                                                                        className="w-10 h-10 rounded-full border border-green-300 bg-white flex items-center justify-center text-green-600 hover:bg-green-50 transition-colors shadow-sm" title="Approve">
+                                                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                                                                    </button>
+                                                                                    <button
+                                                                                        onClick={() => handleStatusUpdate(entry._id, 'Rejected')}
+                                                                                        className="w-10 h-10 rounded-full border border-red-300 bg-white flex items-center justify-center text-red-600 hover:bg-red-50 transition-colors shadow-sm" title="Reject">
+                                                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                                                    </button>
+                                                                                </>
+                                                                            )}
+                                                                        </div>
+
+                                                                        {/* Right Column: Feedback Box & Plus Button */}
+                                                                        <div className="flex-1 flex gap-4">
+                                                                            {/* Feedback Box */}
+                                                                            <div className="max-w-[350px] flex-1 rounded-lg flex flex-col overflow-hidden bg-white h-[400px]">
+                                                                                <div className="bg-gray-50 p-3 border-b border-gray-200 flex justify-between items-center">
+                                                                                    <h4 className="text-sm font-bold text-gray-700 text-left">Feedback of Iteration {iterIdx + 1}</h4>
+                                                                                    <button
+                                                                                        onClick={() => toggleFeedbackInput(entry._id)}
+                                                                                        className="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                                                                        title={showFeedbackInputs[entry._id] ? "Hide feedback input" : "Add feedback"}
+                                                                                    >
+                                                                                        {showFeedbackInputs[entry._id] ? (
+                                                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                                                                        ) : (
+                                                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                                                                                        )}
+                                                                                    </button>
+                                                                                </div>
+                                                                                <div className="flex-1 p-4 overflow-y-auto space-y-4 flex-col-reverse">
+                                                                                    {feedbacksLoading ? (
+                                                                                        <div className="text-center text-gray-400 text-sm mt-10">Loading comments...</div>
+                                                                                    ) : sortedFeedbacks.length === 0 ? (
+                                                                                        <div className="text-center text-gray-400 text-sm mt-10">
+                                                                                            No feedback yet.<br />Start the conversation!
+                                                                                        </div>
+                                                                                    ) : (
+                                                                                        sortedFeedbacks.map((fb) => {
+                                                                                            const isCurrentUser = fb.userId === user?._id;
+                                                                                            if (!isCurrentUser) {
+                                                                                                return (
+                                                                                                    <div key={fb._id} className="flex flex-col gap-1 items-start">
+                                                                                                        <div className={`text-sm p-3 rounded-lg rounded-tl-none border relative w-[80%] max-w-sm ${fb.role === 'Client' ? 'bg-blue-50 text-gray-800 border-blue-100' : 'bg-gray-50 text-gray-800 border-gray-200'}`}>
+                                                                                                            <span className="text-xs font-semibold text-gray-700">{fb.username || 'User'}</span>
+                                                                                                            <span className="text-[10px] text-gray-400 ml-4">
+                                                                                                                {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })},
+                                                                                                                {new Date(fb.createdAt).toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                                                                                            </span>
+                                                                                                            <br />
+                                                                                                            {fb.text}
                                                                                                         </div>
-                                                                                                        <span className="text-xs font-semibold text-gray-700">{fb.username || 'User'}</span>
-                                                                                                        <span className="text-[10px] text-gray-400">
-                                                                                                            {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                                                                        </span>
                                                                                                     </div>
-                                                                                                    <div className={`text-sm p-3 rounded-lg rounded-tl-none border relative w-full max-w-sm ${fb.role === 'Client' ? 'bg-blue-50 text-gray-800 border-blue-100' : 'bg-gray-50 text-gray-800 border-gray-200'}`}>
-                                                                                                        {fb.text}
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            );
-                                                                                        } else {
-                                                                                            // Current user's comment (Right side)
-                                                                                            return (
-                                                                                                <div key={fb._id} className="flex flex-col gap-1 items-end mt-4">
-                                                                                                    <div className="flex items-center gap-2">
-                                                                                                        <span className="text-[10px] text-gray-400">
-                                                                                                            {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                                                                        </span>
-                                                                                                        <span className="text-xs font-semibold text-gray-700">You ({fb.role})</span>
-                                                                                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold ${fb.role === 'Client' ? 'bg-blue-100 text-blue-700' : 'bg-indigo-100 text-indigo-700'}`}>
-                                                                                                            {fb.username?.charAt(0).toUpperCase() || 'U'}
+                                                                                                );
+                                                                                            } else {
+                                                                                                return (
+                                                                                                    <div key={fb._id} className="flex flex-col gap-1 items-end mt-4">
+                                                                                                        <div className={`text-sm p-3 rounded-lg rounded-tr-none border relative max-w-sm ${fb.role === 'Client' ? 'bg-blue-50 text-gray-800 border-blue-100' : 'bg-indigo-50 text-indigo-900 border-indigo-100'}`}>
+                                                                                                            <span className="text-[10px] text-gray-400">
+                                                                                                                {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })},
+                                                                                                                {new Date(fb.createdAt).toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                                                                                            </span>
+                                                                                                            <span className="text-xs font-semibold text-gray-700 ml-4">You ({fb.role})</span>
+                                                                                                            <br />
+                                                                                                            {fb.text}
                                                                                                         </div>
                                                                                                     </div>
-                                                                                                    <div className={`text-sm p-3 rounded-lg rounded-tr-none border relative max-w-sm ${fb.role === 'Client' ? 'bg-blue-50 text-gray-800 border-blue-100' : 'bg-indigo-50 text-indigo-900 border-indigo-100'}`}>
-                                                                                                        {fb.text}
-                                                                                                    </div>
-                                                                                                </div>
-                                                                                            );
-                                                                                        }
-                                                                                    })
+                                                                                                );
+                                                                                            }
+                                                                                        })
+                                                                                    )}
+                                                                                </div>
+                                                                                {showFeedbackInputs[entry._id] && (
+                                                                                    <div className="p-3 border-t border-gray-200 bg-gray-50">
+                                                                                        <form
+                                                                                            onSubmit={async (e) => {
+                                                                                                e.preventDefault();
+                                                                                                if (feedbackText.trim()) {
+                                                                                                    await addFeedback(feedbackText);
+                                                                                                    setFeedbackText('');
+                                                                                                }
+                                                                                            }}
+                                                                                            className="flex items-center gap-2 border border-gray-300 rounded-md p-1 bg-white focus-within:ring-2 focus-within:ring-indigo-500 transition-shadow"
+                                                                                        >
+                                                                                            <input
+                                                                                                type="text"
+                                                                                                placeholder="Type feedback..."
+                                                                                                value={feedbackText}
+                                                                                                onChange={(e) => setFeedbackText(e.target.value)}
+                                                                                                className="flex-1 bg-transparent px-2 py-1 text-sm outline-none"
+                                                                                                autoFocus
+                                                                                            />
+                                                                                            <button
+                                                                                                type="submit"
+                                                                                                className={`p-2 rounded transition-colors ml-1 ${!feedbackText.trim() ? 'text-gray-400 cursor-not-allowed' : 'text-indigo-600 hover:bg-indigo-50'}`}
+                                                                                                title="Send"
+                                                                                                disabled={!feedbackText.trim()}
+                                                                                            >
+                                                                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                                                                    <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                                                                                                </svg>
+                                                                                            </button>
+                                                                                        </form>
+                                                                                    </div>
                                                                                 )}
                                                                             </div>
-                                                                            {/* Input Box */}
-                                                                            <div className="p-3 border-t border-gray-200 bg-gray-50">
-                                                                                <form
-                                                                                    onSubmit={async (e) => {
-                                                                                        e.preventDefault();
-                                                                                        if (feedbackText.trim()) {
-                                                                                            await addFeedback(feedbackText);
-                                                                                            setFeedbackText('');
-                                                                                        }
-                                                                                    }}
-                                                                                    className="flex items-center gap-2 border border-gray-300 rounded-md p-1 bg-white focus-within:ring-2 focus-within:ring-indigo-500 transition-shadow"
-                                                                                >
-                                                                                    <input
-                                                                                        type="text"
-                                                                                        placeholder="Type feedback..."
-                                                                                        value={feedbackText}
-                                                                                        onChange={(e) => setFeedbackText(e.target.value)}
-                                                                                        className="flex-1 bg-transparent px-2 py-1 text-sm outline-none"
-                                                                                    />
-                                                                                    <svg className="w-4 h-4 text-gray-400 cursor-pointer ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                                                                                    <button type="submit" className="p-2 text-indigo-600 hover:bg-indigo-50 rounded transition-colors ml-1" title="Send" disabled={!feedbackText.trim()}>
-                                                                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
+
+                                                                            {/* Plus Button - Add New Iteration */}
+                                                                            {user?.role !== 'Client' && (!entry.status || entry.status === 'Pending') && (
+                                                                                <div className="flex flex-col items-center justify-center ml-2 relative min-w-[60px]">
+                                                                                    <button
+                                                                                        onClick={() => { setModalInitialData({ mediaId: entry.mediaId, clientName, category: entry.category }); setIsModalOpen(true); }}
+                                                                                        className="w-12 h-12 rounded-full border border-gray-400 flex items-center justify-center text-gray-700 hover:bg-gray-100 transition-colors shrink-0 shadow-sm z-10 bg-white"
+                                                                                        title="Accept & Add New Iteration"
+                                                                                    >
+                                                                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+                                                                                        </svg>
                                                                                     </button>
-                                                                                </form>
+                                                                                    <div className="mt-2 text-center text-[10px] text-gray-500 w-20 leading-tight">
+                                                                                        After this accept<br />add to new one
+                                                                                    </div>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="flex flex-col md:flex-row gap-8 items-start justify-center mt-2">
+                                                                        <div className="flex-1 w-full bg-gray-50 rounded-xl flex border border-gray-200 overflow-hidden items-center justify-center relative p-2 shadow-sm">
+                                                                            {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
+                                                                                <video src={entry.filePath} controls className="w-full max-h-[500px] object-contain block rounded-lg bg-black/5" />
+                                                                            ) : (
+                                                                                <img
+                                                                                    src={entry.filePath}
+                                                                                    alt="Creative"
+                                                                                    className="w-full max-h-[500px] object-contain block cursor-pointer transition-transform hover:scale-[1.02] rounded-lg"
+                                                                                    onClick={() => setSelectedImage(entry.filePath)}
+                                                                                />
+                                                                            )}
+                                                                            <div className="absolute top-4 right-4 bg-black/60 text-white text-[10px] px-2 py-1 rounded pointer-events-none">
+                                                                                {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? 'Video' : 'Image'}
                                                                             </div>
                                                                         </div>
-
-                                                                        {/* Plus Button Container (Small / Side) - Hidden for Clients */}
-                                                                        {user?.role !== 'Client' && (!entry.status || entry.status === 'Pending') && (
-                                                                            <div className="flex flex-col items-center justify-center ml-2 relative min-w-[60px]">
-                                                                                <button
-                                                                                    onClick={() => { setModalInitialData({ mediaId: entry.mediaId, clientName, category: entry.category }); setIsModalOpen(true); }}
-                                                                                    className="w-12 h-12 rounded-full border border-gray-400 flex items-center justify-center text-gray-700 hover:bg-gray-100 transition-colors shrink-0 shadow-sm z-10 bg-white"
-                                                                                    title="Accept & Add New Iteration"
-                                                                                >
-                                                                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" /></svg>
-                                                                                </button>
-                                                                                <div className="absolute top-[calc(50%+30px)] right-full mr-2 hidden lg:flex items-center">
-
-                                                                                </div>
-                                                                                <div className="mt-2 text-center text-[10px] text-gray-500 w-20 leading-tight">
-                                                                                    After this accept<br />add to new one
-                                                                                </div>
-                                                                            </div>
-                                                                        )}
-                                                                    </>
-                                                                ) : (
-                                                                    /* Plus Button Container (Large / Center) - Hidden for Clients */
-                                                                    user?.role !== 'Client' && (!entry.status || entry.status === 'Pending') ? (
-                                                                        <div className="flex-1 flex items-center justify-center h-[400px]">
-                                                                            <div className="flex flex-col items-center justify-center relative group">
-                                                                                <button
-                                                                                    onClick={() => { setModalInitialData({ mediaId: entry.mediaId, clientName, category: entry.category }); setIsModalOpen(true); }}
-                                                                                    className="w-24 h-24 rounded-full border-2 border-dashed border-gray-400 flex items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-gray-600 hover:border-gray-500 transition-all shrink-0 shadow-sm z-10 bg-white"
-                                                                                    title="Accept & Add New Iteration"
-                                                                                >
-                                                                                    <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" /></svg>
-                                                                                </button>
-                                                                                <div className="absolute right-full mr-4 hidden lg:flex items-center top-[120px]">
-
-                                                                                </div>
-                                                                                <div className="mt-6 text-center text-sm font-medium text-gray-500 leading-tight">
-                                                                                    After this accept<br />add to new one
-                                                                                </div>
-                                                                            </div>
+                                                                        <div className="flex-1 w-full bg-white border border-gray-200 shadow-sm rounded-xl p-6 min-h-[100px] flex flex-col">
+                                                                            <p className="text-xs font-semibold text-gray-500 uppercase mb-3 border-b border-gray-100 pb-2">Caption</p>
+                                                                            <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed flex-1">
+                                                                                {entry.caption || 'No caption provided.'}
+                                                                            </p>
                                                                         </div>
-                                                                    ) : <div className="flex-1 flex items-center justify-center h-[400px]"></div>
+                                                                    </div>
                                                                 )}
                                                             </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="flex flex-col md:flex-row gap-8 items-start justify-center mt-2">
-                                                            <div className="flex-1 w-full bg-gray-50 rounded-xl flex border border-gray-200 overflow-hidden items-center justify-center relative p-2 shadow-sm">
-                                                                {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
-                                                                    <video src={entry.filePath} controls className="w-full max-h-[500px] object-contain block rounded-lg bg-black/5" />
-                                                                ) : (
-                                                                    <img
-                                                                        src={entry.filePath}
-                                                                        alt="Creative"
-                                                                        className="w-full max-h-[500px] object-contain block cursor-pointer transition-transform hover:scale-[1.02] rounded-lg"
-                                                                        onClick={() => setSelectedImage(entry.filePath)}
-                                                                    />
-                                                                )}
-                                                                <div className="absolute top-4 right-4 bg-black/60 text-white text-[10px] px-2 py-1 rounded pointer-events-none">
-                                                                    {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? 'Video' : 'Image'}
-                                                                </div>
-                                                            </div>
-
-                                                            <div className="flex-1 w-full bg-white border border-gray-200 shadow-sm rounded-xl p-6 min-h-[100px] flex flex-col">
-                                                                <p className="text-xs font-semibold text-gray-500 uppercase mb-3 border-b border-gray-100 pb-2">Caption</p>
-                                                                <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed flex-1">
-                                                                    {entry.caption || 'No caption provided.'}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-                                                    )}
+                                                        </motion.div>
+                                                    </AnimatePresence>
                                                 </div>
 
-                                                {/* Footer Strip - Iterations */}
-                                                {
-                                                    currentMediaGroup.length > 0 && (
-                                                        <div className="px-6 pb-6 pt-0">
-                                                            <div className="grid grid-cols-[repeat(auto-fit,minmax(12px,1fr))] h-3 border border-gray-300 divide-x divide-gray-300 mb-4 bg-gray-50 max-w-2xl mx-auto">
-                                                                {[...Array(30)].map((_, i) => (
-                                                                    <div key={i} className="h-full"></div>
+                                                {/* Footer Strip - Iteration Carousel Controls */}
+                                                {currentMediaGroup.length > 0 && (
+                                                    <div className="px-6 pb-5 pt-2 border-t border-gray-100 bg-gray-50/60">
+                                                        <div className="flex items-center justify-between max-w-2xl mx-auto gap-4">
+                                                            {/* Prev iteration */}
+                                                            <button
+                                                                onClick={() => {
+                                                                    if (iterIdx > 0) updateViewState(clientName, { iterationIndex: iterIdx - 1 }, -1);
+                                                                }}
+                                                                disabled={iterIdx === 0}
+                                                                className="w-8 h-8 rounded-full border border-gray-300 bg-white flex items-center justify-center text-gray-600 hover:text-indigo-600 hover:border-indigo-300 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm transition-colors"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                                                            </button>
+
+                                                            {/* Dots */}
+                                                            <div className="flex items-center gap-2">
+                                                                {currentMediaGroup.map((_, i) => (
+                                                                    <button
+                                                                        key={i}
+                                                                        onClick={() => updateViewState(clientName, { iterationIndex: i }, i > iterIdx ? 1 : -1)}
+                                                                        title={`Iteration ${i + 1}`}
+                                                                        className={`rounded-full border transition-all ${
+                                                                            i === iterIdx
+                                                                                ? 'w-7 h-7 border-indigo-400 bg-indigo-600 text-white text-xs font-bold shadow-sm'
+                                                                                : 'w-6 h-6 border-gray-300 bg-white text-gray-500 text-xs hover:border-indigo-300 hover:text-indigo-600'
+                                                                        }`}
+                                                                    >
+                                                                        {i + 1}
+                                                                    </button>
                                                                 ))}
                                                             </div>
 
-                                                            <div className="flex flex-wrap items-center gap-4 border-t border-dashed border-gray-200 pt-4 max-w-2xl mx-auto">
-                                                                <span className="text-xs font-bold text-gray-500">I {iterIdx + 1}:</span>
-                                                                <div className="border border-gray-300 p-1 w-24 h-16 rounded overflow-hidden bg-gray-100 flex items-center justify-center relative">
-                                                                    {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
-                                                                        <video src={entry.filePath} className="w-full h-full object-cover" />
-                                                                    ) : (
-                                                                        <img src={entry.filePath} alt="Thumb" className="w-full h-full object-cover" />
-                                                                    )}
-                                                                    <div className="absolute inset-0 bg-white/20"></div>
-                                                                </div>
+                                                            {/* Iteration label */}
+                                                            <span className="text-xs text-gray-400 font-medium hidden sm:block">Iteration {iterIdx + 1} / {currentMediaGroup.length}</span>
 
-                                                                <div className="flex-1"></div>
-
-                                                                <div className="text-sm font-mono text-gray-500 tracking-widest flex items-center gap-3">
-                                                                    <span
-                                                                        onClick={() => updateViewState(clientName, { iterationIndex: Math.max(0, iterIdx - 1) })}
-                                                                        className={`cursor-pointer ${iterIdx === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:text-indigo-600'}`}
-                                                                    >
-                                                                        &lt;
-                                                                    </span>
-
-                                                                    {currentMediaGroup.map((_, i) => (
-                                                                        <span
-                                                                            key={i}
-                                                                            onClick={() => updateViewState(clientName, { iterationIndex: i })}
-                                                                            className={`w-6 h-6 rounded-full flex items-center justify-center text-xs cursor-pointer transition-colors ${i === iterIdx
-                                                                                ? 'border border-gray-300 font-bold bg-white text-gray-800 shadow-sm'
-                                                                                : 'text-gray-400 hover:bg-gray-200 hover:text-gray-700'
-                                                                                }`}
-                                                                        >
-                                                                            {i + 1}
-                                                                        </span>
-                                                                    ))}
-
-                                                                    <span
-                                                                        onClick={() => updateViewState(clientName, { iterationIndex: Math.min(maxIterationIndexes[mediaIdx] - 1, iterIdx + 1) })}
-                                                                        className={`cursor-pointer ${iterIdx === maxIterationIndexes[mediaIdx] - 1 ? 'opacity-30 cursor-not-allowed' : 'hover:text-indigo-600'}`}
-                                                                    >
-                                                                        &gt;
-                                                                    </span>
-                                                                </div>
-                                                            </div>
+                                                            {/* Next iteration */}
+                                                            <button
+                                                                onClick={() => {
+                                                                    if (iterIdx < maxIterationIndexes[mediaIdx] - 1) updateViewState(clientName, { iterationIndex: iterIdx + 1 }, 1);
+                                                                }}
+                                                                disabled={iterIdx === maxIterationIndexes[mediaIdx] - 1}
+                                                                className="w-8 h-8 rounded-full border border-gray-300 bg-white flex items-center justify-center text-gray-600 hover:text-indigo-600 hover:border-indigo-300 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm transition-colors"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                                                            </button>
                                                         </div>
-                                                    )
-                                                }
+                                                    </div>
+                                                )}
 
                                             </div>
                                         )
