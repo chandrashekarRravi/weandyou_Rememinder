@@ -395,30 +395,30 @@ const Dashboard: React.FC = () => {
                                                                             {/* Feedback Box */}
                                                                             <div className="max-w-[350px] flex-1 rounded-lg flex flex-col overflow-hidden bg-white h-[400px]">
                                                                                 <div className="bg-gray-50 p-3 border-b border-gray-200 flex justify-between items-center">
-                                                                                     <h4 className="text-sm font-bold text-gray-700 text-left">Feedback of Iteration {iterIdx + 1}</h4>
-                                                                                     {/* Only show the add-feedback toggle on the latest iteration */}
-                                                                                     {iterIdx === currentMediaGroup.length - 1 && (
-                                                                                         <button
-                                                                                             onClick={() => toggleFeedbackInput(entry._id)}
-                                                                                             className="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                                                                                             title={showFeedbackInputs[entry._id] ? "Hide feedback input" : "Add feedback"}
-                                                                                         >
-                                                                                             {showFeedbackInputs[entry._id] ? (
-                                                                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                                                                                             ) : (
-                                                                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                                                                                             )}
-                                                                                         </button>
-                                                                                     )}
-                                                                                     {/* Previous iterations show a lock hint */}
-                                                                                     {iterIdx < currentMediaGroup.length - 1 && (
-                                                                                         <span className="text-[10px] text-gray-400 flex items-center gap-1">
-                                                                                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 17a2 2 0 100-4 2 2 0 000 4zm6-6V9a6 6 0 10-12 0v2a2 2 0 00-2 2v7a2 2 0 002 2h12a2 2 0 002-2v-7a2 2 0 00-2-2z" /></svg>
-                                                                                             Read-only
-                                                                                         </span>
-                                                                                     )}
-                                                                                 </div>
-                                                                                <div className="flex-1 p-4 overflow-y-auto space-y-4 flex-col-reverse">
+                                                                                    <h4 className="text-sm font-bold text-gray-700 text-left">Feedback of Iteration {iterIdx + 1}</h4>
+                                                                                    {/* Only show the add-feedback toggle on the latest iteration */}
+                                                                                    {iterIdx === currentMediaGroup.length - 1 && (
+                                                                                        <button
+                                                                                            onClick={() => toggleFeedbackInput(entry._id)}
+                                                                                            className="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                                                                            title={showFeedbackInputs[entry._id] ? "Hide feedback input" : "Add feedback"}
+                                                                                        >
+                                                                                            {showFeedbackInputs[entry._id] ? (
+                                                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                                                                            ) : (
+                                                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                                                                                            )}
+                                                                                        </button>
+                                                                                    )}
+                                                                                    {/* Previous iterations show a lock hint */}
+                                                                                    {iterIdx < currentMediaGroup.length - 1 && (
+                                                                                        <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                                                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 17a2 2 0 100-4 2 2 0 000 4zm6-6V9a6 6 0 10-12 0v2a2 2 0 00-2 2v7a2 2 0 002 2h12a2 2 0 002-2v-7a2 2 0 00-2-2z" /></svg>
+                                                                                            Read-only
+                                                                                        </span>
+                                                                                    )}
+                                                                                </div>
+                                                                                <div className="flex-1 p-4 overflow-y-auto space-y-8 flex-col-reverse">
                                                                                     {feedbacksLoading ? (
                                                                                         <div className="text-center text-gray-400 text-sm mt-10">Loading comments...</div>
                                                                                     ) : sortedFeedbacks.length === 0 ? (
@@ -431,7 +431,7 @@ const Dashboard: React.FC = () => {
                                                                                             if (!isCurrentUser) {
                                                                                                 return (
                                                                                                     <div key={fb._id} className="flex flex-col gap-1 items-start">
-                                                                                                        <div className={`text-sm p-3 rounded-lg rounded-tl-none border relative w-[80%] max-w-sm ${fb.role === 'Client' ? 'bg-blue-50 text-gray-800 border-blue-100' : 'bg-gray-50 text-gray-800 border-gray-200'}`}>
+                                                                                                        <div className={`text-sm p-3 rounded-lg rounded-tl-none border relative w-[100%] max-w-md ${fb.role === 'Client' ? 'bg-blue-50 text-gray-800 border-blue-100' : 'bg-gray-50 text-gray-800 border-gray-200'}`}>
                                                                                                             <span className="text-xs font-semibold text-gray-700">{fb.username || 'User'}</span>
                                                                                                             <span className="text-[10px] text-gray-400 ml-4">
                                                                                                                 {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })},
@@ -460,8 +460,8 @@ const Dashboard: React.FC = () => {
                                                                                         })
                                                                                     )}
                                                                                 </div>
-                                                                                 {/* Input area — only on latest iteration */}
-                                                                                 {showFeedbackInputs[entry._id] && iterIdx === currentMediaGroup.length - 1 && (
+                                                                                {/* Input area — only on latest iteration */}
+                                                                                {showFeedbackInputs[entry._id] && iterIdx === currentMediaGroup.length - 1 && (
                                                                                     <div className="p-3 border-t border-gray-200 bg-gray-50">
                                                                                         <form
                                                                                             onSubmit={async (e) => {
@@ -496,42 +496,41 @@ const Dashboard: React.FC = () => {
                                                                                 )}
                                                                             </div>
 
-                                                                             {/* Plus Button - Add New Iteration */}
-                                                                             {/* Only enabled when: non-Client role, entry is Pending, on latest iteration, AND a Client has given feedback */}
-                                                                             {(() => {
-                                                                                 const isLatestIteration = iterIdx === currentMediaGroup.length - 1;
-                                                                                 const clientHasFeedback = sortedFeedbacks.some(fb => fb.role === 'Client');
-                                                                                 if (user?.role === 'Client' || (entry.status && entry.status !== 'Pending')) return null;
-                                                                                 return (
-                                                                                     <div className="flex flex-col items-center justify-center ml-2 relative min-w-[60px]">
-                                                                                         <button
-                                                                                             onClick={() => {
-                                                                                                 if (isLatestIteration && clientHasFeedback) {
-                                                                                                     setModalInitialData({ mediaId: entry.mediaId, clientName, category: entry.category });
-                                                                                                     setIsModalOpen(true);
-                                                                                                 }
-                                                                                             }}
-                                                                                             disabled={!isLatestIteration || !clientHasFeedback}
-                                                                                             className={`w-12 h-12 rounded-full border flex items-center justify-center transition-colors shrink-0 shadow-sm z-10 ${
-                                                                                                 isLatestIteration && clientHasFeedback
-                                                                                                     ? 'border-gray-400 bg-white text-gray-700 hover:bg-gray-100 cursor-pointer'
-                                                                                                     : 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed'
-                                                                                             }`}
-                                                                                             title={!isLatestIteration ? 'Navigate to the latest iteration' : !clientHasFeedback ? 'Waiting for client feedback before adding a new iteration' : 'Add New Iteration'}
-                                                                                         >
-                                                                                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
-                                                                                             </svg>
-                                                                                         </button>
-                                                                                         <div className="mt-2 text-center text-[10px] leading-tight w-20 text-center">
-                                                                                             {!clientHasFeedback
-                                                                                                 ? <span className="text-orange-400 font-medium">Awaiting client feedback</span>
-                                                                                                 : <span className="text-gray-500">Add new iteration</span>
-                                                                                             }
-                                                                                         </div>
-                                                                                     </div>
-                                                                                 );
-                                                                             })()}
+                                                                            {/* Plus Button - Add New Iteration */}
+                                                                            {/* Only enabled when: non-Client role, entry is Pending, on latest iteration, AND a Client has given feedback */}
+                                                                            {(() => {
+                                                                                const isLatestIteration = iterIdx === currentMediaGroup.length - 1;
+                                                                                const clientHasFeedback = sortedFeedbacks.some(fb => fb.role === 'Client');
+                                                                                if (user?.role === 'Client' || (entry.status && entry.status !== 'Pending')) return null;
+                                                                                return (
+                                                                                    <div className="flex flex-col items-center justify-center ml-2 relative min-w-[60px]">
+                                                                                        <button
+                                                                                            onClick={() => {
+                                                                                                if (isLatestIteration && clientHasFeedback) {
+                                                                                                    setModalInitialData({ mediaId: entry.mediaId, clientName, category: entry.category });
+                                                                                                    setIsModalOpen(true);
+                                                                                                }
+                                                                                            }}
+                                                                                            disabled={!isLatestIteration || !clientHasFeedback}
+                                                                                            className={`w-12 h-12 rounded-full border flex items-center justify-center transition-colors shrink-0 shadow-sm z-10 ${isLatestIteration && clientHasFeedback
+                                                                                                ? 'border-gray-400 bg-white text-gray-700 hover:bg-gray-100 cursor-pointer'
+                                                                                                : 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed'
+                                                                                                }`}
+                                                                                            title={!isLatestIteration ? 'Navigate to the latest iteration' : !clientHasFeedback ? 'Waiting for client feedback before adding a new iteration' : 'Add New Iteration'}
+                                                                                        >
+                                                                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+                                                                                            </svg>
+                                                                                        </button>
+                                                                                        <div className="mt-2 text-center text-[10px] leading-tight w-20 text-center">
+                                                                                            {!clientHasFeedback
+                                                                                                ? <span className="text-orange-400 font-medium">Awaiting client feedback</span>
+                                                                                                : <span className="text-gray-500">Add new iteration</span>
+                                                                                            }
+                                                                                        </div>
+                                                                                    </div>
+                                                                                );
+                                                                            })()}
                                                                         </div>
                                                                     </div>
                                                                 ) : (
@@ -577,11 +576,10 @@ const Dashboard: React.FC = () => {
                                                                                         const isCurrentUser = fb.userId === user?._id;
                                                                                         return (
                                                                                             <div key={fb._id} className={`flex flex-col gap-0.5 ${isCurrentUser ? 'items-end' : 'items-start'}`}>
-                                                                                                <div className={`text-sm p-3 rounded-lg border max-w-[80%] ${
-                                                                                                    fb.role === 'Client' ? 'bg-blue-50 border-blue-100 text-gray-800'
+                                                                                                <div className={`text-sm p-3 rounded-lg border max-w-[80%] ${fb.role === 'Client' ? 'bg-blue-50 border-blue-100 text-gray-800'
                                                                                                     : isCurrentUser ? 'bg-indigo-50 border-indigo-100 text-indigo-900'
-                                                                                                    : 'bg-gray-50 border-gray-200 text-gray-800'
-                                                                                                }`}>
+                                                                                                        : 'bg-gray-50 border-gray-200 text-gray-800'
+                                                                                                    }`}>
                                                                                                     <div className="flex items-center gap-2 mb-1">
                                                                                                         <span className="text-xs font-semibold text-gray-700">
                                                                                                             {isCurrentUser ? `You (${fb.role})` : (fb.username || 'User')}

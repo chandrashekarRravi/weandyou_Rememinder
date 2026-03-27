@@ -1,7 +1,7 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-import { protect } from '../middleware/auth.js';
+import { protect, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -65,6 +65,67 @@ router.post('/logout', protect, (req, res) => {
     // For Bearer tokens kept in local storage, actual logout is handled client-side
     // This endpoint remains to be functionally complete or if we switch to HTTP-Only cookies
     res.json({ message: 'Logged out successfully' });
+});
+
+// @desc    Register a Team user
+// @route   POST /api/auth/team
+// @access  Private (Admin only)
+router.post('/team', protect, authorize('Admin'), async (req, res) => {
+    try {
+        const { name } = req.body;
+        if (!name) {
+            return res.status(400).json({ message: 'Team member name is required' });
+        }
+
+        const username = `${name}@team`;
+        const password = `${name}@12345`;
+
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            return res.status(400).json({ message: 'A team member with this name already exists.' });
+        }
+
+        const user = await User.create({
+            username: username,
+            password: password,
+            role: 'Team'
+        });
+
+        res.status(201).json({
+            message: 'Team member created successfully',
+            user: { _id: user._id, username: user.username, role: user.role }
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Delete a Team user
+// @route   DELETE /api/auth/team/:id
+// @access  Private (Admin only)
+router.delete('/team/:id', protect, authorize('Admin'), async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user || user.role !== 'Team') {
+            return res.status(404).json({ message: 'Team member not found' });
+        }
+        await User.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Team member removed' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @desc    Get all Team users
+// @route   GET /api/auth/team
+// @access  Private (Admin only)
+router.get('/team', protect, authorize('Admin'), async (req, res) => {
+    try {
+        const teamMembers = await User.find({ role: 'Team' }).select('-password');
+        res.json(teamMembers);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
 });
 
 // @desc    Seed temporary mock users

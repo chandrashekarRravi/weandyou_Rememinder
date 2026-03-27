@@ -33,7 +33,7 @@ const FeedbackPanel: React.FC<FeedbackPanelProps> = ({ entryId, onFeedbackAdded,
                         No feedback yet.
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                         {feedbacks.map((fb) => (
                             <div key={fb._id} className="flex flex-col gap-1">
                                 <div className="flex items-center gap-2">
@@ -54,21 +54,26 @@ const FeedbackPanel: React.FC<FeedbackPanelProps> = ({ entryId, onFeedbackAdded,
             </div>
             {/* Input Box */}
             {showInput && !readOnly && (
-                <div className="p-2 border-t border-gray-100 mt-2">
+                <div className="p-4 border-t border-gray-200 mt-2 bg-gray-50">
                     <form
                         onSubmit={handleSubmit}
-                        className="flex items-center gap-2 border border-gray-300 rounded-md p-1 bg-white focus-within:ring-2 focus-within:ring-indigo-500 transition-shadow"
+                        className="flex flex-col gap-3"
                     >
-                        <input
-                            type="text"
-                            placeholder="Type feedback..."
+                        <textarea
+                            placeholder="Add your feedback..."
                             value={feedbackText}
                             onChange={(e) => setFeedbackText(e.target.value)}
-                            className="flex-1 bg-transparent px-2 py-1 text-sm outline-none"
+                            className="w-full border border-gray-300 rounded-md p-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 resize-y min-h-[100px] shadow-sm bg-white"
                         />
-                        <button type="submit" className="p-2 text-indigo-600 hover:bg-indigo-50 rounded transition-colors ml-1" title="Send" disabled={!feedbackText.trim()}>
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" /></svg>
-                        </button>
+                        <div className="flex justify-end">
+                            <button 
+                                type="submit" 
+                                className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm" 
+                                disabled={!feedbackText.trim()}
+                            >
+                                Submit Feedback
+                            </button>
+                        </div>
                     </form>
                 </div>
             )}
