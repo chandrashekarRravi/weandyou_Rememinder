@@ -24,9 +24,10 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response && error.response.status === 401) {
-            // Token is invalid/expired
-            // Optional: emit an event or clear local storage here
-            console.error('Unauthorized! Token may be expired.');
+            // Token is invalid/expired (ignore for login route as it returns 401 on invalid credentials)
+            if (!error.config.url?.endsWith('/login')) {
+                console.error('Unauthorized! Token may be expired.');
+            }
         }
         return Promise.reject(error);
     }
