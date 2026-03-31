@@ -84,9 +84,12 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days }) => {
             const isSameDate = isSameDay(parseISO(entryDateStr), date);
             if (!isSameDate) return false;
 
+            // Do not show Chinmai's raw drafts in the calendar
+            const entryClient = entry.clientName?.trim() || 'No Client';
+            if (entryClient === 'Drafts') return false;
+
             // Client Filter
             if (activeFilter.client !== 'All') {
-                const entryClient = entry.clientName?.trim() || 'No Client';
                 if (entryClient !== activeFilter.client) return false;
             }
 
