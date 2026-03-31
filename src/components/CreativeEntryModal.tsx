@@ -9,19 +9,25 @@ interface CreativeEntryModalProps {
     onClose: () => void;
     onSuccess: () => void;
     initialData?: {
+        _id?: string;
         mediaId?: string;
         clientName?: string;
         category?: string;
+        caption?: string;
+        filePath?: string;
+        ratio?: string;
+        date?: string;
     };
 }
 
 const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose, onSuccess, initialData }) => {
+    const [entryId, setEntryId] = useState('');
     const [mediaId, setMediaId] = useState('');
     const [clientName, setClientName] = useState('');
     const [file, setFile] = useState<File | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
     const [caption, setCaption] = useState('');
-    const [category, setCategory] = useState('Other');
+    const [category, setCategory] = useState('');
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [ratio, setRatio] = useState('1:1');
     const RATIO_OPTIONS = ['1:1', '4:5', '9:16', '16:9'];
@@ -30,15 +36,15 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
 
     useEffect(() => {
         if (isOpen) {
+            setEntryId(initialData?._id || '');
             setMediaId(initialData?.mediaId || '');
-            setClientName(initialData?.clientName || '');
-            setCategory(initialData?.category || 'Other');
-            // Reset other fields on open
+            setClientName(initialData?.clientName === 'Drafts' ? '' : (initialData?.clientName || ''));
+            setCategory(initialData?.category || '');
+            setCaption(initialData?.caption || '');
+            setRatio(initialData?.ratio || '1:1');
+            setPreview(initialData?.filePath || null);
             setFile(null);
-            setPreview(null);
-            setCaption('');
-            setRatio('1:1');
-            setDate(new Date().toISOString().split('T')[0]);
+            setDate(initialData?.date ? new Date(initialData.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
             setError('');
         }
     }, [isOpen, initialData]);
@@ -46,8 +52,8 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
     const { user } = useAuth();
     const { clients } = useClients();
     // Auto-captured details
-    // If no user is logged in, use "UnknownUser" as fallback
     const username = user?.username || "UnknownUser";
+    const isChinmai = user?.username?.toLowerCase() === 'chinmai@team';
 
     if (!isOpen) return null;
 
@@ -100,39 +106,56 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
             setError('Media ID must start with "img" or "vid"');
             return;
         }
-        if (!file) {
+        if (!file && !preview) {
             setError('Please upload a file');
+            return;
+        }
+
+        if (!isChinmai && !clientName) {
+            setError('Please select a client');
+            return;
+        }
+
+        if (!isChinmai && !category) {
+            setError('Please select a category');
             return;
         }
 
         setUploading(true);
         try {
-            // 1. Upload File
-            const fd = new FormData();
-            fd.append('file', file);
-            const uploadRes = await api.post('/api/creative-entries/upload', fd, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            const filePath = uploadRes.data.url;
+            let actualFilePath = preview;
+            // 1. Upload File if a new one is selected
+            if (file) {
+                const fd = new FormData();
+                fd.append('file', file);
+                const uploadRes = await api.post('/api/creative-entries/upload', fd, {
+                    headers: { 'Content-Type': 'multipart/form-data' }
+                });
+                actualFilePath = uploadRes.data.url;
+            }
 
-            // 2. Save Entry
-            await api.post('/api/creative-entries', {
+            // 2. Save or Update Entry
+            const payload = {
                 mediaId,
-                clientName,
-                filePath,
-                caption,
-                category,
-                date,
-                username,
+                clientName: isChinmai ? 'Drafts' : clientName,
+                filePath: actualFilePath,
+                caption: isChinmai ? '' : caption,
+                category: isChinmai ? 'Other' : category,
+                date: isChinmai ? new Date().toISOString() : date,
+                username: entryId ? undefined : username, // don't override username if editing
                 ratio,
-                // createdAt automatically handled by backend or we can send it if we want specific client time, 
-                // but usually backend time is safer. Requirement said "Current Timestamp" captured when modal opens.
-                // We'll let backend set default createdAt to now, which matches "submit time".
-            });
+            };
+
+            if (entryId) {
+                await api.put(`/api/creative-entries/${entryId}`, payload);
+            } else {
+                await api.post('/api/creative-entries', payload);
+            }
 
             onSuccess();
             onClose();
             // Reset form
+            setEntryId('');
             setMediaId('');
             setClientName('');
             setFile(null);
@@ -156,9 +179,7 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                     <div>
-                        <h2 className="text-xl font-bold text-gray-800">New Creative Entry</h2>
-                        {/*<p className="text-xs text-gray-500 mt-1">Logged in as: <span className="font-semibold">{username}</span> • {timestamp}</p>
-                     */}
+                        <h2 className="text-xl font-bold text-gray-800">{entryId ? 'Edit Creative Entry' : 'New Creative Entry'}</h2>
                     </div>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
                         <FaTimes />
@@ -247,26 +268,29 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
                             </div>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Caption</label>
-                            <textarea
-                                value={caption}
-                                onChange={(e) => setCaption(e.target.value)}
-                                placeholder="Enter a caption..."
-                                rows={3}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
-                            />
-                        </div>
+                        {!isChinmai && (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Caption</label>
+                                <textarea
+                                    value={caption}
+                                    onChange={(e) => setCaption(e.target.value)}
+                                    placeholder="Enter a caption..."
+                                    rows={3}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
+                                />
+                            </div>
+                        )}
                     </div>
 
                     {/* Right Column: Details & Reminders */}
-                    <div className="space-y-4">
-                        <div className=" p-4 rounded-xl border border-gray-100">
-                            <h3 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Entry Details</h3>
+                    {!isChinmai && (
+                        <div className="space-y-4">
+                            <div className=" p-4 rounded-xl border border-gray-100">
+                                <h3 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Entry Details</h3>
 
-                            <div className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Client Name <span className="text-red-500">*</span></label>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Client Name <span className="text-red-500">*</span></label>
                                     <select
                                         value={clientName}
                                         onChange={(e) => setClientName(e.target.value)}
@@ -297,23 +321,16 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
                                         onChange={(e) => setCategory(e.target.value)}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
                                     >
+                                        <option value="" disabled>Select a Category</option>
                                         <option value="Special Day">Special Day</option>
                                         <option value="Engagement">Engagement</option>
                                         <option value="Ideation">Ideation</option>
-                                        <option value="Other">Select</option>
-                                    </select>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    {/* <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                            <h3 className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">Instructions</h3>
-                            <ul className="text-xs text-gray-600 space-y-1 list-disc pl-4">
-                                <li>Ensure Media ID matches the file naming convention.</li>
-                                <li>Captions should be concise and engaging.</li>
-                                <li>Select the correct category for proper color coding in the calendar.</li>
-                            </ul>
-                        </div>*/}
+                    )}
 
                 </div>
 

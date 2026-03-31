@@ -53,7 +53,7 @@ const Dashboard: React.FC = () => {
     const { feedbacks, addFeedback, loading: feedbacksLoading } = useIterationFeedback(activeFeedbackId);
     const [feedbackText, setFeedbackText] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalInitialData, setModalInitialData] = useState<{ mediaId?: string; clientName?: string; category?: string }>();
+    const [modalInitialData, setModalInitialData] = useState<{ _id?: string; mediaId?: string; clientName?: string; category?: string; caption?: string; filePath?: string; ratio?: string; date?: string; }>();
 
     // Sort feedbacks to show latest first (descending order by createdAt)
     const sortedFeedbacks = useMemo(() => {
@@ -244,7 +244,6 @@ const Dashboard: React.FC = () => {
                                     { label: 'Special Day', value: 'Special Day' },
                                     { label: 'Engagement', value: 'Engagement' },
                                     { label: 'Ideation', value: 'Ideation' },
-                                    { label: 'Other', value: 'Other' },
                                 ]}
                                 onChange={(val) => setDashboardFilter(prev => ({ ...prev, category: val }))}
                                 placeholder="All Categories"
@@ -321,12 +320,32 @@ const Dashboard: React.FC = () => {
                                                         }`}>
                                                         STATUS: {entry.status || 'Pending'}
                                                     </span>
-                                                    <div className="text-xs text-gray-500 font-medium mt-2 sm:mt-0 flex sm:flex-col items-center sm:items-end gap-2 sm:gap-0 xl:pr-8">
+                                                    <div className="text-xs text-gray-500 font-medium mt-2 sm:mt-0 flex flex-row items-center justify-end gap-6 mr-4 sm:mr-0 xl:pr-8">
                                                         <span>{entry.username || 'Unknown'}</span>
                                                         <span>
                                                             {new Date(entry.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} {' '}
                                                             {new Date(entry.createdAt).toLocaleDateString()}
                                                         </span>
+                                                        {clientName === 'Drafts' && (user?.username?.toLowerCase() === 'bhuvan@team' || user?.role === 'Admin') && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setModalInitialData({
+                                                                        _id: entry._id,
+                                                                        mediaId: entry.mediaId,
+                                                                        clientName: entry.clientName,
+                                                                        category: entry.category,
+                                                                        caption: entry.caption,
+                                                                        filePath: entry.filePath,
+                                                                        ratio: entry.ratio,
+                                                                        date: entry.date
+                                                                    });
+                                                                    setIsModalOpen(true);
+                                                                }}
+                                                                className="px-2 py-1 bg-indigo-50 text-indigo-700 font-bold rounded hover:bg-indigo-100 uppercase tracking-wider border border-indigo-200 text-[10px]"
+                                                            >
+                                                                Edit Original
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
 
@@ -357,11 +376,10 @@ const Dashboard: React.FC = () => {
                                                                                     }
                                                                                 }}
                                                                                 type="button"
-                                                                                className={`px-3 py-1 text-xs font-bold rounded-md border transition-colors ${
-                                                                                    entry.ratio === r || (r === '1:1' && !entry.ratio)
-                                                                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                                                                                        : 'bg-white text-gray-400 border-gray-200 hover:bg-gray-50'
-                                                                                }`}
+                                                                                className={`px-3 py-1 text-xs font-bold rounded-md border transition-colors ${entry.ratio === r || (r === '1:1' && !entry.ratio)
+                                                                                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                                                                                    : 'bg-white text-gray-400 border-gray-200 hover:bg-gray-50'
+                                                                                    }`}
                                                                             >
                                                                                 {r}
                                                                             </button>
@@ -369,7 +387,7 @@ const Dashboard: React.FC = () => {
                                                                     </div>
                                                                     <AnimatePresence>
                                                                         {ratioError?.id === entry._id && (
-                                                                            <motion.span 
+                                                                            <motion.span
                                                                                 initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }}
                                                                                 className="text-[11px] text-red-500 font-medium"
                                                                             >
@@ -761,7 +779,7 @@ const Dashboard: React.FC = () => {
                 isOpen={isModalOpen}
                 initialData={modalInitialData}
                 onClose={() => setIsModalOpen(false)}
-                onSuccess={() => setIsModalOpen(false)}
+                onSuccess={() => { setIsModalOpen(false); window.location.reload(); }}
             />
 
             {/* Image Lightbox Modal */}

@@ -41,7 +41,6 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days }) => {
         { label: 'Special Day', value: 'Special Day' },
         { label: 'Engagement', value: 'Engagement' },
         { label: 'Ideation', value: 'Ideation' },
-        { label: 'Other', value: 'Other' },
     ];
 
     const statusOptions = [
@@ -135,7 +134,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days }) => {
                     value={activeFilter.client}
                     options={clientOptions}
                     onChange={(val) => setActiveFilter({ client: val })}
-                    placeholder="All Clients"
+                    placeholder="All"
                 />
 
                 <div className="w-px h-8 bg-gray-100 mx-2 hidden md:block"></div>
