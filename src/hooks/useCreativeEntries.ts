@@ -14,6 +14,7 @@ export interface CreativeEntryType {
     clientName?: string;
     createdAt: string; // ISO string
     status?: 'Pending' | 'Approved' | 'Rejected';
+    ratio?: string;
 }
 
 export interface UseCreativeEntriesOptions {

@@ -23,6 +23,8 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
     const [caption, setCaption] = useState('');
     const [category, setCategory] = useState('Other');
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+    const [ratio, setRatio] = useState('1:1');
+    const RATIO_OPTIONS = ['1:1', '4:5', '9:16', '16:9'];
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState('');
 
@@ -35,6 +37,7 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
             setFile(null);
             setPreview(null);
             setCaption('');
+            setRatio('1:1');
             setDate(new Date().toISOString().split('T')[0]);
             setError('');
         }
@@ -48,11 +51,41 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
 
     if (!isOpen) return null;
 
+    const autoSelectRatio = (r: number) => {
+        const diffs = [
+            { ratio: '1:1', val: 1 },
+            { ratio: '4:5', val: 0.8 },
+            { ratio: '9:16', val: 0.5625 },
+            { ratio: '16:9', val: 1.7777 }
+        ];
+        let closest = diffs[0];
+        let minDiff = Math.abs(r - diffs[0].val);
+        for (let i = 1; i < diffs.length; i++) {
+            const diff = Math.abs(r - diffs[i].val);
+            if (diff < minDiff) {
+                minDiff = diff;
+                closest = diffs[i];
+            }
+        }
+        setRatio(closest.ratio);
+    };
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const f = e.target.files && e.target.files[0];
         if (f) {
             setFile(f);
-            setPreview(URL.createObjectURL(f));
+            const objectUrl = URL.createObjectURL(f);
+            setPreview(objectUrl);
+
+            if (f.type.startsWith('image/')) {
+                const img = new Image();
+                img.onload = () => autoSelectRatio(img.naturalWidth / img.naturalHeight);
+                img.src = objectUrl;
+            } else if (f.type.startsWith('video/')) {
+                const vid = document.createElement('video');
+                vid.onloadedmetadata = () => autoSelectRatio(vid.videoWidth / vid.videoHeight);
+                vid.src = objectUrl;
+            }
         }
     };
 
@@ -91,6 +124,7 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
                 category,
                 date,
                 username,
+                ratio,
                 // createdAt automatically handled by backend or we can send it if we want specific client time, 
                 // but usually backend time is safer. Requirement said "Current Timestamp" captured when modal opens.
                 // We'll let backend set default createdAt to now, which matches "submit time".
@@ -105,6 +139,7 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
             setPreview(null);
             setCaption('');
             setCategory('Other');
+            setRatio('1:1');
             setDate(new Date().toISOString().split('T')[0]);
         } catch (err: any) {
             console.error(err);
@@ -160,22 +195,43 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
                         </div>
 
                         <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Image Box Size</label>
+                            <div className="flex gap-2 mb-4">
+                                {RATIO_OPTIONS.map(r => (
+                                    <button
+                                        key={r}
+                                        type="button"
+                                        onClick={() => setRatio(r)}
+                                        className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                                            ratio === r
+                                                ? 'bg-indigo-600 text-white border-indigo-600'
+                                                : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        {r}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Upload File <span className="text-red-500">*</span></label>
-                            <div className={`border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center hover:bg-gray-50 transition-colors relative w-full ${!preview ? 'aspect-square p-6' : 'overflow-hidden'}`}>
+                            <div className={`border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center hover:bg-gray-50 transition-colors relative w-full ${!preview ? 'aspect-square p-6' : 'overflow-hidden mx-auto'}`}
+                                 style={preview ? { aspectRatio: ratio.replace(':', '/'), maxHeight: '600px', maxWidth: '100%' } : {}}>
                                 {!preview ? (
                                     <>
                                         <FaCloudUploadAlt className="text-4xl text-gray-400 mb-2" />
                                         <p className="text-sm text-gray-500 text-center">Click to upload image or video</p>
                                     </>
                                 ) : (
-                                    <div className="w-full flex items-center justify-center bg-black relative z-10">
+                                    <div className="w-full h-full flex items-center justify-center bg-black relative z-10">
                                         {file?.type.startsWith('video') || (preview && preview.match(/\.(mp4|webm|ogg)$/)) ? (
-                                            <video src={preview} controls className="w-full h-auto max-h-[60vh] object-contain block" />
+                                            <video src={preview} controls className="w-full h-full object-contain block" />
                                         ) : (
-                                            <img src={preview} alt="Preview" className="w-full h-auto max-h-[60vh] object-contain block" />
+                                            <img src={preview} alt="Preview" className="w-full h-full object-contain block" />
                                         )}
                                         {/* Optional button to click for a new file later */}
-                                        <div className="absolute top-2 right-2 flex gap-2">
+                                        <div className="absolute top-4 right-4 flex gap-2">
                                             <div className="bg-black/60 text-white text-xs px-2 py-1 rounded select-none cursor-pointer hover:bg-black/80 flex items-center gap-1 transition-colors">
                                                 <FaCloudUploadAlt /> Change
                                             </div>

@@ -26,6 +26,8 @@ const creativeEntrySchema = new mongoose.Schema({
     date: { type: Date, required: true, default: Date.now, index: true },
     username: String,
     clientName: String, // Added Client Name
+    ratio: { type: String, default: '1:1' },
+
     createdAt: { type: Date, default: Date.now, index: true } // Index for date-range queries
 });
 

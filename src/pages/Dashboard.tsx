@@ -24,6 +24,7 @@ const Dashboard: React.FC = () => {
 
     const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{ id: string, status: 'Approved' | 'Rejected' } | null>(null);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [ratioError, setRatioError] = useState<{ id: string, message: string } | null>(null);
 
     // State for toggling feedback inputs per entry
     const [showFeedbackInputs, setShowFeedbackInputs] = useState<Record<string, boolean>>({});
@@ -342,6 +343,41 @@ const Dashboard: React.FC = () => {
                                                             transition={{ type: 'tween', ease: 'easeInOut', duration: 0.3 }}
                                                         >
                                                             <div className="p-6 xl:px-12">
+                                                                <div className="flex flex-col gap-1 mb-3">
+                                                                    <div className="flex gap-2">
+                                                                        {['1:1', '4:5', '9:16', '16:9'].map(r => (
+                                                                            <button
+                                                                                key={r}
+                                                                                onClick={() => {
+                                                                                    if (entry.ratio !== r && !(r === '1:1' && !entry.ratio)) {
+                                                                                        setRatioError({ id: entry._id, message: 'This size is not available' });
+                                                                                        setTimeout(() => {
+                                                                                            setRatioError(prev => prev?.id === entry._id ? null : prev);
+                                                                                        }, 2500);
+                                                                                    }
+                                                                                }}
+                                                                                type="button"
+                                                                                className={`px-3 py-1 text-xs font-bold rounded-md border transition-colors ${
+                                                                                    entry.ratio === r || (r === '1:1' && !entry.ratio)
+                                                                                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                                                                                        : 'bg-white text-gray-400 border-gray-200 hover:bg-gray-50'
+                                                                                }`}
+                                                                            >
+                                                                                {r}
+                                                                            </button>
+                                                                        ))}
+                                                                    </div>
+                                                                    <AnimatePresence>
+                                                                        {ratioError?.id === entry._id && (
+                                                                            <motion.span 
+                                                                                initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }}
+                                                                                className="text-[11px] text-red-500 font-medium"
+                                                                            >
+                                                                                {ratioError.message}
+                                                                            </motion.span>
+                                                                        )}
+                                                                    </AnimatePresence>
+                                                                </div>
                                                                 <div className="text-sm font-bold text-gray-700 mb-4 pb-2 border-b border-gray-100 uppercase tracking-wider flex justify-between items-center">
                                                                     <span>Iteration {iterIdx + 1} <span className="text-gray-400 font-normal text-xs ml-1">of {currentMediaGroup.length}</span></span>
 
