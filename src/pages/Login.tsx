@@ -32,16 +32,16 @@ const Login: React.FC = () => {
             <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg border border-gray-100">
                 <div>
                     <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        Sign in to AVAIO
+                        Sign in 
                     </h2>
-                    <p className="mt-2 text-center text-sm text-gray-600">
+                    {/* <p className="mt-2 text-center text-sm text-gray-600">
                         Use one of the demo accounts
                     </p>
                     <div className="mt-4 p-4 bg-indigo-50 rounded-md text-xs text-indigo-700 font-mono">
                         <p>Admin: admin / admin123</p>
                         <p>Team: team / team123</p>
                         <p>Client: client / client123</p>
-                    </div>
+                    </div> */}
                 </div>
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
                     <div className="rounded-md shadow-sm space-y-4">

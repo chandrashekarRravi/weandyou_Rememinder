@@ -3,20 +3,15 @@ import multer from 'multer';
 import path from 'path';
 import CreativeEntry from '../models/CreativeEntry.js';
 import { protect, authorize } from '../middleware/auth.js';
+import { storage, cloudinary } from '../cloudinaryConfig.js';
 
 const router = express.Router();
-
-// multer storage to uploads/ folder (reusing existing uploads folder)
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, 'uploads/'),
-    filename: (req, file, cb) => cb(null, `creative-${Date.now()}${path.extname(file.originalname)}`)
-});
 const upload = multer({ storage });
 
-// Upload endpoint: returns URL (similar to feedbacks but distinct if needed)
+// Upload endpoint: returns Cloudinary URL
 router.post('/upload', protect, upload.single('file'), (req, res) => {
     if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
-    const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    const url = req.file.path; // Cloudinary URL
     res.json({ url });
 });
 
@@ -95,7 +90,20 @@ router.delete('/:id', protect, authorize('Admin'), async (req, res) => {
             return res.status(404).json({ message: 'Creative Entry not found' });
         }
 
-        // Optional: Delete file from uploads/ if needed (fs.unlink)
+        // Extract public_id from Cloudinary URL and delete it
+        if (deletedEntry.filePath && deletedEntry.filePath.includes('cloudinary')) {
+            const urlParts = deletedEntry.filePath.split('/');
+            const filenameParts = urlParts[urlParts.length - 1].split('.');
+            // the folder is 'avaio_calendar' based on cloudinaryConfig
+            const publicId = `avaio_calendar/${filenameParts[0]}`;
+            // detect resource_type based on mediaId or URL
+            const resourceType = deletedEntry.mediaId?.startsWith('vid') ? 'video' : 'image';
+            try {
+                await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+            } catch (cloudErr) {
+                console.error('Error deleting from Cloudinary:', cloudErr);
+            }
+        }
 
         if (req.io) {
             req.io.emit('creativeEntryDeleted', id);

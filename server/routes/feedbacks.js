@@ -3,20 +3,16 @@ import multer from 'multer';
 import path from 'path';
 import Feedback from '../models/Feedback.js';
 import { protect } from '../middleware/auth.js';
+import { storage } from '../cloudinaryConfig.js';
 
 const router = express.Router();
 
-// multer storage to uploads/ folder
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'uploads/'),
-  filename: (req, file, cb) => cb(null, `${Date.now()}${path.extname(file.originalname)}`)
-});
 const upload = multer({ storage });
 
-// Upload endpoint: returns URL
+// Upload endpoint: returns Cloudinary URL
 router.post('/upload', protect, upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
-  const url = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+  const url = req.file.path; // Cloudinary URL
   res.json({ url });
 });
 
