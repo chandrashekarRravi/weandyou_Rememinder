@@ -32,6 +32,7 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
     const [ratio, setRatio] = useState('1:1');
     const RATIO_OPTIONS = ['1:1', '4:5', '9:16', '16:9'];
     const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [error, setError] = useState('');
 
     useEffect(() => {
@@ -101,6 +102,7 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
 
     const handleSubmit = async () => {
         setError('');
+        setUploadProgress(0);
 
         if (!validateMediaId(mediaId)) {
             setError('Media ID must start with "img" or "vid"');
@@ -129,7 +131,13 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
                 const fd = new FormData();
                 fd.append('file', file);
                 const uploadRes = await api.post('/api/creative-entries/upload', fd, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
+                    headers: { 'Content-Type': 'multipart/form-data' },
+                    onUploadProgress: (progressEvent) => {
+                        if (progressEvent.total) {
+                            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                            setUploadProgress(percentCompleted);
+                        }
+                    }
                 });
                 actualFilePath = uploadRes.data.url;
             }
@@ -239,6 +247,18 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
                             <label className="block text-sm font-medium text-gray-700 mb-1">Upload File <span className="text-red-500">*</span></label>
                             <div className={`border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center hover:bg-gray-50 transition-colors relative w-full ${!preview ? 'aspect-square p-6' : 'overflow-hidden mx-auto'}`}
                                  style={preview ? { aspectRatio: ratio.replace(':', '/'), maxHeight: '600px', maxWidth: '100%' } : {}}>
+                                
+                                {uploading && file && (
+                                    <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center z-50 transition-opacity">
+                                        <div className="w-16 h-16 border-4 border-gray-600 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
+                                        <div className="text-white text-3xl font-bold drop-shadow-md">{uploadProgress}%</div>
+                                        <div className="text-gray-300 text-sm mt-2 font-medium">Uploading to Cloudinary...</div>
+                                        <div className="w-3/4 max-w-xs bg-gray-700/50 rounded-full h-2 mt-4 overflow-hidden shadow-inner">
+                                            <div className="bg-indigo-500 h-2 transition-all duration-300 ease-out" style={{ width: `${uploadProgress}%` }}></div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 {!preview ? (
                                     <>
                                         <FaCloudUploadAlt className="text-4xl text-gray-400 mb-2" />
@@ -263,7 +283,8 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
                                     type="file"
                                     accept="image/*,video/*"
                                     onChange={handleFileChange}
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                                    disabled={uploading}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20 disabled:cursor-not-allowed"
                                 />
                             </div>
                         </div>

@@ -20,7 +20,7 @@ const creativeEntrySchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Approved', 'Rejected'], // Aligned with Event statuses
+        enum: ['Pending', 'Client Approved', 'Approved', 'Rejected'], // Added 'Client Approved'
         default: 'Pending'
     },
     date: { type: Date, required: true, default: Date.now, index: true },

@@ -84,6 +84,9 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days }) => {
             const isSameDate = isSameDay(parseISO(entryDateStr), date);
             if (!isSameDate) return false;
 
+            // Only show the entry in the calendar if it has received final approval
+            if (entry.status !== 'Approved') return false;
+
             // Do not show Chinmai's raw drafts in the calendar
             const entryClient = entry.clientName?.trim() || 'No Client';
             if (entryClient === 'Drafts') return false;
@@ -101,13 +104,9 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days }) => {
 
             // Status Filter
             if (activeFilter.status !== 'All') {
-                // Map Entry status to Event status equivalent
-                // Pending -> Pending (Review)
-                // Approved -> Ongoing (Approved)
-                // Creative Entries don't have Completed usually
-                if (activeFilter.status === 'Pending' && entry.status !== 'Pending') return false;
-                if (activeFilter.status === 'Ongoing' && entry.status !== 'Approved') return false;
-                if (activeFilter.status === 'Completed') return false;
+                // Since this function now only processes 'Approved' entries,
+                // they only map to the 'Ongoing' event status filter.
+                if (activeFilter.status !== 'Ongoing') return false;
             }
 
             return true;

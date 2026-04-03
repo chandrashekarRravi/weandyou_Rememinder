@@ -18,18 +18,18 @@ const Dashboard: React.FC = () => {
 
     // Calculate generic stats for mobile top row
     const total = events.length + creativeEntries.length;
-    const pending = events.filter(e => e.status === 'Pending').length + creativeEntries.filter(e => !e.status || e.status === 'Pending').length;
+    const pending = events.filter(e => e.status === 'Pending').length + creativeEntries.filter(e => !e.status || e.status === 'Pending' || e.status === 'Client Approved').length;
     const ongoing = events.filter(e => e.status === 'Ongoing').length + creativeEntries.filter(e => e.status === 'Approved').length;
     const completed = events.filter(e => e.status === 'Completed').length;
 
-    const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{ id: string, status: 'Approved' | 'Rejected' } | null>(null);
+    const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{ id: string, status: 'Approved' | 'Rejected' | 'Client Approved' } | null>(null);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [ratioError, setRatioError] = useState<{ id: string, message: string } | null>(null);
 
     // State for toggling feedback inputs per entry
     const [showFeedbackInputs, setShowFeedbackInputs] = useState<Record<string, boolean>>({});
 
-    const handleStatusUpdate = async (id: string, newStatus: 'Approved' | 'Rejected') => {
+    const handleStatusUpdate = async (id: string, newStatus: 'Approved' | 'Rejected' | 'Client Approved') => {
         setPendingStatusUpdate({ id, status: newStatus });
     };
 
@@ -254,6 +254,7 @@ const Dashboard: React.FC = () => {
                                 value={dashboardFilter.status}
                                 options={[
                                     { label: 'Pending', value: 'Pending' },
+                                    { label: 'Client Approved', value: 'Client Approved' },
                                     { label: 'Approved', value: 'Approved' },
                                     { label: 'Rejected', value: 'Rejected' },
                                 ]}
@@ -315,6 +316,7 @@ const Dashboard: React.FC = () => {
                                                         </div>
                                                     </div>
                                                     <span className={`px-2 py-1 rounded text-[10px] font-bold tracking-wide ${entry.status === 'Approved' ? 'bg-green-100 text-green-700' :
+                                                        entry.status === 'Client Approved' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
                                                         entry.status === 'Rejected' ? 'bg-red-100 text-red-700' :
                                                             'bg-yellow-100 text-yellow-700'
                                                         }`}>
@@ -401,7 +403,6 @@ const Dashboard: React.FC = () => {
 
                                                                 </div>
 
-                                                                {(!entry.status || entry.status === 'Pending') ? (
                                                                     <div className="flex flex-col lg:flex-row gap-6">
                                                                         {/* Left Column: Image & Caption */}
                                                                         <div className="flex-none lg:w-[30%] space-y-4">
@@ -428,11 +429,21 @@ const Dashboard: React.FC = () => {
 
                                                                         {/* Middle Column: Actions */}
                                                                         <div className="flex lg:flex-col items-center justify-center gap-4 lg:py-8 lg:px-2 relative">
-                                                                            {user?.role !== 'Team' && user?.role !== 'Client' && (!entry.status || entry.status === 'Pending') && (
+                                                                            {/* Client Action */}
+                                                                            {user?.role === 'Client' && (!entry.status || entry.status === 'Pending') && (
+                                                                                <button
+                                                                                    onClick={() => handleStatusUpdate(entry._id, 'Client Approved')}
+                                                                                    className="px-4 py-2 rounded-full border border-green-300 bg-white flex items-center justify-center text-green-600 hover:bg-green-50 transition-colors shadow-sm font-bold text-xs" title="Approve Entry">
+                                                                                    Approve
+                                                                                </button>
+                                                                            )}
+
+                                                                            {/* Admin/Team Final Actions */}
+                                                                            {user?.role !== 'Team' && user?.role !== 'Client' && (!entry.status || entry.status === 'Pending' || entry.status === 'Client Approved') && (
                                                                                 <>
                                                                                     <button
                                                                                         onClick={() => handleStatusUpdate(entry._id, 'Approved')}
-                                                                                        className="w-10 h-10 rounded-full border border-green-300 bg-white flex items-center justify-center text-green-600 hover:bg-green-50 transition-colors shadow-sm" title="Approve">
+                                                                                        className="w-10 h-10 rounded-full border border-green-400 bg-white flex items-center justify-center text-green-600 hover:bg-green-50 transition-colors shadow-sm" title="Final Approve">
                                                                                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                                                                                     </button>
                                                                                     <button
@@ -587,74 +598,6 @@ const Dashboard: React.FC = () => {
                                                                             })()}
                                                                         </div>
                                                                     </div>
-                                                                ) : (
-                                                                    <div className="flex flex-col gap-6 mt-2">
-                                                                        {/* Media + Caption row */}
-                                                                        <div className="flex flex-col md:flex-row gap-6 items-start">
-                                                                            <div className="flex-1 w-full bg-gray-50 rounded-xl flex border border-gray-200 overflow-hidden items-center justify-center relative p-2 shadow-sm">
-                                                                                {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
-                                                                                    <video src={entry.filePath} controls className="w-full max-h-[400px] object-contain block rounded-lg bg-black/5" />
-                                                                                ) : (
-                                                                                    <img
-                                                                                        src={entry.filePath}
-                                                                                        alt="Creative"
-                                                                                        className="w-full max-h-[400px] object-contain block cursor-pointer transition-transform hover:scale-[1.02] rounded-lg"
-                                                                                        onClick={() => setSelectedImage(entry.filePath)}
-                                                                                    />
-                                                                                )}
-                                                                                <div className="absolute top-4 right-4 bg-black/60 text-white text-[10px] px-2 py-1 rounded pointer-events-none">
-                                                                                    {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? 'Video' : 'Image'}
-                                                                                </div>
-                                                                            </div>
-                                                                            <div className="flex-1 w-full bg-white border border-gray-200 shadow-sm rounded-xl p-6 min-h-[100px] flex flex-col">
-                                                                                <p className="text-xs font-semibold text-gray-500 uppercase mb-3 border-b border-gray-100 pb-2">Caption</p>
-                                                                                <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed flex-1">
-                                                                                    {entry.caption || 'No caption provided.'}
-                                                                                </p>
-                                                                            </div>
-                                                                        </div>
-
-                                                                        {/* Read-only feedback panel */}
-                                                                        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                                                                            <div className="bg-gray-50 px-4 py-2.5 border-b border-gray-200 flex items-center gap-2">
-                                                                                <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 17a2 2 0 100-4 2 2 0 000 4zm6-6V9a6 6 0 10-12 0v2a2 2 0 00-2 2v7a2 2 0 002 2h12a2 2 0 002-2v-7a2 2 0 00-2-2z" /></svg>
-                                                                                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Client Feedback — Read Only</h4>
-                                                                            </div>
-                                                                            <div className="p-4 max-h-[240px] overflow-y-auto space-y-3">
-                                                                                {feedbacksLoading ? (
-                                                                                    <div className="text-center text-gray-400 text-sm py-6">Loading feedback...</div>
-                                                                                ) : sortedFeedbacks.length === 0 ? (
-                                                                                    <div className="text-center text-gray-400 text-sm py-6">No feedback was recorded for this iteration.</div>
-                                                                                ) : (
-                                                                                    sortedFeedbacks.map((fb) => {
-                                                                                        const isCurrentUser = fb.userId === user?._id;
-                                                                                        return (
-                                                                                            <div key={fb._id} className={`flex flex-col gap-0.5 ${isCurrentUser ? 'items-end' : 'items-start'}`}>
-                                                                                                <div className={`text-sm p-3 rounded-lg border max-w-[80%] ${fb.role === 'Client' ? 'bg-blue-50 border-blue-100 text-gray-800'
-                                                                                                    : isCurrentUser ? 'bg-indigo-50 border-indigo-100 text-indigo-900'
-                                                                                                        : 'bg-gray-50 border-gray-200 text-gray-800'
-                                                                                                    }`}>
-                                                                                                    <div className="flex items-center gap-2 mb-1">
-                                                                                                        <span className="text-xs font-semibold text-gray-700">
-                                                                                                            {isCurrentUser ? `You (${fb.role})` : (fb.username || 'User')}
-                                                                                                        </span>
-                                                                                                        {fb.role === 'Client' && (
-                                                                                                            <span className="text-[9px] bg-blue-100 text-blue-600 font-bold px-1.5 py-0.5 rounded">CLIENT</span>
-                                                                                                        )}
-                                                                                                        <span className="text-[10px] text-gray-400 ml-auto">
-                                                                                                            {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}, {new Date(fb.createdAt).toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                                                                                                        </span>
-                                                                                                    </div>
-                                                                                                    <p className="text-sm">{fb.text}</p>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        );
-                                                                                    })
-                                                                                )}
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                )}
                                                             </div>
                                                         </motion.div>
                                                     </AnimatePresence>
@@ -732,7 +675,7 @@ const Dashboard: React.FC = () => {
                     <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={cancelStatusUpdate}></div>
                     <div className="bg-white rounded-3xl shadow-xl w-full max-w-[340px] p-6 flex flex-col items-center relative z-10 animate-fade-in text-center">
                         <div className="mb-4">
-                            {pendingStatusUpdate.status === 'Approved' ? (
+                            {pendingStatusUpdate.status === 'Approved' || pendingStatusUpdate.status === 'Client Approved' ? (
                                 <svg className="w-14 h-14 text-green-500 mx-auto drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -745,10 +688,10 @@ const Dashboard: React.FC = () => {
                             )}
                         </div>
                         <h3 className="text-[22px] font-bold text-gray-800 mb-2">
-                            {pendingStatusUpdate.status === 'Approved' ? 'Approve Entry' : 'Reject Entry'}
+                            {pendingStatusUpdate.status === 'Approved' || pendingStatusUpdate.status === 'Client Approved' ? 'Approve Entry' : 'Reject Entry'}
                         </h3>
                         <p className="text-gray-600 text-[15px] mb-4 font-medium">
-                            You're going to {pendingStatusUpdate.status === 'Approved' ? 'approve' : 'reject'} this "Entry"
+                            You're going to {pendingStatusUpdate.status === 'Approved' || pendingStatusUpdate.status === 'Client Approved' ? 'approve' : 'reject'} this "Entry"
                         </p>
                         <p className="text-red-500 text-sm font-bold mb-8">
                             Note: Once you do this, all further actions and feedback for this iteration will be permanently disabled.
@@ -762,12 +705,12 @@ const Dashboard: React.FC = () => {
                             </button>
                             <button
                                 onClick={confirmStatusUpdate}
-                                className={`flex-1 py-3 px-2 text-white font-semibold rounded-xl transition-all text-[15px] shadow-[0_8px_20px_-6px_rgba(0,0,0,0.5)] ${pendingStatusUpdate.status === 'Approved'
+                                className={`flex-1 py-3 px-2 text-white font-semibold rounded-xl transition-all text-[15px] shadow-[0_8px_20px_-6px_rgba(0,0,0,0.5)] ${pendingStatusUpdate.status === 'Approved' || pendingStatusUpdate.status === 'Client Approved'
                                     ? 'bg-green-500 hover:bg-green-600 shadow-green-500/50'
                                     : 'bg-[#FF3B30] hover:bg-[#e6352b] shadow-red-500/50'
                                     }`}
                             >
-                                Yes, {pendingStatusUpdate.status}!
+                                Yes, {pendingStatusUpdate.status === 'Client Approved' ? 'Approve' : pendingStatusUpdate.status}!
                             </button>
                         </div>
                     </div>

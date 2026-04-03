@@ -13,7 +13,7 @@ export interface CreativeEntryType {
     username?: string;
     clientName?: string;
     createdAt: string; // ISO string
-    status?: 'Pending' | 'Approved' | 'Rejected';
+    status?: 'Pending' | 'Client Approved' | 'Approved' | 'Rejected';
     ratio?: string;
 }
 
