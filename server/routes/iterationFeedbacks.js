@@ -44,4 +44,30 @@ router.post('/', protect, async (req, res) => {
     }
 });
 
+// Delete feedback
+router.delete('/:id', protect, async (req, res) => {
+    try {
+        const feedback = await IterationFeedback.findById(req.params.id);
+        
+        if (!feedback) {
+            return res.status(404).json({ message: 'Feedback not found' });
+        }
+
+        // Only allow the user who created it or an Admin to delete it
+        if (feedback.userId.toString() !== req.user._id.toString() && req.user.role !== 'Admin') {
+            return res.status(403).json({ message: 'Not authorized to delete this feedback' });
+        }
+
+        await feedback.deleteOne();
+
+        if (req.io) {
+            req.io.emit('deleteIterationFeedback', req.params.id);
+        }
+
+        res.json({ message: 'Feedback removed' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
 export default router;

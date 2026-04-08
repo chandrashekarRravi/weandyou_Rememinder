@@ -50,7 +50,7 @@ const Dashboard: React.FC = () => {
     };
 
     const [activeFeedbackId, setActiveFeedbackId] = useState<string | null>(null);
-    const { feedbacks, addFeedback, loading: feedbacksLoading } = useIterationFeedback(activeFeedbackId);
+    const { feedbacks, addFeedback, deleteFeedback, refreshFeedbacks, loading: feedbacksLoading } = useIterationFeedback(activeFeedbackId);
     const [feedbackText, setFeedbackText] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalInitialData, setModalInitialData] = useState<{ _id?: string; mediaId?: string; clientName?: string; category?: string; caption?: string; filePath?: string; ratio?: string; date?: string; }>();
@@ -395,6 +395,7 @@ const Dashboard: React.FC = () => {
                                                                             </button>
                                                                         ))}
                                                                     </div>
+                                                                    {/* in mobile virew the in feedbakc  send button is not visible  ,   check work on it */}
                                                                     <AnimatePresence>
                                                                         {ratioError?.id === entry._id && (
                                                                             <motion.span
@@ -502,9 +503,19 @@ const Dashboard: React.FC = () => {
                                                                     {/* Right Column: Feedback Box & Plus Button */}
                                                                     <div className="flex-1 flex gap-4">
                                                                         {/* Feedback Box */}
-                                                                        <div className="max-w-[350px] flex-1 rounded-lg flex flex-col overflow-hidden bg-white h-[400px]">
+                                                                        <div className="w-full lg:max-w-[350px] flex-1 rounded-lg flex flex-col overflow-hidden bg-white h-[400px]">
                                                                             <div className="bg-gray-50 p-3 border-b border-gray-200 flex justify-between items-center">
-                                                                                <h4 className="text-sm font-bold text-gray-700 text-left">Feedback of Iteration {iterIdx + 1}</h4>
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <h4 className="text-sm font-bold text-gray-700 text-left">Feedback of Iteration {iterIdx + 1}</h4>
+                                                                                    {/* Refresh button visible on mobile only */}
+                                                                                    <button
+                                                                                        onClick={() => refreshFeedbacks()}
+                                                                                        className="p-1 md:hidden text-gray-500 hover:text-indigo-600 hover:bg-gray-100 rounded transition-colors"
+                                                                                        title="Refresh feedback"
+                                                                                    >
+                                                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                                                                    </button>
+                                                                                </div>
                                                                                 {/* Only show the add-feedback toggle on the latest iteration */}
                                                                                 {iterIdx === currentMediaGroup.length - 1 && (
                                                                                     <button
@@ -539,29 +550,43 @@ const Dashboard: React.FC = () => {
                                                                                         const isCurrentUser = fb.userId === user?._id;
                                                                                         if (!isCurrentUser) {
                                                                                             return (
-                                                                                                <div key={fb._id} className="flex flex-col gap-1 items-start">
+                                                                                                <div key={fb._id} className="flex flex-col gap-1 items-start group">
                                                                                                     <div className={`text-sm p-3 rounded-lg rounded-tl-none border relative w-[100%] max-w-md ${fb.role === 'Client' ? 'bg-blue-50 text-gray-800 border-blue-100' : 'bg-gray-50 text-gray-800 border-gray-200'}`}>
-                                                                                                        <span className="text-xs font-semibold text-gray-700">{fb.username || 'User'}</span>
-                                                                                                        <span className="text-[10px] text-gray-400 ml-4">
-                                                                                                            {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })},
-                                                                                                            {new Date(fb.createdAt).toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                                                                                                        </span>
-                                                                                                        <br />
-                                                                                                        {fb.text}
+                                                                                                        <div className="flex justify-between items-start">
+                                                                                                            <span className="text-xs font-semibold text-gray-700">{fb.username || 'User'}</span>
+                                                                                                            <div className="flex items-center gap-2">
+                                                                                                                <span className="text-[10px] text-gray-400">
+                                                                                                                    {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}, 
+                                                                                                                    {new Date(fb.createdAt).toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                                                                                                </span>
+                                                                                                                {user?.role === 'Admin' && (
+                                                                                                                    <button onClick={() => deleteFeedback(fb._id)} className="text-gray-400 hover:text-red-500 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity" title="Delete">
+                                                                                                                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                                                                                    </button>
+                                                                                                                )}
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                        <div className="mt-1">{fb.text}</div>
                                                                                                     </div>
                                                                                                 </div>
                                                                                             );
                                                                                         } else {
                                                                                             return (
-                                                                                                <div key={fb._id} className="flex flex-col gap-1 items-end mt-4">
+                                                                                                <div key={fb._id} className="flex flex-col gap-1 items-end mt-4 group">
                                                                                                     <div className={`text-sm p-3 rounded-lg rounded-tr-none border relative max-w-sm ${fb.role === 'Client' ? 'bg-blue-50 text-gray-800 border-blue-100' : 'bg-indigo-50 text-indigo-900 border-indigo-100'}`}>
-                                                                                                        <span className="text-[10px] text-gray-400">
-                                                                                                            {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })},
-                                                                                                            {new Date(fb.createdAt).toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                                                                                                        </span>
-                                                                                                        <span className="text-xs font-semibold text-gray-700 ml-4">You ({fb.role})</span>
-                                                                                                        <br />
-                                                                                                        {fb.text}
+                                                                                                        <div className="flex justify-between items-start flex-row-reverse mb-1 gap-2">
+                                                                                                            <div className="flex items-center gap-1">
+                                                                                                                <span className="text-xs font-semibold text-gray-700">You ({fb.role})</span>
+                                                                                                                <button onClick={() => deleteFeedback(fb._id)} className="text-red-400 hover:text-red-600 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity ml-1" title="Delete">
+                                                                                                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                                                                                </button>
+                                                                                                            </div>
+                                                                                                            <span className="text-[10px] text-gray-400 pt-0.5">
+                                                                                                                {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}, 
+                                                                                                                {new Date(fb.createdAt).toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                                                                                            </span>
+                                                                                                        </div>
+                                                                                                        <div>{fb.text}</div>
                                                                                                     </div>
                                                                                                 </div>
                                                                                             );
@@ -587,12 +612,12 @@ const Dashboard: React.FC = () => {
                                                                                             placeholder="Type feedback..."
                                                                                             value={feedbackText}
                                                                                             onChange={(e) => setFeedbackText(e.target.value)}
-                                                                                            className="flex-1 bg-transparent px-2 py-1 text-sm outline-none"
+                                                                                            className="flex-1 min-w-0 bg-transparent px-2 py-1 text-sm outline-none"
                                                                                             autoFocus
                                                                                         />
                                                                                         <button
                                                                                             type="submit"
-                                                                                            className={`p-2 rounded transition-colors ml-1 ${!feedbackText.trim() ? 'text-gray-400 cursor-not-allowed' : 'text-indigo-600 hover:bg-indigo-50'}`}
+                                                                                            className={`p-2 shrink-0 rounded transition-colors ml-1 ${!feedbackText.trim() ? 'text-gray-400 cursor-not-allowed' : 'text-indigo-600 hover:bg-indigo-50'}`}
                                                                                             title="Send"
                                                                                             disabled={!feedbackText.trim()}
                                                                                         >

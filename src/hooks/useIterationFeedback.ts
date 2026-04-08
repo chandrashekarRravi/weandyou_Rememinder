@@ -43,14 +43,22 @@ export const useIterationFeedback = (creativeEntryId: string | null) => {
 
         const handleNewFeedback = (newFeedback: IterationFeedbackType) => {
             if (newFeedback.creativeEntryId === creativeEntryId) {
-                setFeedbacks(prev => [...prev, newFeedback]);
+                setFeedbacks(prev => {
+                    // Prevent duplicates in case the HTTP POST response already appended it
+                    if (prev.some(fb => fb._id === newFeedback._id)) return prev;
+                    return [...prev, newFeedback];
+                });
             }
         };
 
         socket.on('newIterationFeedback', handleNewFeedback);
+        socket.on('deleteIterationFeedback', (deletedId: string) => {
+            setFeedbacks(prev => prev.filter(fb => fb._id !== deletedId));
+        });
 
         return () => {
             socket.off('newIterationFeedback', handleNewFeedback);
+            socket.off('deleteIterationFeedback');
         };
     }, [socket, creativeEntryId]);
 
@@ -62,8 +70,12 @@ export const useIterationFeedback = (creativeEntryId: string | null) => {
                 creativeEntryId,
                 text
             });
-            // We don't need to manually update state here because the socket will emit the event
-            // and the listener will pick it up, adding it to the state.
+            // Update local state instantly so the user doesn't have to wait for the socket
+            const newFeedback = response.data;
+            setFeedbacks(prev => {
+                if (prev.some(fb => fb._id === newFeedback._id)) return prev;
+                return [...prev, newFeedback];
+            });
             return response.data;
         } catch (error) {
             console.error('Error adding iteration feedback:', error);
@@ -71,5 +83,15 @@ export const useIterationFeedback = (creativeEntryId: string | null) => {
         }
     };
 
-    return { feedbacks, loading, addFeedback, refreshFeedbacks: fetchFeedbacks };
+    const deleteFeedback = async (id: string) => {
+        try {
+            await api.delete(`/api/iteration-feedbacks/${id}`);
+            setFeedbacks(prev => prev.filter(fb => fb._id !== id));
+        } catch (error) {
+            console.error('Error deleting iteration feedback:', error);
+            throw error;
+        }
+    };
+
+    return { feedbacks, loading, addFeedback, deleteFeedback, refreshFeedbacks: fetchFeedbacks };
 };
