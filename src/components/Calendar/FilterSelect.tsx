@@ -35,8 +35,8 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
     const selectedOption = options.find((opt) => opt.value === value);
 
     return (
-        <div className="relative min-w-[160px]" ref={containerRef}>
-            <div className="relative">
+        <div className="relative min-w-0 w-full md:min-w-[160px]" ref={containerRef}>
+            <div className="relative w-full">
                 <button
                     onClick={() => setIsOpen(!isOpen)}
                     className={`w-full flex items-center justify-between px-4 py-3 bg-white border rounded-xl text-left transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${isOpen ? 'border-indigo-600 ring-2 ring-indigo-500/20' : 'border-gray-300 hover:border-gray-400'

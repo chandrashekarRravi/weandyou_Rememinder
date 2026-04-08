@@ -221,50 +221,58 @@ const Dashboard: React.FC = () => {
                     <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
 
                         {/* Filters Header */}
-                        <div className="p-4 border-b border-gray-100 bg-white flex flex-wrap items-center gap-4">
-                            <h3 className="text-lg font-bold text-gray-800 mr-4">Creative Entries</h3>
+                        <div className="p-4 border-b border-gray-100 bg-white flex flex-col md:flex-row items-start md:items-center gap-4">
+                            <h3 className="text-lg font-bold text-gray-800 md:mr-4">Creative Entries</h3>
 
-                            {user?.role !== 'Client' && (
-                                <>
+                            <div className={`grid ${user?.role !== 'Client' ? 'grid-cols-3' : 'grid-cols-2'} gap-2 w-full md:flex md:w-auto md:items-center md:gap-4 md:flex-1`}>
+                                {user?.role !== 'Client' && (
+                                    <>
+                                        <div className="min-w-0">
+                                            <FilterSelect
+                                                label="Client"
+                                                value={dashboardFilter.client}
+                                                options={clientOptions}
+                                                onChange={(val) => setDashboardFilter(prev => ({ ...prev, client: val }))}
+                                                placeholder="All"
+                                            />
+                                        </div>
+                                        <div className="w-px h-8 bg-gray-100 mx-2 hidden md:block"></div>
+                                    </>
+                                )}
+
+                                <div className="min-w-0">
                                     <FilterSelect
-                                        label="Client"
-                                        value={dashboardFilter.client}
-                                        options={clientOptions}
-                                        onChange={(val) => setDashboardFilter(prev => ({ ...prev, client: val }))}
-                                        placeholder="All Clients"
+                                        label="Category"
+                                        value={dashboardFilter.category}
+                                        options={[
+                                            { label: 'Special Day', value: 'Special Day' },
+                                            { label: 'Engagement', value: 'Engagement' },
+                                            { label: 'Ideation', value: 'Ideation' },
+                                        ]}
+                                        onChange={(val) => setDashboardFilter(prev => ({ ...prev, category: val }))}
+                                        placeholder="All"
                                     />
-                                    <div className="w-px h-8 bg-gray-100 mx-2 hidden md:block"></div>
-                                </>
-                            )}
+                                </div>
 
-                            <FilterSelect
-                                label="Category"
-                                value={dashboardFilter.category}
-                                options={[
-                                    { label: 'Special Day', value: 'Special Day' },
-                                    { label: 'Engagement', value: 'Engagement' },
-                                    { label: 'Ideation', value: 'Ideation' },
-                                ]}
-                                onChange={(val) => setDashboardFilter(prev => ({ ...prev, category: val }))}
-                                placeholder="All Categories"
-                            />
-
-                            <FilterSelect
-                                label="Status"
-                                value={dashboardFilter.status}
-                                options={[
-                                    { label: 'Pending', value: 'Pending' },
-                                    { label: 'Client Approved', value: 'Client Approved' },
-                                    { label: 'Approved', value: 'Approved' },
-                                    { label: 'Rejected', value: 'Rejected' },
-                                ]}
-                                onChange={(val) => setDashboardFilter(prev => ({ ...prev, status: val }))}
-                                placeholder="All Status"
-                            />
+                                <div className="min-w-0">
+                                    <FilterSelect
+                                        label="Status"
+                                        value={dashboardFilter.status}
+                                        options={[
+                                            { label: 'Pending', value: 'Pending' },
+                                            { label: 'Client Approved', value: 'Client Approved' },
+                                            { label: 'Approved', value: 'Approved' },
+                                            { label: 'Rejected', value: 'Rejected' },
+                                        ]}
+                                        onChange={(val) => setDashboardFilter(prev => ({ ...prev, status: val }))}
+                                        placeholder="All"
+                                    />
+                                </div>
+                            </div>
                         </div>
 
                         {/* Entries List Feed */}
-                        <div className="p-6 bg-gray-50">
+                        <div className="p-6">
                             <div className="space-y-8">
                                 {groupedEntries.length > 0 ? (
                                     groupedEntries.map((group) => {
@@ -278,7 +286,7 @@ const Dashboard: React.FC = () => {
                                         const entry = currentMediaGroup[iterIdx];
 
                                         return (
-                                            <div key={clientName} className="bg-white border text-left border-gray-200 rounded-xl overflow-hidden shadow-sm relative">
+                                            <div key={clientName} className="text-left relative py-4 border-b border-gray-100 last:border-b-0">
 
                                                 {/* Iteration Carousel Arrows — overlaid on sides of card */}
                                                 {currentMediaGroup.length > 1 && (
@@ -301,7 +309,7 @@ const Dashboard: React.FC = () => {
                                                 )}
 
                                                 {/* Top Section */}
-                                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border-b border-gray-100 bg-gray-50/50">
+                                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border-b rounded-xl border-gray-300 bg-gray-100">
                                                     <div className="flex flex-wrap items-center gap-6 xl:pl-8">
                                                         <div className="flex items-center gap-2">
                                                             <span className="text-sm text-gray-500 font-medium">Media ID:</span>
@@ -317,8 +325,8 @@ const Dashboard: React.FC = () => {
                                                     </div>
                                                     <span className={`px-2 py-1 rounded text-[10px] font-bold tracking-wide ${entry.status === 'Approved' ? 'bg-green-100 text-green-700' :
                                                         entry.status === 'Client Approved' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
-                                                        entry.status === 'Rejected' ? 'bg-red-100 text-red-700' :
-                                                            'bg-yellow-100 text-yellow-700'
+                                                            entry.status === 'Rejected' ? 'bg-red-100 text-red-700' :
+                                                                'bg-yellow-100 text-yellow-700'
                                                         }`}>
                                                         STATUS: {entry.status || 'Pending'}
                                                     </span>
@@ -403,208 +411,209 @@ const Dashboard: React.FC = () => {
 
                                                                 </div>
 
-                                                                    <div className="flex flex-col lg:flex-row gap-6">
-                                                                        {/* Left Column: Image & Caption */}
-                                                                        <div className="flex-none lg:w-[30%] space-y-4">
-                                                                            <div className="w-full bg-gray-100 rounded-lg flex border border-gray-200 overflow-hidden items-center justify-center relative group">
-                                                                                {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
-                                                                                    <video src={entry.filePath} controls className="w-full h-auto block" />
-                                                                                ) : (
-                                                                                    <img
-                                                                                        src={entry.filePath}
-                                                                                        alt="Creative"
-                                                                                        className="w-full h-auto block cursor-pointer transition-transform hover:scale-[1.02]"
-                                                                                        onClick={() => setSelectedImage(entry.filePath)}
-                                                                                    />
-                                                                                )}
-                                                                                <div className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded pointer-events-none">
-                                                                                    {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? 'Video' : 'Image'}
-                                                                                </div>
-                                                                            </div>
-                                                                            <div className="border border-gray-200 rounded-lg p-4 min-h-[10px] bg-gray-50">
-                                                                                <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Captions</p>
-                                                                                <p className="text-sm text-gray-700 whitespace-pre-wrap">{entry.caption || 'No caption provided.'}</p>
+                                                                <div className="flex flex-col lg:flex-row gap-6">
+                                                                    {/* Left Column: Image & Caption */}
+                                                                    <div className="flex-none lg:w-[30%] space-y-4">
+                                                                        <div className="w-full bg-gray-100 rounded-lg flex border border-gray-200 overflow-hidden items-center justify-center relative group">
+                                                                            {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
+                                                                                <video src={entry.filePath} controls className="w-full h-auto block" />
+                                                                            ) : (
+                                                                                <img
+                                                                                    src={entry.filePath}
+                                                                                    alt="Creative"
+                                                                                    className="w-full h-auto block cursor-pointer transition-transform hover:scale-[1.02]"
+                                                                                    onClick={() => setSelectedImage(entry.filePath)}
+                                                                                />
+                                                                            )}
+                                                                            <div className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded pointer-events-none">
+                                                                                {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? 'Video' : 'Image'}
                                                                             </div>
                                                                         </div>
-
-                                                                        {/* Middle Column: Actions */}
-                                                                        <div className="flex lg:flex-col items-center justify-center gap-4 lg:py-8 lg:px-2 relative">
-                                                                            {/* Client Action */}
-                                                                            {user?.role === 'Client' && (!entry.status || entry.status === 'Pending') && (
-                                                                                <button
-                                                                                    onClick={() => handleStatusUpdate(entry._id, 'Client Approved')}
-                                                                                    className="px-4 py-2 rounded-full border border-green-300 bg-white flex items-center justify-center text-green-600 hover:bg-green-50 transition-colors shadow-sm font-bold text-xs" title="Approve Entry">
-                                                                                    Approve
-                                                                                </button>
-                                                                            )}
-
-                                                                            {/* Admin/Team Final Actions */}
-                                                                            {user?.role !== 'Team' && user?.role !== 'Client' && (!entry.status || entry.status === 'Pending' || entry.status === 'Client Approved') && (
-                                                                                <>
-                                                                                    <button
-                                                                                        onClick={() => handleStatusUpdate(entry._id, 'Approved')}
-                                                                                        className="w-10 h-10 rounded-full border border-green-400 bg-white flex items-center justify-center text-green-600 hover:bg-green-50 transition-colors shadow-sm" title="Final Approve">
-                                                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                                                                                    </button>
-                                                                                    <button
-                                                                                        onClick={() => handleStatusUpdate(entry._id, 'Rejected')}
-                                                                                        className="w-10 h-10 rounded-full border border-red-300 bg-white flex items-center justify-center text-red-600 hover:bg-red-50 transition-colors shadow-sm" title="Reject">
-                                                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
-                                                                                    </button>
-                                                                                </>
-                                                                            )}
-                                                                        </div>
-
-                                                                        {/* Right Column: Feedback Box & Plus Button */}
-                                                                        <div className="flex-1 flex gap-4">
-                                                                            {/* Feedback Box */}
-                                                                            <div className="max-w-[350px] flex-1 rounded-lg flex flex-col overflow-hidden bg-white h-[400px]">
-                                                                                <div className="bg-gray-50 p-3 border-b border-gray-200 flex justify-between items-center">
-                                                                                    <h4 className="text-sm font-bold text-gray-700 text-left">Feedback of Iteration {iterIdx + 1}</h4>
-                                                                                    {/* Only show the add-feedback toggle on the latest iteration */}
-                                                                                    {iterIdx === currentMediaGroup.length - 1 && (
-                                                                                        <button
-                                                                                            onClick={() => toggleFeedbackInput(entry._id)}
-                                                                                            className="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                                                                                            title={showFeedbackInputs[entry._id] ? "Hide feedback input" : "Add feedback"}
-                                                                                        >
-                                                                                            {showFeedbackInputs[entry._id] ? (
-                                                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                                                                                            ) : (
-                                                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                                                                                            )}
-                                                                                        </button>
-                                                                                    )}
-                                                                                    {/* Previous iterations show a lock hint */}
-                                                                                    {iterIdx < currentMediaGroup.length - 1 && (
-                                                                                        <span className="text-[10px] text-gray-400 flex items-center gap-1">
-                                                                                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 17a2 2 0 100-4 2 2 0 000 4zm6-6V9a6 6 0 10-12 0v2a2 2 0 00-2 2v7a2 2 0 002 2h12a2 2 0 002-2v-7a2 2 0 00-2-2z" /></svg>
-                                                                                            Read-only
-                                                                                        </span>
-                                                                                    )}
-                                                                                </div>
-                                                                                <div className="flex-1 p-4 overflow-y-auto space-y-8 flex-col-reverse">
-                                                                                    {feedbacksLoading ? (
-                                                                                        <div className="text-center text-gray-400 text-sm mt-10">Loading comments...</div>
-                                                                                    ) : sortedFeedbacks.length === 0 ? (
-                                                                                        <div className="text-center text-gray-400 text-sm mt-10">
-                                                                                            No feedback yet.<br />Start the conversation!
-                                                                                        </div>
-                                                                                    ) : (
-                                                                                        sortedFeedbacks.map((fb) => {
-                                                                                            const isCurrentUser = fb.userId === user?._id;
-                                                                                            if (!isCurrentUser) {
-                                                                                                return (
-                                                                                                    <div key={fb._id} className="flex flex-col gap-1 items-start">
-                                                                                                        <div className={`text-sm p-3 rounded-lg rounded-tl-none border relative w-[100%] max-w-md ${fb.role === 'Client' ? 'bg-blue-50 text-gray-800 border-blue-100' : 'bg-gray-50 text-gray-800 border-gray-200'}`}>
-                                                                                                            <span className="text-xs font-semibold text-gray-700">{fb.username || 'User'}</span>
-                                                                                                            <span className="text-[10px] text-gray-400 ml-4">
-                                                                                                                {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })},
-                                                                                                                {new Date(fb.createdAt).toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                                                                                                            </span>
-                                                                                                            <br />
-                                                                                                            {fb.text}
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                );
-                                                                                            } else {
-                                                                                                return (
-                                                                                                    <div key={fb._id} className="flex flex-col gap-1 items-end mt-4">
-                                                                                                        <div className={`text-sm p-3 rounded-lg rounded-tr-none border relative max-w-sm ${fb.role === 'Client' ? 'bg-blue-50 text-gray-800 border-blue-100' : 'bg-indigo-50 text-indigo-900 border-indigo-100'}`}>
-                                                                                                            <span className="text-[10px] text-gray-400">
-                                                                                                                {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })},
-                                                                                                                {new Date(fb.createdAt).toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                                                                                                            </span>
-                                                                                                            <span className="text-xs font-semibold text-gray-700 ml-4">You ({fb.role})</span>
-                                                                                                            <br />
-                                                                                                            {fb.text}
-                                                                                                        </div>
-                                                                                                    </div>
-                                                                                                );
-                                                                                            }
-                                                                                        })
-                                                                                    )}
-                                                                                </div>
-                                                                                {/* Input area — only on latest iteration */}
-                                                                                {showFeedbackInputs[entry._id] && iterIdx === currentMediaGroup.length - 1 && (
-                                                                                    <div className="p-3 border-t border-gray-200 bg-gray-50">
-                                                                                        <form
-                                                                                            onSubmit={async (e) => {
-                                                                                                e.preventDefault();
-                                                                                                if (feedbackText.trim()) {
-                                                                                                    await addFeedback(feedbackText);
-                                                                                                    setFeedbackText('');
-                                                                                                }
-                                                                                            }}
-                                                                                            className="flex items-center gap-2 border border-gray-300 rounded-md p-1 bg-white focus-within:ring-2 focus-within:ring-indigo-500 transition-shadow"
-                                                                                        >
-                                                                                            <input
-                                                                                                type="text"
-                                                                                                placeholder="Type feedback..."
-                                                                                                value={feedbackText}
-                                                                                                onChange={(e) => setFeedbackText(e.target.value)}
-                                                                                                className="flex-1 bg-transparent px-2 py-1 text-sm outline-none"
-                                                                                                autoFocus
-                                                                                            />
-                                                                                            <button
-                                                                                                type="submit"
-                                                                                                className={`p-2 rounded transition-colors ml-1 ${!feedbackText.trim() ? 'text-gray-400 cursor-not-allowed' : 'text-indigo-600 hover:bg-indigo-50'}`}
-                                                                                                title="Send"
-                                                                                                disabled={!feedbackText.trim()}
-                                                                                            >
-                                                                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                                                                    <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-                                                                                                </svg>
-                                                                                            </button>
-                                                                                        </form>
-                                                                                    </div>
-                                                                                )}
-                                                                            </div>
-
-                                                                            {/* Plus Button - Add New Iteration */}
-                                                                            {/* Only enabled when: non-Client role, entry is Pending, on latest iteration, AND a Client has given feedback */}
-                                                                            {(() => {
-                                                                                const isLatestIteration = iterIdx === currentMediaGroup.length - 1;
-                                                                                const clientHasFeedback = sortedFeedbacks.some(fb => fb.role === 'Client');
-                                                                                if (user?.role === 'Client' || (entry.status && entry.status !== 'Pending')) return null;
-                                                                                return (
-                                                                                    <div className="flex flex-col items-center justify-center ml-2 relative min-w-[60px]">
-                                                                                        <button
-                                                                                            onClick={() => {
-                                                                                                if (isLatestIteration && clientHasFeedback) {
-                                                                                                    setModalInitialData({ mediaId: entry.mediaId, clientName, category: entry.category });
-                                                                                                    setIsModalOpen(true);
-                                                                                                }
-                                                                                            }}
-                                                                                            disabled={!isLatestIteration || !clientHasFeedback}
-                                                                                            className={`w-12 h-12 rounded-full border flex items-center justify-center transition-colors shrink-0 shadow-sm z-10 ${isLatestIteration && clientHasFeedback
-                                                                                                ? 'border-gray-400 bg-white text-gray-700 hover:bg-gray-100 cursor-pointer'
-                                                                                                : 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed'
-                                                                                                }`}
-                                                                                            title={!isLatestIteration ? 'Navigate to the latest iteration' : !clientHasFeedback ? 'Waiting for client feedback before adding a new iteration' : 'Add New Iteration'}
-                                                                                        >
-                                                                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
-                                                                                            </svg>
-                                                                                        </button>
-                                                                                        <div className="mt-2 text-center text-[10px] leading-tight w-20 text-center">
-                                                                                            {!clientHasFeedback
-                                                                                                ? <span className="text-orange-400 font-medium">Awaiting client feedback</span>
-                                                                                                : <span className="text-gray-500">Add new iteration</span>
-                                                                                            }
-                                                                                        </div>
-                                                                                    </div>
-                                                                                );
-                                                                            })()}
+                                                                        <div className="border border-gray-200 rounded-lg p-4 min-h-[10px] bg-gray-50">
+                                                                            <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Captions</p>
+                                                                            <p className="text-sm text-gray-700 whitespace-pre-wrap">{entry.caption || 'No caption provided.'}</p>
                                                                         </div>
                                                                     </div>
+
+                                                                    {/* Middle Column: Actions */}
+                                                                    <div className="flex lg:flex-col items-center justify-center gap-4 lg:py-8 lg:px-2 relative">
+                                                                        {/* Client Action */}
+                                                                        {user?.role === 'Client' && (!entry.status || entry.status === 'Pending') && (
+                                                                            <button
+                                                                                onClick={() => handleStatusUpdate(entry._id, 'Client Approved')}
+                                                                                className="px-4 py-2 rounded-full border border-green-300 bg-white flex items-center justify-center text-green-600 hover:bg-green-50 transition-colors shadow-sm font-bold text-xs" title="Approve Entry">
+                                                                                Approve
+                                                                            </button>
+                                                                        )}
+
+                                                                        {/* Admin/Team Final Actions */}
+                                                                        {user?.role !== 'Team' && user?.role !== 'Client' && (!entry.status || entry.status === 'Pending' || entry.status === 'Client Approved') && (
+                                                                            <>
+                                                                                <button
+                                                                                    onClick={() => handleStatusUpdate(entry._id, 'Approved')}
+                                                                                    className="w-10 h-10 rounded-full border border-green-400 bg-white flex items-center justify-center text-green-600 hover:bg-green-50 transition-colors shadow-sm" title="Final Approve">
+                                                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                                                                </button>
+                                                                                <button
+                                                                                    onClick={() => handleStatusUpdate(entry._id, 'Rejected')}
+                                                                                    className="w-10 h-10 rounded-full border border-red-300 bg-white flex items-center justify-center text-red-600 hover:bg-red-50 transition-colors shadow-sm" title="Reject">
+                                                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                                                </button>
+                                                                            </>
+                                                                        )}
+
+                                                                        {/* Plus Button - Add New Iteration */}
+                                                                        {/* Only enabled when: non-Client role, entry is Pending, on latest iteration, AND a Client has given feedback */}
+                                                                        {(() => {
+                                                                            const isLatestIteration = iterIdx === currentMediaGroup.length - 1;
+                                                                            const clientHasFeedback = sortedFeedbacks.some(fb => fb.role === 'Client');
+                                                                            if (user?.role === 'Client' || (entry.status && entry.status !== 'Pending')) return null;
+                                                                            return (
+                                                                                <div className="flex flex-col items-center justify-center relative min-w-[60px]">
+                                                                                    <button
+                                                                                        onClick={() => {
+                                                                                            if (isLatestIteration && clientHasFeedback) {
+                                                                                                setModalInitialData({ mediaId: entry.mediaId, clientName, category: entry.category });
+                                                                                                setIsModalOpen(true);
+                                                                                            }
+                                                                                        }}
+                                                                                        disabled={!isLatestIteration || !clientHasFeedback}
+                                                                                        className={`w-12 h-12 rounded-full border flex items-center justify-center transition-colors shrink-0 shadow-sm z-10 ${isLatestIteration && clientHasFeedback
+                                                                                            ? 'border-gray-400 bg-white text-gray-700 hover:bg-gray-100 cursor-pointer'
+                                                                                            : 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed'
+                                                                                            }`}
+                                                                                        title={!isLatestIteration ? 'Navigate to the latest iteration' : !clientHasFeedback ? 'Waiting for client feedback before adding a new iteration' : 'Add New Iteration'}
+                                                                                    >
+                                                                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4v16m8-8H4" />
+                                                                                        </svg>
+                                                                                    </button>
+                                                                                    <div className="mt-2 text-center text-[10px] leading-tight w-20">
+                                                                                        {!clientHasFeedback
+                                                                                            ? <span className="text-orange-400 font-medium">Awaiting client feedback</span>
+                                                                                            : <span className="text-gray-500">Add new iteration</span>
+                                                                                        }
+                                                                                    </div>
+                                                                                </div>
+                                                                            );
+                                                                        })()}
+                                                                    </div>
+
+                                                                    {/* Right Column: Feedback Box & Plus Button */}
+                                                                    <div className="flex-1 flex gap-4">
+                                                                        {/* Feedback Box */}
+                                                                        <div className="max-w-[350px] flex-1 rounded-lg flex flex-col overflow-hidden bg-white h-[400px]">
+                                                                            <div className="bg-gray-50 p-3 border-b border-gray-200 flex justify-between items-center">
+                                                                                <h4 className="text-sm font-bold text-gray-700 text-left">Feedback of Iteration {iterIdx + 1}</h4>
+                                                                                {/* Only show the add-feedback toggle on the latest iteration */}
+                                                                                {iterIdx === currentMediaGroup.length - 1 && (
+                                                                                    <button
+                                                                                        onClick={() => toggleFeedbackInput(entry._id)}
+                                                                                        className="p-1.5 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                                                                        title={showFeedbackInputs[entry._id] ? "Hide feedback input" : "Add feedback"}
+                                                                                    >
+                                                                                        {showFeedbackInputs[entry._id] ? (
+                                                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                                                                        ) : (
+                                                                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                                                                                        )}
+                                                                                    </button>
+                                                                                )}
+                                                                                {/* Previous iterations show a lock hint */}
+                                                                                {iterIdx < currentMediaGroup.length - 1 && (
+                                                                                    <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                                                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 17a2 2 0 100-4 2 2 0 000 4zm6-6V9a6 6 0 10-12 0v2a2 2 0 00-2 2v7a2 2 0 002 2h12a2 2 0 002-2v-7a2 2 0 00-2-2z" /></svg>
+                                                                                        Read-only
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                            <div className="flex-1 p-4 overflow-y-auto space-y-8 flex-col-reverse">
+                                                                                {feedbacksLoading ? (
+                                                                                    <div className="text-center text-gray-400 text-sm mt-10">Loading comments...</div>
+                                                                                ) : sortedFeedbacks.length === 0 ? (
+                                                                                    <div className="text-center text-gray-400 text-sm mt-10">
+                                                                                        No feedback yet.<br />Start the conversation!
+                                                                                    </div>
+                                                                                ) : (
+                                                                                    sortedFeedbacks.map((fb) => {
+                                                                                        const isCurrentUser = fb.userId === user?._id;
+                                                                                        if (!isCurrentUser) {
+                                                                                            return (
+                                                                                                <div key={fb._id} className="flex flex-col gap-1 items-start">
+                                                                                                    <div className={`text-sm p-3 rounded-lg rounded-tl-none border relative w-[100%] max-w-md ${fb.role === 'Client' ? 'bg-blue-50 text-gray-800 border-blue-100' : 'bg-gray-50 text-gray-800 border-gray-200'}`}>
+                                                                                                        <span className="text-xs font-semibold text-gray-700">{fb.username || 'User'}</span>
+                                                                                                        <span className="text-[10px] text-gray-400 ml-4">
+                                                                                                            {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })},
+                                                                                                            {new Date(fb.createdAt).toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                                                                                        </span>
+                                                                                                        <br />
+                                                                                                        {fb.text}
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            );
+                                                                                        } else {
+                                                                                            return (
+                                                                                                <div key={fb._id} className="flex flex-col gap-1 items-end mt-4">
+                                                                                                    <div className={`text-sm p-3 rounded-lg rounded-tr-none border relative max-w-sm ${fb.role === 'Client' ? 'bg-blue-50 text-gray-800 border-blue-100' : 'bg-indigo-50 text-indigo-900 border-indigo-100'}`}>
+                                                                                                        <span className="text-[10px] text-gray-400">
+                                                                                                            {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })},
+                                                                                                            {new Date(fb.createdAt).toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                                                                                        </span>
+                                                                                                        <span className="text-xs font-semibold text-gray-700 ml-4">You ({fb.role})</span>
+                                                                                                        <br />
+                                                                                                        {fb.text}
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            );
+                                                                                        }
+                                                                                    })
+                                                                                )}
+                                                                            </div>
+                                                                            {/* Input area — only on latest iteration */}
+                                                                            {showFeedbackInputs[entry._id] && iterIdx === currentMediaGroup.length - 1 && (
+                                                                                <div className="p-3 border-t border-gray-200 bg-gray-50">
+                                                                                    <form
+                                                                                        onSubmit={async (e) => {
+                                                                                            e.preventDefault();
+                                                                                            if (feedbackText.trim()) {
+                                                                                                await addFeedback(feedbackText);
+                                                                                                setFeedbackText('');
+                                                                                            }
+                                                                                        }}
+                                                                                        className="flex items-center gap-2 border border-gray-300 rounded-md p-1 bg-white focus-within:ring-2 focus-within:ring-indigo-500 transition-shadow"
+                                                                                    >
+                                                                                        <input
+                                                                                            type="text"
+                                                                                            placeholder="Type feedback..."
+                                                                                            value={feedbackText}
+                                                                                            onChange={(e) => setFeedbackText(e.target.value)}
+                                                                                            className="flex-1 bg-transparent px-2 py-1 text-sm outline-none"
+                                                                                            autoFocus
+                                                                                        />
+                                                                                        <button
+                                                                                            type="submit"
+                                                                                            className={`p-2 rounded transition-colors ml-1 ${!feedbackText.trim() ? 'text-gray-400 cursor-not-allowed' : 'text-indigo-600 hover:bg-indigo-50'}`}
+                                                                                            title="Send"
+                                                                                            disabled={!feedbackText.trim()}
+                                                                                        >
+                                                                                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                                                                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                                                                                            </svg>
+                                                                                        </button>
+                                                                                    </form>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         </motion.div>
                                                     </AnimatePresence>
                                                 </div>
 
                                                 {/* Footer Strip - Media Pagination (different mediaIds) + Iteration Dots */}
-                                                <div className="px-6 pb-5 pt-2 border-t border-gray-100 bg-gray-50/60">
+                                                <div className="px-6 pb-5 pt-2 border-t border-gray-200 rounded-xl bg-gray-100">
                                                     <div className="flex items-center justify-between max-w-2xl mx-auto gap-4">
 
                                                         {/* Media Prev — navigate different mediaIds */}
