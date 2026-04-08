@@ -8,7 +8,7 @@ import { useIterationFeedback } from '../hooks/useIterationFeedback';
 import FilterSelect from '../components/Calendar/FilterSelect';
 import CreativeEntryModal from '../components/CreativeEntryModal';
 import { AnimatePresence, motion } from 'framer-motion';
-import { FaRegComment } from 'react-icons/fa';
+// import { FaRegComment } from 'react-icons/fa';
 
 const Dashboard: React.FC = () => {
     const { currentDate } = useCalendarContext();
