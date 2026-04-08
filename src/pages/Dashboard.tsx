@@ -441,7 +441,7 @@ const Dashboard: React.FC = () => {
                                                                         {/* Client Action */}
                                                                         {user?.role === 'Client' && (!entry.status || entry.status === 'Pending') && (
                                                                             <button
-                                                                                onClick={() => handleStatusUpdate(entry._id, 'Client Approved')}
+                                                                                onClick={() => handleStatusUpdate(entry._id, 'Approved')}
                                                                                 className="px-4 py-2 rounded-full border border-green-300 bg-white flex items-center justify-center text-green-600 hover:bg-green-50 transition-colors shadow-sm font-bold text-xs" title="Approve Entry">
                                                                                 Approve
                                                                             </button>

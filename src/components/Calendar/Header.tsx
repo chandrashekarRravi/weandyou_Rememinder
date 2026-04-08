@@ -72,7 +72,7 @@ const Header: React.FC<HeaderProps> = () => {
             <div className="flex items-center gap-16">
                 {/* Logo */}
                 <div className="flex items-center">
-                    <img src="/AVAIO.png" alt="WE & You" className="h-16 w-auto object-contain" />
+                    <img src="/WE&YOU-LOGO.png" alt="WE & You" className="h-28 w-auto object-contain" />
                 </div>
 
                 {/* Navigation */}

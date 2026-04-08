@@ -118,10 +118,10 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days }) => {
 
 
             {/* Filter Controls */}
-            <div className="flex flex-wrap items-center gap-4 p-4 border-b border-gray-100 bg-white">
+            <div className="p-4 border-b border-gray-100 bg-white flex flex-col md:flex-row items-start md:items-center gap-4">
 
                 {/* Mobile Month Tap */}
-                <div className="w-full md:hidden mb-2">
+                <div className="w-full md:hidden">
                     <FilterSelect
                         label="Month"
                         value={currentDate.getMonth().toString()}
@@ -131,31 +131,39 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days }) => {
                     />
                 </div>
 
-                <FilterSelect
-                    label="Client"
-                    value={activeFilter.client}
-                    options={clientOptions}
-                    onChange={(val) => setActiveFilter({ client: val })}
-                    placeholder="All"
-                />
+                <div className="grid grid-cols-2 gap-2 w-full md:flex md:w-auto md:items-center md:gap-4 md:flex-1">
+                    <div className="min-w-0 md:flex-1 max-w-xs">
+                        <FilterSelect
+                            label="Client"
+                            value={activeFilter.client}
+                            options={clientOptions}
+                            onChange={(val) => setActiveFilter({ client: val })}
+                            placeholder="All"
+                        />
+                    </div>
 
-                <div className="w-px h-8 bg-gray-100 mx-2 hidden md:block"></div>
+                    <div className="w-px h-8 bg-gray-100 mx-2 hidden md:block"></div>
 
-                <FilterSelect
-                    label="Category"
-                    value={activeFilter.category}
-                    options={categoryOptions}
-                    onChange={(val) => setActiveFilter({ category: val })}
-                    placeholder="All"
-                />
+                    <div className="min-w-0 md:flex-1 max-w-xs">
+                        <FilterSelect
+                            label="Category"
+                            value={activeFilter.category}
+                            options={categoryOptions}
+                            onChange={(val) => setActiveFilter({ category: val })}
+                            placeholder="All"
+                        />
+                    </div>
 
-                <FilterSelect
-                    label="Status"
-                    value={activeFilter.status}
-                    options={statusOptions}
-                    onChange={(val) => setActiveFilter({ status: val })}
-                    placeholder="All"
-                />
+                    <div className="min-w-0 col-span-2 md:col-span-1 md:flex-1 max-w-xs">
+                        <FilterSelect
+                            label="Status"
+                            value={activeFilter.status}
+                            options={statusOptions}
+                            onChange={(val) => setActiveFilter({ status: val })}
+                            placeholder="All"
+                        />
+                    </div>
+                </div>
             </div>
 
             {/* Desktop Transposed month grid: left column = weekday labels, top row = week numbers */}
