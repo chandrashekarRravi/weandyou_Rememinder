@@ -556,7 +556,7 @@ const Dashboard: React.FC = () => {
                                                                                                             <span className="text-xs font-semibold text-gray-700">{fb.username || 'User'}</span>
                                                                                                             <div className="flex items-center gap-2">
                                                                                                                 <span className="text-[10px] text-gray-400">
-                                                                                                                    {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}, 
+                                                                                                                    {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })},
                                                                                                                     {new Date(fb.createdAt).toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' })}
                                                                                                                 </span>
                                                                                                                 {user?.role === 'Admin' && (
@@ -582,7 +582,7 @@ const Dashboard: React.FC = () => {
                                                                                                                 </button>
                                                                                                             </div>
                                                                                                             <span className="text-[10px] text-gray-400 pt-0.5">
-                                                                                                                {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}, 
+                                                                                                                {new Date(fb.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })},
                                                                                                                 {new Date(fb.createdAt).toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' })}
                                                                                                             </span>
                                                                                                         </div>
