@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create an Axios instance
 const api = axios.create({
-    baseURL: '/', // Vite proxies /api to backend by default
+    baseURL: import.meta.env.VITE_API_URL || '/api', // Use env variable or fallback to /api (for Vite proxy)
 });
 
 // Request interceptor for adding the bearer token

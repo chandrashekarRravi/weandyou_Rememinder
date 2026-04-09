@@ -5,11 +5,7 @@ import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Not needed since we don't serve static files from here anymore
 
 dotenv.config({ path: '../.env' });
 
@@ -25,13 +21,13 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: process.env.CLIENT_URL || "http://localhost:5173", // Vite default port or Prod URL
-        methods: ["GET", "POST"]
+        origin: "*", // Allow all origins to fix CORS
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
     }
 });
 
 app.use(cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173"
+    origin: "*"
 }));
 app.use(express.json());
 
@@ -61,12 +57,9 @@ app.use('/api/iteration-feedbacks', iterationFeedbackRoutes);
 
 import clientRoutes from './routes/clients.js';
 app.use('/api/clients', clientRoutes);
-// Serve static files
-app.use(express.static(path.join(__dirname, '../dist')));
-
-// Fallback route for React Router
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../dist/index.html'));
+// Health check route for Render
+app.get('/', (req, res) => {
+    res.status(200).json({ message: 'Backend API is running gracefully' });
 });
 const PORT = process.env.PORT || 5000;
 
