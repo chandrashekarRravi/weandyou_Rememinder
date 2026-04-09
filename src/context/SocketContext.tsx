@@ -11,7 +11,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const [socket, setSocket] = useState<Socket | null>(null);
 
     useEffect(() => {
-        const newSocket = io('http://localhost:5000');
+        const socketUrl = import.meta.env.PROD ? '/' : 'http://localhost:5000';
+        const newSocket = io(socketUrl);
         setSocket(newSocket);
 
         return () => {

@@ -4,8 +4,12 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config({ path: '../.env' });
 
@@ -21,12 +25,14 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: "http://localhost:5173", // Vite default port
+        origin: process.env.CLIENT_URL || "http://localhost:5173", // Vite default port or Prod URL
         methods: ["GET", "POST"]
     }
 });
 
-app.use(cors());
+app.use(cors({
+    origin: process.env.CLIENT_URL || "http://localhost:5173"
+}));
 app.use(express.json());
 
 // Serve uploaded files
@@ -55,9 +61,12 @@ app.use('/api/iteration-feedbacks', iterationFeedbackRoutes);
 
 import clientRoutes from './routes/clients.js';
 app.use('/api/clients', clientRoutes);
-// Fallback route
-app.get('/', (req, res) => {
-    res.send('Calendar API is running');
+// Serve static files
+app.use(express.static(path.join(__dirname, '../dist')));
+
+// Fallback route for React Router
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 const PORT = process.env.PORT || 5000;
 
