@@ -2,7 +2,10 @@ import axios from 'axios';
 
 // Create an Axios instance
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || '', // Use env variable or fallback to empty string (for Vite proxy)
+    // Use relative path by default. 
+    // In dev: proxy in vite.config.ts routes to localhost:5000
+    // In prod: rewrites in vercel.json route to the Render backend
+    baseURL: '', 
 });
 
 // Request interceptor for adding the bearer token
