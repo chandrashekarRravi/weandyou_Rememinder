@@ -5,7 +5,8 @@ const userSchema = new mongoose.Schema({
     username: {
         type: String,
         required: [true, 'Please provide a username'],
-        unique: true,
+        unique: true, // Automatically creates a unique index
+        index: true,  // Explicit declaration for performance indexing
         trim: true,
     },
     password: {
