@@ -2,6 +2,7 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { protect, authorize } from '../middleware/auth.js';
+import bcrypt from 'bcryptjs';
 
 const router = express.Router();
 
@@ -18,10 +19,26 @@ const generateToken = (id) => {
 router.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
+        console.time('login-total');
 
-        // Check for user
-        const user = await User.findOne({ username }).select('+password');
-        if (user && (await user.matchPassword(password))) {
+        console.time('db-query');
+        // 1. Use .lean() to bypass Mongoose document hydration overhead
+        const user = await User.findOne({ username }).select('+password +role').lean();
+        console.timeEnd('db-query');
+
+        if (!user) {
+            console.timeEnd('login-total');
+            return res.status(401).json({ message: 'Invalid username or password' });
+        }
+
+        console.time('bcrypt-compare');
+        // 2. Perform bcrypt comparison securely and asynchronously
+        // Note: Using pure bcrypt.compare from bcryptjs instead of the document method
+        // speeds up the process because we don't have to instantiate a full Mongoose Document
+        const isMatch = await bcrypt.compare(password, user.password);
+        console.timeEnd('bcrypt-compare');
+
+        if (isMatch) {
             res.json({
                 _id: user._id,
                 username: user.username,
@@ -31,6 +48,8 @@ router.post('/login', async (req, res) => {
         } else {
             res.status(401).json({ message: 'Invalid username or password' });
         }
+        
+        console.timeEnd('login-total');
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ message: 'Server error' });
