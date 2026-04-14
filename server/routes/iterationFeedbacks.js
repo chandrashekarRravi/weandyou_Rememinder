@@ -18,19 +18,27 @@ router.get('/:creativeEntryId', protect, async (req, res) => {
 // Create new feedback
 router.post('/', protect, async (req, res) => {
     try {
-        const { creativeEntryId, text } = req.body;
+        const { creativeEntryId, text, audioUrl } = req.body;
 
-        if (!creativeEntryId || !text) {
+        if (!creativeEntryId || (!text && !audioUrl)) {
             return res.status(400).json({ message: 'Missing required fields' });
         }
 
-        const newFeedback = new IterationFeedback({
+        const newFeedbackData = {
             creativeEntryId,
             userId: req.user._id,
             username: req.user.username,
             role: req.user.role,
             text
-        });
+        };
+
+        if (audioUrl) {
+            newFeedbackData.audioUrl = audioUrl;
+            // Set expiration to 30 days from now
+            newFeedbackData.expireAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        }
+
+        const newFeedback = new IterationFeedback(newFeedbackData);
 
         const savedFeedback = await newFeedback.save();
 

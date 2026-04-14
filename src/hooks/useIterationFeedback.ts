@@ -8,7 +8,8 @@ export interface IterationFeedbackType {
     userId: string;
     username: string;
     role: string;
-    text: string;
+    text?: string;
+    audioUrl?: string;
     createdAt: string;
 }
 
@@ -62,23 +63,56 @@ export const useIterationFeedback = (creativeEntryId: string | null) => {
         };
     }, [socket, creativeEntryId]);
 
-    const addFeedback = async (text: string) => {
-        if (!creativeEntryId || !text.trim()) return null;
+    const addFeedback = async (text: string, audioBlob?: Blob) => {
+        if (!creativeEntryId || (!text.trim() && !audioBlob)) return null;
+
+        const tempId = `temp-${Date.now()}`;
+        
+        let localAudioUrl: string | undefined = undefined;
+        if (audioBlob) {
+            localAudioUrl = URL.createObjectURL(audioBlob);
+        }
+
+        const tempFeedback: IterationFeedbackType = {
+            _id: tempId,
+            creativeEntryId,
+            userId: 'temp', 
+            username: 'You',
+            role: 'Sending...',
+            text: text || undefined,
+            audioUrl: localAudioUrl,
+            createdAt: new Date().toISOString()
+        };
+
+        // Add optimistic UI bubble
+        setFeedbacks(prev => [...prev, tempFeedback]);
 
         try {
+            let audioUrl = undefined;
+            if (audioBlob) {
+                const formData = new FormData();
+                formData.append('file', audioBlob, 'audio_note.webm');
+                const uploadRes = await api.post('/api/feedbacks/upload', formData);
+                audioUrl = uploadRes.data.url;
+            }
+
             const response = await api.post('/api/iteration-feedbacks', {
                 creativeEntryId,
-                text
+                text,
+                audioUrl
             });
-            // Update local state instantly so the user doesn't have to wait for the socket
+            
             const newFeedback = response.data;
             setFeedbacks(prev => {
-                if (prev.some(fb => fb._id === newFeedback._id)) return prev;
-                return [...prev, newFeedback];
+                const filtered = prev.filter(fb => fb._id !== tempId);
+                if (filtered.some(fb => fb._id === newFeedback._id)) return filtered;
+                return [...filtered, newFeedback];
             });
             return response.data;
         } catch (error) {
             console.error('Error adding iteration feedback:', error);
+            // Remove the temporary bubble if it fails
+            setFeedbacks(prev => prev.filter(fb => fb._id !== tempId));
             throw error;
         }
     };

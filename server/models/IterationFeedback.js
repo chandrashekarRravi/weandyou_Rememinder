@@ -22,7 +22,15 @@ const iterationFeedbackSchema = new mongoose.Schema({
     },
     text: {
         type: String,
-        required: true
+        required: false
+    },
+    audioUrl: {
+        type: String,
+        required: false
+    },
+    expireAt: {
+        type: Date,
+        index: { expires: '0' }
     },
     createdAt: {
         type: Date,

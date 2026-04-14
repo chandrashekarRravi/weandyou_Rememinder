@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useCreativeEntries } from '../hooks/useCreativeEntries';
 import { useEvents } from '../hooks/useEvents';
 import { useClients } from '../hooks/useClients';
@@ -61,6 +61,53 @@ const Dashboard: React.FC = () => {
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
     }, [feedbacks]);
+
+    const [isRecording, setIsRecording] = useState(false);
+    const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+    const audioChunksRef = useRef<BlobPart[]>([]);
+    
+    const startRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mediaRecorder = new MediaRecorder(stream);
+            mediaRecorderRef.current = mediaRecorder;
+            audioChunksRef.current = [];
+
+            mediaRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) audioChunksRef.current.push(event.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                setAudioBlob(blob);
+            };
+
+            mediaRecorder.start();
+            setIsRecording(true);
+        } catch (error) {
+            console.error('Error accessing microphone:', error);
+            alert('Cannot access microphone');
+        }
+    };
+
+    const stopRecording = () => {
+        if (mediaRecorderRef.current && isRecording) {
+            mediaRecorderRef.current.stop();
+            mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+            setIsRecording(false);
+        }
+    };
+
+    const cancelRecording = () => {
+        if (mediaRecorderRef.current && isRecording) {
+            mediaRecorderRef.current.stop();
+            mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+        }
+        setIsRecording(false);
+        setAudioBlob(null);
+        audioChunksRef.current = [];
+    };
 
     // Dashboard-specific filter state
     const [dashboardFilter, setDashboardFilter] = useState({
@@ -547,7 +594,7 @@ const Dashboard: React.FC = () => {
                                                                                     </div>
                                                                                 ) : (
                                                                                     sortedFeedbacks.map((fb) => {
-                                                                                        const isCurrentUser = fb.userId === user?._id;
+                                                                                        const isCurrentUser = fb.userId === user?._id || fb._id.startsWith('temp');
                                                                                         if (!isCurrentUser) {
                                                                                             return (
                                                                                                 <div key={fb._id} className="flex flex-col gap-1 items-start group">
@@ -566,7 +613,12 @@ const Dashboard: React.FC = () => {
                                                                                                                 )}
                                                                                                             </div>
                                                                                                         </div>
-                                                                                                        <div className="mt-1">{fb.text}</div>
+                                                                                                        {fb.text && <div className="mt-1">{fb.text}</div>}
+                                                                                                        {fb.audioUrl && (
+                                                                                                            <div className="mt-2 w-full overflow-x-hidden rounded-full">
+                                                                                                                <audio src={fb.audioUrl} controls className="h-9 w-full max-w-full" style={{ minWidth: '150px' }} />
+                                                                                                            </div>
+                                                                                                        )}
                                                                                                     </div>
                                                                                                 </div>
                                                                                             );
@@ -586,7 +638,12 @@ const Dashboard: React.FC = () => {
                                                                                                                 {new Date(fb.createdAt).toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' })}
                                                                                                             </span>
                                                                                                         </div>
-                                                                                                        <div>{fb.text}</div>
+                                                                                                        {fb.text && <div className="mt-1">{fb.text}</div>}
+                                                                                                        {fb.audioUrl && (
+                                                                                                            <div className="mt-2 flex justify-end w-full overflow-x-hidden rounded-full">
+                                                                                                                <audio src={fb.audioUrl} controls className="h-9 w-full max-w-full" style={{ minWidth: '150px' }} />
+                                                                                                            </div>
+                                                                                                        )}
                                                                                                     </div>
                                                                                                 </div>
                                                                                             );
@@ -596,20 +653,48 @@ const Dashboard: React.FC = () => {
                                                                             </div>
                                                                             {/* Input area — only on latest iteration */}
                                                                             {showFeedbackInputs[entry._id] && iterIdx === currentMediaGroup.length - 1 && (
-                                                                                <div className="p-3 border-t border-gray-200 bg-gray-50">
+                                                                                <div className="p-3 border-t border-gray-200 bg-gray-50 flex flex-col gap-2">
+                                                                                    {audioBlob && (
+                                                                                        <div className="flex items-center gap-2 bg-indigo-50 p-2 rounded-md">
+                                                                                            <audio src={URL.createObjectURL(audioBlob)} controls className="h-8 flex-1" />
+                                                                                            <button onClick={cancelRecording} className="p-1 text-red-500 hover:bg-red-100 rounded">
+                                                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    )}
+                                                                                    {isRecording && (
+                                                                                        <div className="flex items-center gap-2 bg-red-50 p-2 rounded-md animate-pulse">
+                                                                                            <span className="w-2 h-2 rounded-full bg-red-500" />
+                                                                                            <span className="text-red-600 text-xs font-semibold flex-1">Recording...</span>
+                                                                                            <button onClick={stopRecording} className="px-2 py-1 bg-red-500 text-white rounded text-xs font-bold shadow-sm">Stop</button>
+                                                                                        </div>
+                                                                                    )}
                                                                                     <form
                                                                                         onSubmit={async (e) => {
                                                                                             e.preventDefault();
-                                                                                            if (feedbackText.trim()) {
-                                                                                                await addFeedback(feedbackText);
+                                                                                            if (feedbackText.trim() || audioBlob) {
+                                                                                                await addFeedback(feedbackText, audioBlob || undefined);
                                                                                                 setFeedbackText('');
+                                                                                                setAudioBlob(null);
                                                                                             }
                                                                                         }}
                                                                                         className="flex items-center gap-2 border border-gray-300 rounded-md p-1 bg-white focus-within:ring-2 focus-within:ring-indigo-500 transition-shadow"
                                                                                     >
+                                                                                        <button
+                                                                                            type="button"
+                                                                                            onClick={isRecording ? stopRecording : startRecording}
+                                                                                            className={`p-2 shrink-0 rounded transition-colors ${isRecording ? 'text-red-500 bg-red-50' : 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50'}`}
+                                                                                            title={isRecording ? 'Stop Recording' : 'Record Voice Note'}
+                                                                                        >
+                                                                                            {isRecording ? (
+                                                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" strokeWidth="2" fill="currentColor"/></svg>
+                                                                                            ) : (
+                                                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                                                                                            )}
+                                                                                        </button>
                                                                                         <input
                                                                                             type="text"
-                                                                                            placeholder="Type feedback..."
+                                                                                            placeholder={audioBlob ? "Add caption (optional)..." : "Type feedback..."}
                                                                                             value={feedbackText}
                                                                                             onChange={(e) => setFeedbackText(e.target.value)}
                                                                                             className="flex-1 min-w-0 bg-transparent px-2 py-1 text-sm outline-none"
@@ -617,9 +702,9 @@ const Dashboard: React.FC = () => {
                                                                                         />
                                                                                         <button
                                                                                             type="submit"
-                                                                                            className={`p-2 shrink-0 rounded transition-colors ml-1 ${!feedbackText.trim() ? 'text-gray-400 cursor-not-allowed' : 'text-indigo-600 hover:bg-indigo-50'}`}
+                                                                                            className={`p-2 shrink-0 rounded transition-colors ml-1 ${(!feedbackText.trim() && !audioBlob) ? 'text-gray-400 cursor-not-allowed' : 'text-indigo-600 hover:bg-indigo-50'}`}
                                                                                             title="Send"
-                                                                                            disabled={!feedbackText.trim()}
+                                                                                            disabled={!feedbackText.trim() && !audioBlob}
                                                                                         >
                                                                                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                                                                                 <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
