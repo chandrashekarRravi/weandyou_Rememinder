@@ -195,7 +195,7 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
                 </div>
 
                 {/* Body - 2 Column Layout */}
-                <div className="p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-6 overflow-y-auto flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 gap-6">
 
                     {/* Left Column: Media & Caption */}
                     <div className="space-y-4">
@@ -246,7 +246,7 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Upload File <span className="text-red-500">*</span></label>
                             <div className={`border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center hover:bg-gray-50 transition-colors relative w-full ${!preview ? 'aspect-square p-6' : 'overflow-hidden mx-auto'}`}
-                                 style={preview ? { aspectRatio: ratio.replace(':', '/'), maxHeight: '600px', maxWidth: '100%' } : {}}>
+                                 style={preview ? { aspectRatio: ratio.replace(':', '/'), maxHeight: '45vh', maxWidth: '100%' } : {}}>
                                 
                                 {uploading && file && (
                                     <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center z-50 transition-opacity">
@@ -310,12 +310,12 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
                                 <h3 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Entry Details</h3>
 
                                 <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Client Name <span className="text-red-500">*</span></label>
+                                    <div className="flex items-center gap-3">
+                                        <label className="min-w-[100px] text-sm font-medium text-gray-700">Client Name <span className="text-red-500">*</span></label>
                                     <select
                                         value={clientName}
                                         onChange={(e) => setClientName(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                                        className="flex-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
                                         required
                                     >
                                         <option value="" disabled>Select a Client</option>
@@ -325,22 +325,22 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
                                     </select>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Posting Date</label>
+                                <div className="flex items-center gap-3">
+                                    <label className="min-w-[100px] text-sm font-medium text-gray-700">Posting Date</label>
                                     <input
                                         type="date"
                                         value={date}
                                         onChange={(e) => setDate(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all bg-white"
+                                        className="flex-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all bg-white"
                                     />
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                                <div className="flex items-center gap-3">
+                                    <label className="min-w-[100px] text-sm font-medium text-gray-700">Category</label>
                                     <select
                                         value={category}
                                         onChange={(e) => setCategory(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
+                                        className="flex-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none bg-white"
                                     >
                                         <option value="" disabled>Select a Category</option>
                                         <option value="Special Day">Special Day</option>

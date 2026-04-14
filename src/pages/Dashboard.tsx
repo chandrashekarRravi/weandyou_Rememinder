@@ -66,7 +66,7 @@ const Dashboard: React.FC = () => {
     const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<BlobPart[]>([]);
-    
+
     const startRecording = async () => {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -462,7 +462,7 @@ const Dashboard: React.FC = () => {
                                                                 <div className="flex flex-col lg:flex-row gap-6">
                                                                     {/* Left Column: Image & Caption */}
                                                                     <div className="flex-none lg:w-[30%] space-y-4">
-                                                                        <div className="w-full bg-gray-100 rounded-lg flex border border-gray-200 overflow-hidden items-center justify-center relative group">
+                                                                        <div className="w-full bg-gray-100 rounded-lg flex border-2 border-green-500 overflow-hidden items-center justify-center relative group shadow-[0_0_10px_rgba(223,239,14,0.2)]">
                                                                             {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
                                                                                 <video src={entry.filePath} controls className="w-full h-auto block" />
                                                                             ) : (
@@ -687,7 +687,7 @@ const Dashboard: React.FC = () => {
                                                                                             title={isRecording ? 'Stop Recording' : 'Record Voice Note'}
                                                                                         >
                                                                                             {isRecording ? (
-                                                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" strokeWidth="2" fill="currentColor"/></svg>
+                                                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" strokeWidth="2" fill="currentColor" /></svg>
                                                                                             ) : (
                                                                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
                                                                                             )}
