@@ -141,7 +141,7 @@ const Header: React.FC<HeaderProps> = () => {
                         className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:shadow hover:bg-gray-200 transition-all"
                         aria-label="User menu"
                     >
-                        <FaUserCircle size={24} />
+                        <i className="fa-jelly-duo fa-regular fa-circle-user text-2xl"></i>
                     </button>
 
                     {open && (
