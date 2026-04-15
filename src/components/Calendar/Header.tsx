@@ -66,13 +66,13 @@ const Header: React.FC<HeaderProps> = () => {
     };
 
     return (
-        <header className="flex items-center justify-between px-8 py-1 bg-white border-b border-gray-100 shadow-sm sticky top-0 z-10 relative">
+        <header className="flex items-center justify-between px-6 md:px-12 py-1 bg-white border-b border-gray-100 shadow-sm sticky top-0 z-10 relative">
 
             {/* Left Side: Logo & Navigation */}
-            <div className="flex items-center gap-16">
+            <div className="flex items-center gap-8 md:gap-16">
                 {/* Logo */}
                 <div className="flex items-center">
-                    <img src="/WE&YOU-LOGO.png" alt="WE & You" className="h-28 w-auto object-contain" />
+                    <img src="/WE&YOU-LOGO.png" alt="WE & You" className="h-16 md:h-16 w-auto object-contain" />
                 </div>
 
                 {/* Navigation */}

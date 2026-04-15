@@ -462,7 +462,8 @@ const Dashboard: React.FC = () => {
                                                                 <div className="flex flex-col lg:flex-row gap-6">
                                                                     {/* Left Column: Image & Caption */}
                                                                     <div className="flex-none lg:w-[30%] space-y-4">
-                                                                        <div className="w-full bg-gray-100 rounded-lg flex border-2 border-green-500 overflow-hidden items-center justify-center relative group shadow-[0_0_10px_rgba(223,239,14,0.2)]">
+                                                                        <div className="w-full bg-gray-100 rounded-lg flex border-2 border
+                                                                         overflow-hidden items-center justify-center relative group ">
                                                                             {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
                                                                                 <video src={entry.filePath} controls className="w-full h-auto block" />
                                                                             ) : (
