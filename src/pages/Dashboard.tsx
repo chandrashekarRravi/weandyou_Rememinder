@@ -22,14 +22,14 @@ const Dashboard: React.FC = () => {
     const ongoing = events.filter(e => e.status === 'Ongoing').length + creativeEntries.filter(e => e.status === 'Approved').length;
     const completed = events.filter(e => e.status === 'Completed').length;
 
-    const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{ id: string, status: 'Approved' | 'Rejected' | 'Client Approved' } | null>(null);
+    const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{ id: string, status: 'Approved' | 'Rejected' | 'Client Approved' | 'Pending' } | null>(null);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [ratioError, setRatioError] = useState<{ id: string, message: string } | null>(null);
 
     // State for toggling feedback inputs per entry
     const [showFeedbackInputs, setShowFeedbackInputs] = useState<Record<string, boolean>>({});
 
-    const handleStatusUpdate = async (id: string, newStatus: 'Approved' | 'Rejected' | 'Client Approved') => {
+    const handleStatusUpdate = async (id: string, newStatus: 'Approved' | 'Rejected' | 'Client Approved' | 'Pending') => {
         setPendingStatusUpdate({ id, status: newStatus });
     };
 
@@ -138,6 +138,7 @@ const Dashboard: React.FC = () => {
     const groupedEntries = useMemo(() => {
         // 1. Filter
         const filtered = creativeEntries.filter(entry => {
+            if (user?.role === 'Client' && entry.status === 'Internal Review') return false;
             if (dashboardFilter.client !== 'All' && entry.clientName !== dashboardFilter.client) return false;
             if (dashboardFilter.category !== 'All' && (entry.category || 'Other') !== dashboardFilter.category) return false;
             if (dashboardFilter.status !== 'All' && (entry.status || 'Pending') !== dashboardFilter.status) return false;
@@ -317,6 +318,7 @@ const Dashboard: React.FC = () => {
                                         label="Status"
                                         value={dashboardFilter.status}
                                         options={[
+                                            { label: 'Internal Review', value: 'Internal Review' },
                                             { label: 'Pending', value: 'Pending' },
                                             { label: 'Client Approved', value: 'Client Approved' },
                                             { label: 'Approved', value: 'Approved' },
@@ -384,7 +386,8 @@ const Dashboard: React.FC = () => {
                                                     <span className={`px-2 py-1 rounded text-[10px] font-bold tracking-wide ${entry.status === 'Approved' ? 'bg-green-100 text-green-700' :
                                                         entry.status === 'Client Approved' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
                                                             entry.status === 'Rejected' ? 'bg-red-100 text-red-700' :
-                                                                'bg-yellow-100 text-yellow-700'
+                                                                entry.status === 'Internal Review' ? 'bg-blue-100 text-blue-700' :
+                                                                    'bg-yellow-100 text-yellow-700'
                                                         }`}>
                                                         STATUS: {entry.status || 'Pending'}
                                                     </span>
@@ -394,7 +397,7 @@ const Dashboard: React.FC = () => {
                                                             {new Date(entry.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} {' '}
                                                             {new Date(entry.createdAt).toLocaleDateString()}
                                                         </span>
-                                                        {clientName === 'Drafts' && (user?.username?.toLowerCase() === 'bhuvan@team' || user?.role === 'Admin') && (
+                                                        {(user?.username?.toLowerCase() === 'bhuvan@team' || user?.role === 'Admin') && (
                                                             <button
                                                                 onClick={() => {
                                                                     setModalInitialData({
@@ -503,6 +506,15 @@ const Dashboard: React.FC = () => {
                                                                                 onClick={() => handleStatusUpdate(entry._id, 'Approved')}
                                                                                 className="px-4 py-2 rounded-full border border-green-300 bg-white flex items-center justify-center text-green-600 hover:bg-green-50 transition-colors shadow-sm font-bold text-xs" title="Approve Entry">
                                                                                 Approve
+                                                                            </button>
+                                                                        )}
+
+                                                                        {/* Bhuvan Verify Action */}
+                                                                        {(user?.username?.toLowerCase() === 'bhuvan@team' || user?.role === 'Admin') && entry.status === 'Internal Review' && (
+                                                                            <button
+                                                                                onClick={() => handleStatusUpdate(entry._id, 'Pending')}
+                                                                                className="w-10 h-10 rounded-full border border-blue-400 bg-blue-50 flex items-center justify-center text-blue-600 hover:bg-blue-100 transition-colors shadow-sm" title="Verify & Send to Client">
+                                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                                                                             </button>
                                                                         )}
 
@@ -819,6 +831,10 @@ const Dashboard: React.FC = () => {
                                 <svg className="w-14 h-14 text-green-500 mx-auto drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
+                            ) : pendingStatusUpdate.status === 'Pending' ? (
+                                <svg className="w-14 h-14 text-blue-500 mx-auto drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                </svg>
                             ) : (
                                 <svg width="60" height="60" viewBox="0 0 24 24" fill="none" className="text-red-500 mx-auto drop-shadow-sm">
                                     <path d="M12 4.16875L2.34375 20.8313H21.6562L12 4.16875Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -828,14 +844,20 @@ const Dashboard: React.FC = () => {
                             )}
                         </div>
                         <h3 className="text-[22px] font-bold text-gray-800 mb-2">
-                            {pendingStatusUpdate.status === 'Approved' || pendingStatusUpdate.status === 'Client Approved' ? 'Approve Entry' : 'Reject Entry'}
+                            {pendingStatusUpdate.status === 'Approved' || pendingStatusUpdate.status === 'Client Approved' ? 'Approve Entry' : pendingStatusUpdate.status === 'Pending' ? 'Send to Client' : 'Reject Entry'}
                         </h3>
                         <p className="text-gray-600 text-[15px] mb-4 font-medium">
-                            You're going to {pendingStatusUpdate.status === 'Approved' || pendingStatusUpdate.status === 'Client Approved' ? 'approve' : 'reject'} this "Entry"
+                            You're going to {pendingStatusUpdate.status === 'Approved' || pendingStatusUpdate.status === 'Client Approved' ? 'approve' : pendingStatusUpdate.status === 'Pending' ? 'send' : 'reject'} this "Entry"
                         </p>
-                        <p className="text-red-500 text-sm font-bold mb-8">
-                            Note: Once you do this, all further actions and feedback for this iteration will be permanently disabled.
-                        </p>
+                        {pendingStatusUpdate.status !== 'Pending' ? (
+                            <p className="text-red-500 text-sm font-bold mb-8">
+                                Note: Once you do this, all further actions and feedback for this iteration will be permanently disabled.
+                            </p>
+                        ) : (
+                            <p className="text-blue-500 text-sm font-bold mb-8">
+                                Note: This will verify the entry and make it visible to the client.
+                            </p>
+                        )}
                         <div className="flex gap-3 w-full">
                             <button
                                 onClick={cancelStatusUpdate}

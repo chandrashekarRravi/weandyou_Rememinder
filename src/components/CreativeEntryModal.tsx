@@ -143,7 +143,7 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
             }
 
             // 2. Save or Update Entry
-            const payload = {
+            const payload: any = {
                 mediaId,
                 clientName: isChinmai ? 'Drafts' : clientName,
                 filePath: actualFilePath,
@@ -153,6 +153,14 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
                 username: entryId ? undefined : username, // don't override username if editing
                 ratio,
             };
+
+            if (!entryId) {
+                // Temporarily forcing all newly created entries into Internal Review
+                // so you can test the Bhuvan verify button easily!
+                payload.status = 'Internal Review';
+            }
+
+            console.log('Submitting Creative Entry Payload:', payload, 'User:', user);
 
             if (entryId) {
                 await api.put(`/api/creative-entries/${entryId}`, payload);

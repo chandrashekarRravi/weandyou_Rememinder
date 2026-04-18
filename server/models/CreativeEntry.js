@@ -20,7 +20,7 @@ const creativeEntrySchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Client Approved', 'Approved', 'Rejected'], // Added 'Client Approved'
+        enum: ['Pending', 'Client Approved', 'Approved', 'Rejected', 'Internal Review'], // Added 'Client Approved' and 'Internal Review'
         default: 'Pending'
     },
     date: { type: Date, required: true, default: Date.now, index: true },
