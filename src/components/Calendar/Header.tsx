@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { FaUserCircle } from 'react-icons/fa';
 import CreativeEntryModal from '../CreativeEntryModal';
 import { useEvents } from '../../hooks/useEvents';
 import { useCreativeEntries } from '../../hooks/useCreativeEntries';
