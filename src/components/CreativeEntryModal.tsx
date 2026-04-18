@@ -181,7 +181,7 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
             <div className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
 
                 {/* Header */}
@@ -195,10 +195,11 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
                 </div>
 
                 {/* Body - 2 Column Layout */}
-                <div className="p-6 overflow-y-auto flex-1 min-h-0 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="overflow-y-auto flex-1 min-h-0">
+                    <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-6 pb-8">
 
-                    {/* Left Column: Media & Caption */}
-                    <div className="space-y-4">
+                        {/* Left Column: Media & Caption */}
+                        <div className="space-y-4">
                         {error && (
                             <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg border border-red-100 md:col-span-2">
                                 {error}
@@ -353,6 +354,7 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
                         </div>
                     )}
 
+                    </div>
                 </div>
 
                 {/* Footer */}
