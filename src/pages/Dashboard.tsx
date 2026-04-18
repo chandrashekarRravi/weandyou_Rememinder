@@ -348,25 +348,7 @@ const Dashboard: React.FC = () => {
                                         return (
                                             <div key={clientName} className="text-left relative py- border-b border-gray-100 last:border-b-0">
 
-                                                {/* Iteration Carousel Arrows — overlaid on sides of card */}
-                                                {currentMediaGroup.length > 1 && (
-                                                    <>
-                                                        <button
-                                                            onClick={() => { if (iterIdx > 0) updateViewState(clientName, { iterationIndex: iterIdx - 1 }, -1); }}
-                                                            disabled={iterIdx === 0}
-                                                            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white border border-gray-200 rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-indigo-600 hover:border-indigo-300 disabled:opacity-30 disabled:hover:text-gray-600 disabled:hover:border-gray-200 z-20"
-                                                        >
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-                                                        </button>
-                                                        <button
-                                                            onClick={() => { if (iterIdx < maxIterationIndexes[mediaIdx] - 1) updateViewState(clientName, { iterationIndex: iterIdx + 1 }, 1); }}
-                                                            disabled={iterIdx === maxIterationIndexes[mediaIdx] - 1}
-                                                            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white border border-gray-200 rounded-full shadow-md flex items-center justify-center text-gray-600 hover:text-indigo-600 hover:border-indigo-300 disabled:opacity-30 disabled:hover:text-gray-600 disabled:hover:border-gray-200 z-20"
-                                                        >
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                                                        </button>
-                                                    </>
-                                                )}
+                                                {/* Iteration Carousel Arrows removed from main card container */}
 
                                                 {/* Top Section */}
                                                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border-b rounded-xl border-gray-300 bg-gray-100">
@@ -397,7 +379,7 @@ const Dashboard: React.FC = () => {
                                                             {new Date(entry.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} {' '}
                                                             {new Date(entry.createdAt).toLocaleDateString()}
                                                         </span>
-                                                        {(user?.username?.toLowerCase() === 'bhuvan@team' || user?.role === 'Admin') && (
+                                                        {(user?.username?.toLowerCase().includes('bhuvan') || user?.role === 'Admin') && (
                                                             <button
                                                                 onClick={() => {
                                                                     setModalInitialData({
@@ -476,21 +458,42 @@ const Dashboard: React.FC = () => {
                                                                 <div className="flex flex-col lg:flex-row gap-6">
                                                                     {/* Left Column: Image & Caption */}
                                                                     <div className="flex-none w-full lg:w-[30%] space-y-4">
-                                                                        <div className="w-full bg-gray-100 rounded-lg flex border-2 border
-                                                                         overflow-hidden items-center justify-center relative group ">
+                                                                        <div className="w-full bg-gray-50 rounded-xl flex border border-gray-200 px-10 py-4 sm:px-12 sm:py-6 overflow-hidden items-center justify-center relative group shadow-inner">
                                                                             {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
                                                                                 <video src={entry.filePath} controls className="w-full h-auto block" />
                                                                             ) : (
                                                                                 <img
                                                                                     src={entry.filePath}
                                                                                     alt="Creative"
-                                                                                    className="w-full h-auto block cursor-pointer transition-transform hover:scale-[1.02]"
+                                                                                    className="w-full h-auto block cursor-pointer transition-transform hover:scale-[1.02] rounded-md shadow-md ring-1 ring-gray-200/50"
                                                                                     onClick={() => setSelectedImage(entry.filePath)}
                                                                                 />
                                                                             )}
                                                                             <div className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded pointer-events-none">
                                                                                 {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? 'Video' : 'Image'}
                                                                             </div>
+                                                                            
+                                                                            {/* Iteration Arrows - Centered physically on the image */}
+                                                                            {currentMediaGroup.length > 1 && (
+                                                                                <>
+                                                                                    <button
+                                                                                        onClick={(e) => { e.stopPropagation(); if (iterIdx > 0) updateViewState(clientName, { iterationIndex: iterIdx - 1 }, -1); }}
+                                                                                        disabled={iterIdx === 0}
+                                                                                        className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-white/90 border border-gray-200 rounded-full shadow-lg flex items-center justify-center text-gray-700 hover:text-indigo-600 hover:bg-white disabled:opacity-0 disabled:pointer-events-none z-20 transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                                                                                        title="Previous Iteration"
+                                                                                    >
+                                                                                        <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+                                                                                    </button>
+                                                                                    <button
+                                                                                        onClick={(e) => { e.stopPropagation(); if (iterIdx < maxIterationIndexes[mediaIdx] - 1) updateViewState(clientName, { iterationIndex: iterIdx + 1 }, 1); }}
+                                                                                        disabled={iterIdx === maxIterationIndexes[mediaIdx] - 1}
+                                                                                        className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 bg-white/90 border border-gray-200 rounded-full shadow-lg flex items-center justify-center text-gray-700 hover:text-indigo-600 hover:bg-white disabled:opacity-0 disabled:pointer-events-none z-20 transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                                                                                        title="Next Iteration"
+                                                                                    >
+                                                                                        <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                                                                                    </button>
+                                                                                </>
+                                                                            )}
                                                                         </div>
                                                                         <div className="border border-gray-200 rounded-lg p-4 min-h-[10px] bg-gray-50">
                                                                             <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Captions</p>
@@ -756,29 +759,29 @@ const Dashboard: React.FC = () => {
                                                 </div>
 
                                                 {/* Footer Strip - Media Pagination (different mediaIds) + Iteration Dots */}
-                                                <div className="px-6 pb-5 pt-2 border-t border-gray-200 rounded-xl bg-gray-100">
-                                                    <div className="flex items-center justify-between max-w-2xl mx-auto gap-4">
+                                                <div className="px-2 sm:px-6 pb-5 pt-2 border-t border-gray-200 rounded-xl bg-gray-100">
+                                                    <div className="flex items-center justify-between max-w-2xl mx-auto gap-2 sm:gap-4">
 
                                                         {/* Media Prev — navigate different mediaIds */}
                                                         {mediaGroups.length > 1 ? (
                                                             <button
                                                                 onClick={() => updateViewState(clientName, { mediaIndex: Math.max(0, mediaIdx - 1), iterationIndex: -1 })}
                                                                 disabled={mediaIdx === 0}
-                                                                className="w-8 h-8 rounded-full border border-gray-300 bg-white flex items-center justify-center text-gray-600 hover:text-indigo-600 hover:border-indigo-300 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm transition-colors"
+                                                                className="w-8 h-8 shrink-0 rounded-full border border-gray-300 bg-white flex items-center justify-center text-gray-600 hover:text-indigo-600 hover:border-indigo-300 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm transition-colors"
                                                                 title="Previous Media ID"
                                                             >
                                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                                                             </button>
-                                                        ) : <div className="w-8" />}
+                                                        ) : <div className="w-8 shrink-0" />}
 
                                                         {/* Center: Iteration dots */}
-                                                        <div className="flex items-center gap-2">
+                                                        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
                                                             {currentMediaGroup.map((_, i) => (
                                                                 <button
                                                                     key={i}
                                                                     onClick={() => updateViewState(clientName, { iterationIndex: i }, i > iterIdx ? 1 : -1)}
                                                                     title={`Iteration ${i + 1}`}
-                                                                    className={`rounded-full border transition-all ${i === iterIdx
+                                                                    className={`rounded-full border transition-all shrink-0 ${i === iterIdx
                                                                         ? 'w-7 h-7 border-indigo-400 bg-indigo-600 text-white text-xs font-bold shadow-sm'
                                                                         : 'w-6 h-6 border-gray-300 bg-white text-gray-500 text-xs hover:border-indigo-300 hover:text-indigo-600'
                                                                         }`}
@@ -787,7 +790,7 @@ const Dashboard: React.FC = () => {
                                                                 </button>
                                                             ))}
                                                             {mediaGroups.length > 1 && (
-                                                                <span className="ml-2 text-[10px] text-gray-400 font-medium">
+                                                                <span className="ml-1 sm:ml-2 text-[9px] sm:text-[10px] text-gray-400 font-medium whitespace-nowrap">
                                                                     Media {mediaIdx + 1}/{mediaGroups.length}
                                                                 </span>
                                                             )}
@@ -798,12 +801,12 @@ const Dashboard: React.FC = () => {
                                                             <button
                                                                 onClick={() => updateViewState(clientName, { mediaIndex: Math.min(maxMediaIndex, mediaIdx + 1), iterationIndex: -1 })}
                                                                 disabled={mediaIdx === maxMediaIndex}
-                                                                className="w-8 h-8 rounded-full border border-gray-300 bg-white flex items-center justify-center text-gray-600 hover:text-indigo-600 hover:border-indigo-300 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm transition-colors"
+                                                                className="w-8 h-8 shrink-0 rounded-full border border-gray-300 bg-white flex items-center justify-center text-gray-600 hover:text-indigo-600 hover:border-indigo-300 disabled:opacity-30 disabled:cursor-not-allowed shadow-sm transition-colors"
                                                                 title="Next Media ID"
                                                             >
                                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                                                             </button>
-                                                        ) : <div className="w-8" />}
+                                                        ) : <div className="w-8 shrink-0" />}
                                                     </div>
                                                 </div>
 
