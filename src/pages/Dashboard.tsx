@@ -432,7 +432,7 @@ const Dashboard: React.FC = () => {
                                                             exit="exit"
                                                             transition={{ type: 'tween', ease: 'easeInOut', duration: 0.3 }}
                                                         >
-                                                            <div className="p-6 xl:px-12">
+                                                            <div className="p-4 sm:p-6 xl:px-12 bg-white sm:bg-transparent rounded-xl border border-gray-100 sm:border-none shadow-sm sm:shadow-none">
                                                                 <div className="flex flex-col gap-1 mb-3">
                                                                     <div className="flex gap-2">
                                                                         {['1:1', '4:5', '9:16', '16:9'].map(r => (
@@ -475,7 +475,7 @@ const Dashboard: React.FC = () => {
 
                                                                 <div className="flex flex-col lg:flex-row gap-6">
                                                                     {/* Left Column: Image & Caption */}
-                                                                    <div className="flex-none lg:w-[30%] space-y-4">
+                                                                    <div className="flex-none w-full lg:w-[30%] space-y-4">
                                                                         <div className="w-full bg-gray-100 rounded-lg flex border-2 border
                                                                          overflow-hidden items-center justify-center relative group ">
                                                                             {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
@@ -499,7 +499,7 @@ const Dashboard: React.FC = () => {
                                                                     </div>
 
                                                                     {/* Middle Column: Actions */}
-                                                                    <div className="flex lg:flex-col items-center justify-center gap-4 lg:py-8 lg:px-2 relative">
+                                                                    <div className="flex lg:flex-col flex-wrap items-center justify-center gap-4 lg:py-8 lg:px-2 relative">
                                                                         {/* Client Action */}
                                                                         {user?.role === 'Client' && (!entry.status || entry.status === 'Pending') && (
                                                                             <button
@@ -510,7 +510,7 @@ const Dashboard: React.FC = () => {
                                                                         )}
 
                                                                         {/* Bhuvan Verify Action */}
-                                                                        {(user?.username?.toLowerCase() === 'bhuvan@team' || user?.role === 'Admin') && entry.status === 'Internal Review' && (
+                                                                        {(user?.username?.toLowerCase().includes('bhuvan') || user?.role === 'Admin') && entry.status === 'Internal Review' && (
                                                                             <button
                                                                                 onClick={() => handleStatusUpdate(entry._id, 'Pending')}
                                                                                 className="w-10 h-10 rounded-full border border-blue-400 bg-blue-50 flex items-center justify-center text-blue-600 hover:bg-blue-100 transition-colors shadow-sm" title="Verify & Send to Client">
@@ -583,7 +583,7 @@ const Dashboard: React.FC = () => {
                                                                     {/* Right Column: Feedback Box & Plus Button */}
                                                                     <div className="flex-1 flex gap-4">
                                                                         {/* Feedback Box */}
-                                                                        <div className="w-full lg:max-w-[350px] flex-1 rounded-lg flex flex-col overflow-hidden bg-white h-[400px]">
+                                                                        <div className={`w-full lg:max-w-[350px] flex-1 rounded-lg flex flex-col overflow-hidden bg-white border border-gray-100 lg:border-none shadow-sm lg:shadow-none transition-all duration-300 ease-in-out ${showFeedbackInputs[entry._id] || sortedFeedbacks.length > 0 ? 'h-[400px]' : 'h-min lg:h-[400px]'}`}>
                                                                             <div className="bg-gray-50 p-3 border-b border-gray-200 flex justify-between items-center">
                                                                                 <div className="flex items-center gap-2">
                                                                                     <h4 className="text-sm font-bold text-gray-700 text-left">Feedback of Iteration {iterIdx + 1}</h4>
@@ -618,7 +618,7 @@ const Dashboard: React.FC = () => {
                                                                                     </span>
                                                                                 )}
                                                                             </div>
-                                                                            <div className="flex-1 p-4 overflow-y-auto space-y-8 flex-col-reverse">
+                                                                            <div className={`flex-1 p-4 overflow-y-auto space-y-8 flex-col-reverse ${!showFeedbackInputs[entry._id] && sortedFeedbacks.length === 0 ? 'hidden lg:flex' : 'flex'}`}>
                                                                                 {feedbacksLoading ? (
                                                                                     <div className="text-center text-gray-400 text-sm mt-10">Loading comments...</div>
                                                                                 ) : sortedFeedbacks.length === 0 ? (
