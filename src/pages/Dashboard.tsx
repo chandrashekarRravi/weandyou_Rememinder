@@ -12,7 +12,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 const Dashboard: React.FC = () => {
     const { currentDate } = useCalendarContext();
-    const { creativeEntries, loading, updateEntry } = useCreativeEntries(currentDate, { fetchAll: true });
+    const { creativeEntries, loading, updateEntry, deleteEntry } = useCreativeEntries(currentDate, { fetchAll: true });
     const { user } = useAuth();
     const { events } = useEvents(currentDate, { fetchAll: true });
 
@@ -47,6 +47,17 @@ const Dashboard: React.FC = () => {
 
     const cancelStatusUpdate = () => {
         setPendingStatusUpdate(null);
+    };
+
+    const handleDeleteEntry = async (id: string) => {
+        if (window.confirm("Are you sure you want to delete this rejected entry? This action cannot be undone.")) {
+            try {
+                await deleteEntry(id);
+            } catch (error) {
+                console.error("Failed to delete entry:", error);
+                alert("Failed to delete entry. Please try again.");
+            }
+        }
     };
 
     const [activeFeedbackId, setActiveFeedbackId] = useState<string | null>(null);
@@ -509,6 +520,15 @@ const Dashboard: React.FC = () => {
                                                                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
                                                                                 </button>
                                                                             </>
+                                                                        )}
+
+                                                                        {/* Delete Option for Admin on Rejected Entries */}
+                                                                        {user?.role === 'Admin' && entry.status === 'Rejected' && (
+                                                                            <button
+                                                                                onClick={() => handleDeleteEntry(entry._id)}
+                                                                                className="w-10 h-10 rounded-full border border-red-400 bg-red-50 flex items-center justify-center text-red-600 hover:bg-red-100 transition-colors shadow-sm" title="Delete Entry">
+                                                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                                            </button>
                                                                         )}
 
                                                                         {/* Plus Button - Add New Iteration */}

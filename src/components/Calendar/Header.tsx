@@ -71,7 +71,7 @@ const Header: React.FC<HeaderProps> = () => {
             <div className="flex items-center gap-8 md:gap-16">
                 {/* Logo */}
                 <div className="flex items-center">
-                    <img src="/WE&YOU-LOGO.png" alt="WE & You" className="h-16 md:h-16 w-auto object-contain" />
+                    <img src="/IMG_6540.PNG" alt="WE & You" className="h-16 md:h-16 w-auto rounded-full object-contain" />
                 </div>
 
                 {/* Navigation */}
