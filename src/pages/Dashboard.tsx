@@ -251,7 +251,7 @@ const Dashboard: React.FC = () => {
                         </button>
                     </div>
                     {/* Stats */}
-                    <div className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-hide">
+                    <div className="flex items-center space-x-1.5 overflow-x-auto scrollbar-hide">
                         <div className="flex flex-col items-center px-4 py-2 bg-white rounded-lg border border-gray-100 min-w-[70px] shadow-sm">
                             <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Total</span>
                             <span className="text-sm font-bold text-gray-800">{total}</span>
@@ -280,10 +280,10 @@ const Dashboard: React.FC = () => {
                     <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
 
                         {/* Filters Header */}
-                        <div className="p-4 border-b border-gray-100 bg-white flex flex-col md:flex-row items-start md:items-center gap-4">
+                        <div className="pl-4 pr-2 pt-2 border-b border-gray-100 bg-white flex flex-col md:flex-row items-start md:items-center gap-4">
                             <h3 className="text-lg font-bold text-gray-800 md:mr-4">Creative Entries</h3>
 
-                            <div className={`grid ${user?.role !== 'Client' ? 'grid-cols-3' : 'grid-cols-2'} gap-2 w-full md:flex md:w-auto md:items-center md:gap-4 md:flex-1`}>
+                            <div className={`grid ${user?.role !== 'Client' ? 'grid-cols-3' : 'grid-cols-2'} gap-1 w-full md:flex md:w-auto md:items-center md:gap-4 md:flex-1`}>
                                 {user?.role !== 'Client' && (
                                     <>
                                         <div className="min-w-0">
@@ -346,7 +346,7 @@ const Dashboard: React.FC = () => {
                                         const entry = currentMediaGroup[iterIdx];
 
                                         return (
-                                            <div key={clientName} className="text-left relative py-4 border-b border-gray-100 last:border-b-0">
+                                            <div key={clientName} className="text-left relative py- border-b border-gray-100 last:border-b-0">
 
                                                 {/* Iteration Carousel Arrows — overlaid on sides of card */}
                                                 {currentMediaGroup.length > 1 && (
@@ -369,7 +369,7 @@ const Dashboard: React.FC = () => {
                                                 )}
 
                                                 {/* Top Section */}
-                                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border-b rounded-xl border-gray-300 bg-gray-100">
+                                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 border-b rounded-xl border-gray-300 bg-gray-100">
                                                     <div className="flex flex-wrap items-center gap-6 xl:pl-8">
                                                         <div className="flex items-center gap-2">
                                                             <span className="text-sm text-gray-500 font-medium">Media ID:</span>

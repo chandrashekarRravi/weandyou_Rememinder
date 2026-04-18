@@ -137,7 +137,7 @@ const Header: React.FC<HeaderProps> = () => {
                 <div className="relative" ref={ref}>
                     <button
                         onClick={() => setOpen(v => !v)}
-                        className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:shadow hover:bg-gray-200 transition-all"
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-gray-600 hover:shadow hover:bg-gray-200 transition-all"
                         aria-label="User menu"
                     >
                         <i className="fa-jelly-duo fa-regular fa-circle-user text-2xl"></i>
