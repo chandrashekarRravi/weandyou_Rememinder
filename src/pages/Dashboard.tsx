@@ -375,9 +375,9 @@ const Dashboard: React.FC = () => {
                                                     </span>
                                                     <div className="text-xs text-gray-500 font-medium mt-2 sm:mt-0 flex flex-row items-center justify-end gap-6 mr-4 sm:mr-0 xl:pr-8">
                                                         <span>{entry.username || 'Unknown'}</span>
-                                                        <span>
-                                                            {new Date(entry.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} {' '}
-                                                            {new Date(entry.createdAt).toLocaleDateString()}
+                                                        <span className='flex flex-col text-right'>
+                                                            <span className="text-gray-400 font-normal">Created: {new Date(entry.createdAt).toLocaleDateString()} {new Date(entry.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                            <span className="text-indigo-600 font-bold">Posting Date: {new Date(entry.date).toLocaleDateString()}</span>
                                                         </span>
                                                         {(user?.username?.toLowerCase().includes('bhuvan') || user?.role === 'Admin') && (
                                                             <button
@@ -472,7 +472,7 @@ const Dashboard: React.FC = () => {
                                                                             <div className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded pointer-events-none">
                                                                                 {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? 'Video' : 'Image'}
                                                                             </div>
-                                                                            
+
                                                                             {/* Iteration Arrows - Centered physically on the image */}
                                                                             {currentMediaGroup.length > 1 && (
                                                                                 <>

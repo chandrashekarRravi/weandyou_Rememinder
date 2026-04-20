@@ -76,7 +76,7 @@ const Header: React.FC<HeaderProps> = () => {
 
                 {/* Navigation */}
                 <nav className="hidden md:flex items-center space-x-8">
-                    {PAGES.filter(p => user?.role !== 'Client' || p.label === 'Dashboard').map(p => (
+                    {PAGES.map(p => (
                         <NavLink
                             key={p.to}
                             to={p.to}

@@ -20,18 +20,16 @@ const MobileBottomNav: React.FC = () => {
                     <span className="text-[10px] font-medium leading-none">Dashboard</span>
                 </NavLink>
 
-                {user?.role !== 'Client' && (
-                    <NavLink
-                        to="/reminder"
-                        className={({ isActive }) =>
-                            `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-600'
-                            }`
-                        }
-                    >
-                        <FaCalendarAlt className="w-5 h-5 mb-1" />
-                        <span className="text-[10px] font-medium leading-none">Calendar</span>
-                    </NavLink>
-                )}
+                <NavLink
+                    to="/reminder"
+                    className={({ isActive }) =>
+                        `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${isActive ? 'text-indigo-600' : 'text-gray-400 hover:text-gray-600'
+                        }`
+                    }
+                >
+                    <FaCalendarAlt className="w-5 h-5 mb-1" />
+                    <span className="text-[10px] font-medium leading-none">Calendar</span>
+                </NavLink>
 
                 {user?.role === 'Admin' && (
                     <NavLink

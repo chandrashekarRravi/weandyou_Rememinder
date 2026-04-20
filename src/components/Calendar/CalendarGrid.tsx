@@ -5,6 +5,7 @@ import { useCreativeEntries } from '../../hooks/useCreativeEntries';
 import { useClients } from '../../hooks/useClients';
 import { isSameDay, parseISO } from 'date-fns';
 import { useCalendarContext } from '../../context/CalendarContext';
+import { useAuth } from '../../context/AuthContext';
 import FilterSelect from './FilterSelect';
 
 interface CalendarGridProps {
@@ -22,6 +23,7 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days }) => {
 
     // Context now provides objects for activeFilter and partial update setter
     const { activeFilter, setActiveFilter, setMonth } = useCalendarContext();
+    const { user } = useAuth();
 
     // Split days into weeks (chunks of 7)
     const weeks: Date[][] = [];
@@ -132,17 +134,21 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({ currentDate, days }) => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 w-full md:flex md:w-auto md:items-center md:gap-4 md:flex-1">
-                    <div className="min-w-0 md:flex-1 max-w-xs">
-                        <FilterSelect
-                            label="Client"
-                            value={activeFilter.client}
-                            options={clientOptions}
-                            onChange={(val) => setActiveFilter({ client: val })}
-                            placeholder="All"
-                        />
-                    </div>
+                    {user?.role !== 'Client' && (
+                        <>
+                            <div className="min-w-0 md:flex-1 max-w-xs">
+                                <FilterSelect
+                                    label="Client"
+                                    value={activeFilter.client}
+                                    options={clientOptions}
+                                    onChange={(val) => setActiveFilter({ client: val })}
+                                    placeholder="All"
+                                />
+                            </div>
 
-                    <div className="w-px h-8 bg-gray-100 mx-2 hidden md:block"></div>
+                            <div className="w-px h-8 bg-gray-100 mx-2 hidden md:block"></div>
+                        </>
+                    )}
 
                     <div className="min-w-0 md:flex-1 max-w-xs">
                         <FilterSelect

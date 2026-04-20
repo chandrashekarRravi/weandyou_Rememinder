@@ -17,9 +17,9 @@ const ProtectedRoute = () => {
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-  // Restrict Client role to Dashboard only
+  // Restrict Client role to allowed pages
   if (user?.role === 'Client') {
-    if (location.pathname !== '/' && location.pathname !== '/login') {
+    if (location.pathname !== '/' && location.pathname !== '/login' && location.pathname !== '/reminder' && !location.pathname.startsWith('/day/')) {
       return <Navigate to="/" replace />;
     }
   }
