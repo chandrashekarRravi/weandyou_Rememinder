@@ -5,6 +5,7 @@ import { useEvents } from '../../hooks/useEvents';
 import { useCreativeEntries } from '../../hooks/useCreativeEntries';
 import { useCalendarContext } from '../../context/CalendarContext';
 import { useAuth } from '../../context/AuthContext';
+import NotificationBell from '../Navigation/NotificationBell';
 
 interface HeaderProps { }
 
@@ -133,6 +134,8 @@ const Header: React.FC<HeaderProps> = () => {
                         New +
                     </button>
                 )}
+
+                <NotificationBell />
 
                 <div className="relative" ref={ref}>
                     <button

@@ -86,6 +86,34 @@ router.post('/logout', protect, (req, res) => {
     res.json({ message: 'Logged out successfully' });
 });
 
+// @desc    Save FCM Device Token
+// @route   POST /api/auth/device-token
+// @access  Private
+router.post('/device-token', protect, async (req, res) => {
+    try {
+        const { fcmToken } = req.body;
+        if (!fcmToken) {
+            return res.status(400).json({ message: 'FCM Token is required' });
+        }
+
+        const user = await User.findById(req.user._id);
+        if (user) {
+            if (!user.fcmTokens) {
+                user.fcmTokens = [];
+            }
+            if (!user.fcmTokens.includes(fcmToken)) {
+                user.fcmTokens.push(fcmToken);
+                await user.save();
+            }
+            res.json({ message: 'Device token saved successfully' });
+        } else {
+            res.status(404).json({ message: 'User not found' });
+        }
+    } catch (error) {
+        console.error('Save device token error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
 // @desc    Register a Team user
 // @route   POST /api/auth/team
 // @access  Private (Admin only)

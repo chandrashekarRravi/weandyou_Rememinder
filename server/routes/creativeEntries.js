@@ -15,6 +15,8 @@ router.post('/upload', protect, upload.single('file'), (req, res) => {
     res.json({ url });
 });
 
+import { notifyAdmin, notifyClientByUsername, notifyUserByUsername } from '../services/notificationService.js';
+
 // Create Creative Entry record
 router.post('/', protect, async (req, res) => {
     try {
@@ -25,6 +27,17 @@ router.post('/', protect, async (req, res) => {
         if (req.io) {
             req.io.emit('creativeEntryCreated', saved);
         }
+
+        // Notify Admin that a new entry was created (For Internal Review)
+        setImmediate(async () => {
+            const dateStr = new Date(saved.date).toISOString().split('T')[0];
+            const submitter = req.user?.username || 'Team Member';
+            await notifyAdmin(
+                `Internal Review Requested`, 
+                `For internal review is requested by ${submitter}.`,
+                `/day/${dateStr}`
+            );
+        });
 
         res.status(201).json(saved);
     } catch (err) {
@@ -64,6 +77,7 @@ router.get('/', protect, async (req, res) => {
 router.put('/:id', protect, async (req, res) => {
     try {
         const { id } = req.params;
+        const oldEntry = await CreativeEntry.findById(id);
         const updatedEntry = await CreativeEntry.findByIdAndUpdate(id, req.body, { new: true });
 
         if (!updatedEntry) {
@@ -72,6 +86,77 @@ router.put('/:id', protect, async (req, res) => {
 
         if (req.io) {
             req.io.emit('creativeEntryUpdated', updatedEntry);
+        }
+
+        // Notify if status has changed
+        if (oldEntry && oldEntry.status !== updatedEntry.status) {
+            setImmediate(async () => {
+                const dateStr = new Date(updatedEntry.date).toISOString().split('T')[0];
+                const link = `/day/${dateStr}`;
+                const status = updatedEntry.status;
+
+                const actionUser = req.user?.username || 'Someone';
+
+                if (status === 'Pending') {
+                    // It's sent to the client by the Admin
+                    await notifyClientByUsername(
+                        updatedEntry.clientName,
+                        'Entry Needs Review',
+                        `${actionUser} sent a creative entry for your approval.`,
+                        link
+                    );
+                    if (updatedEntry.username) {
+                        await notifyUserByUsername(
+                            updatedEntry.username,
+                            'Internally Approved',
+                            `Internal is accepted, wait for the client approval and we will notify you.`,
+                            link
+                        );
+                    }
+                } else if (status === 'Rejected') {
+                    await notifyAdmin(
+                        'Entry Rejected',
+                        `${actionUser} rejected the entry for ${updatedEntry.clientName}.`,
+                        link
+                    );
+                    if (updatedEntry.username) {
+                        await notifyUserByUsername(
+                            updatedEntry.username,
+                            'Entry Rejected',
+                            `${actionUser} rejected your entry.`,
+                            link
+                        );
+                    }
+                } else if (status === 'Approved' || status === 'Client Approved') {
+                    await notifyAdmin(
+                        'Entry Approved',
+                        `${actionUser} approved the entry for ${updatedEntry.clientName}.`,
+                        link
+                    );
+                    if (updatedEntry.username) {
+                        await notifyUserByUsername(
+                            updatedEntry.username,
+                            'Entry Approved',
+                            `${actionUser} approved your entry.`,
+                            link
+                        );
+                    }
+                } else if (status === 'Internal Review') {
+                    await notifyAdmin(
+                        'Internal Review Requested',
+                        `${actionUser} updated the entry for ${updatedEntry.clientName} and it needs review.`,
+                        link
+                    );
+                    if (updatedEntry.username) {
+                        await notifyUserByUsername(
+                            updatedEntry.username,
+                            'Internal Review Requested',
+                            `${actionUser} sent your entry for internal review by Admin.`,
+                            link
+                        );
+                    }
+                }
+            });
         }
 
         res.json(updatedEntry);

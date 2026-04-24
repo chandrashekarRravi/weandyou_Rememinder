@@ -19,7 +19,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['Admin', 'Team', 'Client'],
         default: 'Client',
-    }
+    },
+    fcmTokens: [{
+        type: String
+    }]
 }, { timestamps: true });
 
 // Pre-save hook to hash password before saving to DB

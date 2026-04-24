@@ -10,7 +10,8 @@ import DayDetails from './pages/DayDetails';
 import Login from './pages/Login';
 import Clients from './pages/Clients';
 import './index.css';
-
+import { Toaster } from 'react-hot-toast';
+import { useNotification } from './hooks/useNotification';
 const ProtectedRoute = () => {
   const { isAuthenticated, user } = useAuth();
   const location = useLocation();
@@ -27,12 +28,19 @@ const ProtectedRoute = () => {
   return <Outlet />;
 };
 
+const NotificationSetup = () => {
+  useNotification();
+  return null;
+};
+
 function App() {
   return (
     <AuthProvider>
       <SocketProvider>
         <CalendarProvider>
           <BrowserRouter>
+            <NotificationSetup />
+            <Toaster position="top-right" />
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route element={<ProtectedRoute />}>

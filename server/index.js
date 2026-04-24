@@ -26,6 +26,23 @@ const io = new Server(httpServer, {
     }
 });
 
+import { setIoInstance } from './services/notificationService.js';
+setIoInstance(io);
+
+io.on('connection', (socket) => {
+    console.log('New client connected', socket.id);
+    
+    // User joins a room based on their user ID when they connect
+    socket.on('join_room', (userId) => {
+        socket.join(userId);
+        console.log(`User ${userId} joined room ${userId}`);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Client disconnected', socket.id);
+    });
+});
+
 app.use(cors({
     origin: "*"
 }));
@@ -57,6 +74,10 @@ app.use('/api/iteration-feedbacks', iterationFeedbackRoutes);
 
 import clientRoutes from './routes/clients.js';
 app.use('/api/clients', clientRoutes);
+
+import notificationRoutes from './routes/notifications.js';
+app.use('/api/notifications', notificationRoutes);
+
 // Health check route for Render
 app.get('/', (req, res) => {
     res.status(200).json({ message: 'Backend API is running gracefully' });
