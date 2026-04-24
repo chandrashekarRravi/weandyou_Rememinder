@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
-import { FaVideo, FaImage } from 'react-icons/fa';
 
 interface MediaCarouselProps {
     filePaths: string[];
     mediaId?: string;
     onImageClick?: (url: string) => void;
     className?: string;
-    showArrowsOnHover?: boolean;
 }
 
-const MediaCarousel: React.FC<MediaCarouselProps> = ({ filePaths, mediaId = '', onImageClick, className = '', showArrowsOnHover = false }) => {
+const MediaCarousel: React.FC<MediaCarouselProps> = ({ filePaths, mediaId = '', onImageClick, className = '' }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [touchStart, setTouchStart] = useState<number | null>(null);
     const [touchEnd, setTouchEnd] = useState<number | null>(null);

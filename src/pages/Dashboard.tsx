@@ -463,7 +463,6 @@ const Dashboard: React.FC = () => {
                                                                                 filePaths={entry.filePaths?.length ? entry.filePaths : (entry.filePath ? [entry.filePath] : [])}
                                                                                 mediaId={entry.mediaId}
                                                                                 onImageClick={() => setSelectedImage(entry.filePaths?.[0] || entry.filePath)}
-                                                                                showArrowsOnHover={true}
                                                                                 className="rounded-md shadow-md ring-1 ring-gray-200/50"
                                                                             />
 
