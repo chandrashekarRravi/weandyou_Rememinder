@@ -15,6 +15,7 @@ interface CreativeEntryModalProps {
         category?: string;
         caption?: string;
         filePath?: string;
+        filePaths?: string[];
         ratio?: string;
         date?: string;
     };
@@ -24,8 +25,9 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
     const [entryId, setEntryId] = useState('');
     const [mediaId, setMediaId] = useState('');
     const [clientName, setClientName] = useState('');
-    const [file, setFile] = useState<File | null>(null);
-    const [preview, setPreview] = useState<string | null>(null);
+    const [files, setFiles] = useState<File[]>([]);
+    const [previews, setPreviews] = useState<string[]>([]);
+    const [currentPreviewIndex, setCurrentPreviewIndex] = useState(0);
     const [caption, setCaption] = useState('');
     const [category, setCategory] = useState('');
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
@@ -43,8 +45,14 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
             setCategory(initialData?.category || '');
             setCaption(initialData?.caption || '');
             setRatio(initialData?.ratio || '1:1');
-            setPreview(initialData?.filePath || null);
-            setFile(null);
+            
+            const initialPaths = initialData?.filePaths?.length 
+                ? initialData.filePaths 
+                : (initialData?.filePath ? [initialData.filePath] : []);
+            setPreviews(initialPaths);
+            setCurrentPreviewIndex(0);
+            setFiles([]);
+            
             setDate(initialData?.date ? new Date(initialData.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
             setError('');
         }
@@ -78,20 +86,23 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const f = e.target.files && e.target.files[0];
-        if (f) {
-            setFile(f);
-            const objectUrl = URL.createObjectURL(f);
-            setPreview(objectUrl);
+        const selectedFiles = Array.from(e.target.files || []);
+        if (selectedFiles.length > 0) {
+            setFiles(selectedFiles);
+            const objectUrls = selectedFiles.map(f => URL.createObjectURL(f));
+            setPreviews(objectUrls);
+            setCurrentPreviewIndex(0);
 
+            // Auto select ratio from first file
+            const f = selectedFiles[0];
             if (f.type.startsWith('image/')) {
                 const img = new Image();
                 img.onload = () => autoSelectRatio(img.naturalWidth / img.naturalHeight);
-                img.src = objectUrl;
+                img.src = objectUrls[0];
             } else if (f.type.startsWith('video/')) {
                 const vid = document.createElement('video');
                 vid.onloadedmetadata = () => autoSelectRatio(vid.videoWidth / vid.videoHeight);
-                vid.src = objectUrl;
+                vid.src = objectUrls[0];
             }
         }
     };
@@ -108,8 +119,8 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
             setError('Media ID must start with "img" or "vid"');
             return;
         }
-        if (!file && !preview) {
-            setError('Please upload a file');
+        if (files.length === 0 && previews.length === 0) {
+            setError('Please upload at least one file');
             return;
         }
 
@@ -125,28 +136,33 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
 
         setUploading(true);
         try {
-            let actualFilePath = preview;
-            // 1. Upload File if a new one is selected
-            if (file) {
-                const fd = new FormData();
-                fd.append('file', file);
-                const uploadRes = await api.post('/api/creative-entries/upload', fd, {
-                    headers: { 'Content-Type': 'multipart/form-data' },
-                    onUploadProgress: (progressEvent) => {
-                        if (progressEvent.total) {
-                            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                            setUploadProgress(percentCompleted);
+            let actualFilePaths = [...previews];
+            // 1. Upload Files if new ones are selected
+            if (files.length > 0) {
+                actualFilePaths = [];
+                for (let i = 0; i < files.length; i++) {
+                    const fd = new FormData();
+                    fd.append('file', files[i]);
+                    const uploadRes = await api.post('/api/creative-entries/upload', fd, {
+                        headers: { 'Content-Type': 'multipart/form-data' },
+                        onUploadProgress: (progressEvent) => {
+                            if (progressEvent.total) {
+                                const fileProgress = (progressEvent.loaded / progressEvent.total) * 100;
+                                const overallProgress = Math.round(((i * 100) + fileProgress) / files.length);
+                                setUploadProgress(overallProgress);
+                            }
                         }
-                    }
-                });
-                actualFilePath = uploadRes.data.url;
+                    });
+                    actualFilePaths.push(uploadRes.data.url);
+                }
             }
 
             // 2. Save or Update Entry
             const payload: any = {
                 mediaId,
                 clientName: isChinmai ? 'Drafts' : clientName,
-                filePath: actualFilePath,
+                filePath: actualFilePaths[0],
+                filePaths: actualFilePaths,
                 caption: isChinmai ? '' : caption,
                 category: isChinmai ? 'Other' : category,
                 date: isChinmai ? new Date().toISOString() : date,
@@ -174,8 +190,9 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
             setEntryId('');
             setMediaId('');
             setClientName('');
-            setFile(null);
-            setPreview(null);
+            setFiles([]);
+            setPreviews([]);
+            setCurrentPreviewIndex(0);
             setCaption('');
             setCategory('Other');
             setRatio('1:1');
@@ -253,11 +270,11 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Upload File <span className="text-red-500">*</span></label>
-                            <div className={`border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center hover:bg-gray-50 transition-colors relative w-full ${!preview ? 'aspect-square p-6' : 'overflow-hidden mx-auto'}`}
-                                 style={preview ? { aspectRatio: ratio.replace(':', '/'), maxHeight: '45vh', maxWidth: '100%' } : {}}>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Upload File(s) <span className="text-red-500">*</span></label>
+                            <div className={`border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center hover:bg-gray-50 transition-colors relative w-full ${previews.length === 0 ? 'aspect-square p-6' : 'overflow-hidden mx-auto'}`}
+                                 style={previews.length > 0 ? { aspectRatio: ratio.replace(':', '/'), maxHeight: '45vh', maxWidth: '100%' } : {}}>
                                 
-                                {uploading && file && (
+                                {uploading && files.length > 0 && (
                                     <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center z-50 transition-opacity">
                                         <div className="w-16 h-16 border-4 border-gray-600 border-t-indigo-500 rounded-full animate-spin mb-4"></div>
                                         <div className="text-white text-3xl font-bold drop-shadow-md">{uploadProgress}%</div>
@@ -268,33 +285,69 @@ const CreativeEntryModal: React.FC<CreativeEntryModalProps> = ({ isOpen, onClose
                                     </div>
                                 )}
 
-                                {!preview ? (
+                                {previews.length === 0 ? (
                                     <>
                                         <FaCloudUploadAlt className="text-4xl text-gray-400 mb-2" />
-                                        <p className="text-sm text-gray-500 text-center">Click to upload image or video</p>
+                                        <p className="text-sm text-gray-500 text-center">Click to upload image(s) or video(s)</p>
                                     </>
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-black relative z-10">
-                                        {file?.type.startsWith('video') || (preview && preview.match(/\.(mp4|webm|ogg)$/)) ? (
-                                            <video src={preview} controls className="w-full h-full object-contain block" />
+                                    <div className="w-full h-full flex items-center justify-center bg-black relative z-10 group">
+                                        {(files[currentPreviewIndex]?.type.startsWith('video') || (previews[currentPreviewIndex] && previews[currentPreviewIndex].match(/\.(mp4|webm|ogg)$/))) ? (
+                                            <video src={previews[currentPreviewIndex]} controls className="w-full h-full object-contain block" />
                                         ) : (
-                                            <img src={preview} alt="Preview" className="w-full h-full object-contain block" />
+                                            <img src={previews[currentPreviewIndex]} alt="Preview" className="w-full h-full object-contain block" />
                                         )}
-                                        {/* Optional button to click for a new file later */}
-                                        <div className="absolute top-4 right-4 flex gap-2">
-                                            <div className="bg-black/60 text-white text-xs px-2 py-1 rounded select-none cursor-pointer hover:bg-black/80 flex items-center gap-1 transition-colors">
+                                        
+                                        {/* Carousel Controls */}
+                                        {previews.length > 1 && (
+                                            <>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => { e.preventDefault(); setCurrentPreviewIndex(prev => prev > 0 ? prev - 1 : previews.length - 1); }}
+                                                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                                >
+                                                    &larr;
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => { e.preventDefault(); setCurrentPreviewIndex(prev => prev < previews.length - 1 ? prev + 1 : 0); }}
+                                                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                                >
+                                                    &rarr;
+                                                </button>
+                                                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 z-20">
+                                                    {previews.map((_, i) => (
+                                                        <div key={i} className={`h-1.5 rounded-full transition-all ${i === currentPreviewIndex ? 'w-4 bg-white' : 'w-1.5 bg-white/50'}`} />
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+
+                                        <div className="absolute top-4 right-4 flex gap-2 z-40">
+                                            <label className="bg-black/60 text-white text-xs px-2 py-1 rounded select-none cursor-pointer hover:bg-black/80 flex items-center gap-1 transition-colors relative overflow-hidden">
                                                 <FaCloudUploadAlt /> Change
-                                            </div>
+                                                <input
+                                                    type="file"
+                                                    multiple
+                                                    accept="image/*,video/*"
+                                                    onChange={handleFileChange}
+                                                    disabled={uploading}
+                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                                                />
+                                            </label>
                                         </div>
                                     </div>
                                 )}
-                                <input
-                                    type="file"
-                                    accept="image/*,video/*"
-                                    onChange={handleFileChange}
-                                    disabled={uploading}
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20 disabled:cursor-not-allowed"
-                                />
+                                {previews.length === 0 && (
+                                    <input
+                                        type="file"
+                                        multiple
+                                        accept="image/*,video/*"
+                                        onChange={handleFileChange}
+                                        disabled={uploading}
+                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-30 disabled:cursor-not-allowed"
+                                    />
+                                )}
                             </div>
                         </div>
 

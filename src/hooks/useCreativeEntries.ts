@@ -7,6 +7,7 @@ export interface CreativeEntryType {
     _id: string;
     mediaId: string;
     filePath: string;
+    filePaths?: string[];
     caption?: string;
     category?: string;
     date: string; // Posting Date

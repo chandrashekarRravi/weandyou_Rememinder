@@ -185,15 +185,20 @@ const DayDetails: React.FC = () => {
                                             {dayCreativeEntries.map(entry => (
                                                 <div key={entry._id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex gap-4 hover:shadow-md transition-shadow">
                                                     {/* Preview */}
-                                                    <div className="w-32 h-24 bg-gray-100 rounded-lgflex-shrink-0 overflow-hidden relative group cursor-pointer" onClick={() => window.open(entry.filePath, '_blank')}>
-                                                        {entry.mediaId.startsWith('vid') || entry.filePath.match(/\.(mp4|webm|ogg)$/i) ? (
-                                                            <video src={entry.filePath} className="w-full h-full object-cover" />
+                                                    <div className="w-32 h-24 bg-gray-100 rounded-lg flex-shrink-0 overflow-hidden relative group cursor-pointer" onClick={() => window.open(entry.filePaths?.[0] || entry.filePath, '_blank')}>
+                                                        {entry.mediaId.startsWith('vid') || (entry.filePaths?.[0] || entry.filePath)?.match(/\.(mp4|webm|ogg)$/i) ? (
+                                                            <video src={entry.filePaths?.[0] || entry.filePath} className="w-full h-full object-cover" />
                                                         ) : (
-                                                            <img src={entry.filePath} alt="Preview" className="w-full h-full object-cover" />
+                                                            <img src={entry.filePaths?.[0] || entry.filePath} alt="Preview" className="w-full h-full object-cover" />
                                                         )}
                                                         <div className="absolute inset-0 bg-black/opacity-0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                                                             {entry.mediaId.startsWith('vid') ? <FaVideo className="text-white drop-shadow-md" /> : <FaImage className="text-white drop-shadow-md" />}
                                                         </div>
+                                                        {entry.filePaths && entry.filePaths.length > 1 && (
+                                                            <div className="absolute top-1 right-1 bg-black/70 text-white text-[9px] px-1.5 py-0.5 rounded-sm font-bold shadow-sm">
+                                                                1/{entry.filePaths.length}
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     {/* Content */}

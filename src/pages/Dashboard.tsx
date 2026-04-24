@@ -7,8 +7,8 @@ import { useAuth } from '../context/AuthContext';
 import { useIterationFeedback } from '../hooks/useIterationFeedback';
 import FilterSelect from '../components/Calendar/FilterSelect';
 import CreativeEntryModal from '../components/CreativeEntryModal';
+import MediaCarousel from '../components/MediaCarousel';
 import { AnimatePresence, motion } from 'framer-motion';
-// import { FaRegComment } from 'react-icons/fa';
 
 const Dashboard: React.FC = () => {
     const { currentDate } = useCalendarContext();
@@ -459,19 +459,13 @@ const Dashboard: React.FC = () => {
                                                                     {/* Left Column: Image & Caption */}
                                                                     <div className="flex-none w-full lg:w-[30%] space-y-4">
                                                                         <div className="w-full bg-gray-50 rounded-xl flex border border-gray-200 px-10 py-4 sm:px-12 sm:py-6 overflow-hidden items-center justify-center relative group shadow-inner">
-                                                                            {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? (
-                                                                                <video src={entry.filePath} controls className="w-full h-auto block" />
-                                                                            ) : (
-                                                                                <img
-                                                                                    src={entry.filePath}
-                                                                                    alt="Creative"
-                                                                                    className="w-full h-auto block cursor-pointer transition-transform hover:scale-[1.02] rounded-md shadow-md ring-1 ring-gray-200/50"
-                                                                                    onClick={() => setSelectedImage(entry.filePath)}
-                                                                                />
-                                                                            )}
-                                                                            <div className="absolute top-2 right-2 bg-black/50 text-white text-[10px] px-2 py-1 rounded pointer-events-none">
-                                                                                {entry.mediaId.startsWith('vid') || entry.filePath?.match(/\.(mp4|webm|ogg)$/i) ? 'Video' : 'Image'}
-                                                                            </div>
+                                                                            <MediaCarousel
+                                                                                filePaths={entry.filePaths?.length ? entry.filePaths : (entry.filePath ? [entry.filePath] : [])}
+                                                                                mediaId={entry.mediaId}
+                                                                                onImageClick={() => setSelectedImage(entry.filePaths?.[0] || entry.filePath)}
+                                                                                showArrowsOnHover={true}
+                                                                                className="rounded-md shadow-md ring-1 ring-gray-200/50"
+                                                                            />
 
                                                                             {/* Iteration Arrows - Centered physically on the image */}
                                                                             {currentMediaGroup.length > 1 && (

@@ -11,7 +11,8 @@ const creativeEntrySchema = new mongoose.Schema({
             message: props => `${props.value} is not a valid Media ID! Must start with 'img' or 'vid'.`
         }
     },
-    filePath: { type: String, required: true },
+    filePath: { type: String, required: false }, // Legacy / Primary image
+    filePaths: { type: [String], default: [] }, // Multiple images for carousel
     caption: String,
     category: {
         type: String,
