@@ -31,11 +31,11 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ filePaths, mediaId = '', 
 
     const handleTouchStart = (e: React.TouchEvent) => {
         setTouchEnd(null);
-        setTouchStart(e.targetTouches[0].clientX);
+        setTouchStart(e.touches[0].clientX);
     };
 
     const handleTouchMove = (e: React.TouchEvent) => {
-        setTouchEnd(e.targetTouches[0].clientX);
+        setTouchEnd(e.touches[0].clientX);
     };
 
     const handleTouchEnd = () => {
@@ -53,7 +53,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ filePaths, mediaId = '', 
 
     return (
         <div 
-            className={`relative group w-full h-full flex items-center justify-center touch-pan-y ${className}`}
+            className={`relative group w-full h-full flex items-center justify-center touch-pan-y select-none ${className}`}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
@@ -64,6 +64,7 @@ const MediaCarousel: React.FC<MediaCarouselProps> = ({ filePaths, mediaId = '', 
                 <img
                     src={currentPath}
                     alt="Creative"
+                    draggable={false}
                     className="w-full h-auto block max-h-full object-contain cursor-pointer transition-transform hover:scale-[1.02]"
                     onClick={() => onImageClick && onImageClick(currentPath)}
                 />
