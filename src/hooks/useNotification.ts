@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { requestNotificationPermissionAndToken, onMessageListener } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
@@ -8,10 +8,16 @@ import api from '../utils/axios';
 export const useNotification = () => {
     const { user, isAuthenticated } = useAuth();
     const socket = useSocket();
+    const [showModal, setShowModal] = useState(false);
     
     useEffect(() => {
         if (isAuthenticated && user) {
-            setupNotifications();
+            // Check if we need to request permission
+            if (Notification.permission !== 'granted') {
+                setShowModal(true);
+            } else {
+                setupNotifications();
+            }
             
             if (socket) {
                 // Join the user's specific notification room
@@ -62,5 +68,10 @@ export const useNotification = () => {
         }).catch(err => console.log('failed: ', err));
     };
 
-    return null;
+    return {
+        showModal,
+        setShowModal,
+        setupNotifications,
+        userRole: user?.role || ''
+    };
 };

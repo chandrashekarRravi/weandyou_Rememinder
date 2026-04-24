@@ -11,7 +11,9 @@ import Login from './pages/Login';
 import Clients from './pages/Clients';
 import './index.css';
 import { Toaster } from 'react-hot-toast';
+import NotificationModal from './components/NotificationModal';
 import { useNotification } from './hooks/useNotification';
+
 const ProtectedRoute = () => {
   const { isAuthenticated, user } = useAuth();
   const location = useLocation();
@@ -29,8 +31,28 @@ const ProtectedRoute = () => {
 };
 
 const NotificationSetup = () => {
-  useNotification();
-  return null;
+  const notificationContext = useNotification();
+  if (!notificationContext) return null;
+
+  const { showModal, setShowModal, setupNotifications, userRole } = notificationContext;
+
+  const handleAllow = () => {
+    setShowModal(false);
+    setupNotifications();
+  };
+
+  const handleDeny = () => {
+    setShowModal(false);
+  };
+
+  return (
+    <NotificationModal
+      isOpen={showModal}
+      onAllow={handleAllow}
+      onDeny={handleDeny}
+      userRole={userRole}
+    />
+  );
 };
 
 function App() {
