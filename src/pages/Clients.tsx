@@ -20,8 +20,8 @@ const Clients: React.FC = () => {
     const [submittingTeam, setSubmittingTeam] = useState(false);
     const [teamError, setTeamError] = useState('');
 
-    // Protect this page for Admins only
-    if (user?.role !== 'Admin') {
+    // Protect this page for Admins and Bhuvan
+    if (user?.role !== 'Admin' && !user?.username?.toLowerCase().includes('bhuvan')) {
         return <Navigate to="/" replace />;
     }
 

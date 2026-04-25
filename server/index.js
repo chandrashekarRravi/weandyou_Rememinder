@@ -78,6 +78,9 @@ app.use('/api/clients', clientRoutes);
 import notificationRoutes from './routes/notifications.js';
 app.use('/api/notifications', notificationRoutes);
 
+import taskRoutes from './routes/tasks.js';
+app.use('/api/tasks', taskRoutes);
+
 // Health check route for Render
 app.get('/', (req, res) => {
     res.status(200).json({ message: 'Backend API is running gracefully' });

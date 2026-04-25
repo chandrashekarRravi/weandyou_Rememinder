@@ -175,18 +175,30 @@ router.delete('/:id', protect, authorize('Admin'), async (req, res) => {
             return res.status(404).json({ message: 'Creative Entry not found' });
         }
 
-        // Extract public_id from Cloudinary URL and delete it
-        if (deletedEntry.filePath && deletedEntry.filePath.includes('cloudinary')) {
-            const urlParts = deletedEntry.filePath.split('/');
-            const filenameParts = urlParts[urlParts.length - 1].split('.');
-            // the folder is 'avaio_calendar' based on cloudinaryConfig
-            const publicId = `avaio_calendar/${filenameParts[0]}`;
-            // detect resource_type based on mediaId or URL
-            const resourceType = deletedEntry.mediaId?.startsWith('vid') ? 'video' : 'image';
-            try {
-                await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
-            } catch (cloudErr) {
-                console.error('Error deleting from Cloudinary:', cloudErr);
+        // Collect all file paths
+        const pathsToDelete = [];
+        if (deletedEntry.filePath) pathsToDelete.push(deletedEntry.filePath);
+        if (deletedEntry.filePaths && deletedEntry.filePaths.length > 0) {
+            deletedEntry.filePaths.forEach(p => {
+                if (!pathsToDelete.includes(p)) pathsToDelete.push(p);
+            });
+        }
+
+        // Extract public_id from Cloudinary URLs and delete them
+        for (const filePath of pathsToDelete) {
+            if (filePath && filePath.includes('cloudinary')) {
+                const urlParts = filePath.split('/');
+                const filenameParts = urlParts[urlParts.length - 1].split('.');
+                // the folder is 'avaio_calendar' based on cloudinaryConfig
+                const publicId = `avaio_calendar/${filenameParts[0]}`;
+                // detect resource_type based on URL
+                const resourceType = filePath.includes('/video/upload/') ? 'video' : 'image';
+                try {
+                    await cloudinary.uploader.destroy(publicId, { resource_type: resourceType });
+                    console.log(`Deleted ${publicId} from Cloudinary`);
+                } catch (cloudErr) {
+                    console.error('Error deleting from Cloudinary:', cloudErr);
+                }
             }
         }
 
